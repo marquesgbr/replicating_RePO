@@ -34,11 +34,14 @@ Em resumo:
   CUDA/cuDNN compatíveis, mas exige um ambiente separado e uma versão de Python
   suportada por essa versão antiga; não é compatível com o Python 3.12/3.13 usado
   no ambiente atual do projeto.
-- **Google Colab:** quando não houver GPU local, selecione uma GPU em
-  `Runtime > Change runtime type`, confirme a GPU com `nvidia-smi` e execute os
-  notebooks no runtime Linux do Colab. Evite substituir automaticamente o
-  TensorFlow pré-instalado executando `pip install -r requirements.txt`, pois
-  o requisito não fixa uma versão e pode causar conflitos com CUDA e Keras.
+- **Google Colab no VS Code:** instale a extensão Google Colab, conecte o
+  notebook a um runtime Colab com GPU pelo seletor de kernel e execute
+  [code/Colab_Setup.ipynb](./code/Colab_Setup.ipynb). Evite substituir
+  automaticamente o TensorFlow pré-instalado executando
+  `pip install -r requirements.txt`.
+- **Google Colab no navegador:** quando não houver GPU local, use o menu
+  `Runtime > Change runtime type > GPU`, confirme a GPU com `nvidia-smi` e
+  siga o guia [COLAB_BROWSER.md](./COLAB_BROWSER.md).
 
 Se o TensorFlow for executado apenas na CPU, escolha uma versão de Python
 compatível com a versão instalada e verifique se o kernel do notebook aponta
@@ -71,6 +74,10 @@ No WSL2 com GPU, o TensorFlow utiliza as bibliotecas NVIDIA instaladas com
 `tensorflow[and-cuda]`. O driver NVIDIA do Windows precisa estar instalado e
 `nvidia-smi` deve funcionar dentro do WSL2.
 
+#### IDE
+
+VSCode
+
 #### Extensões do VS Code
 
 As extensões abaixo cobrem os fluxos de desenvolvimento, notebooks, WSL2,
@@ -81,7 +88,7 @@ Colab e relatório:
 | Python | `ms-python.python` | Interpretador, ambientes virtuais e execução Python |
 | Jupyter | `ms-toolsai.jupyter` | Execução e seleção de kernels nos notebooks |
 | WSL | `ms-vscode-remote.remote-wsl` | Abrir o projeto no Linux do WSL2 com `code .` |
-| Google Colab | `google.colab` | Abrir e executar notebooks no fluxo do Colab |
+| Colab | `google.colab` | Abrir e executar notebooks no fluxo do Colab |
 | LaTeX Workshop | `james-yu.latex-workshop` | Compilar e visualizar `report.tex` |
 
 Instale Python e Jupyter para trabalhar com os notebooks localmente. A
@@ -209,12 +216,32 @@ evita copiar a URL de um servidor Jupyter. Os detalhes de CUDA, cuDNN,
 `LD_LIBRARY_PATH` e a alternativa de conexão por servidor estão em
 [gpu_tensorflow_compatibility.md](./gpu_tensorflow_compatibility.md).
 
-### Execução no Google Colab
+### Execução no Google Colab pelo VS Code
 
-Ative uma GPU no runtime, clone o repositório e entre na pasta `code/`, como
-descrito em [gpu_tensorflow_compatibility.md](./gpu_tensorflow_compatibility.md).
-Use o TensorFlow já fornecido pelo Colab sempre que possível e não instale
-automaticamente `requirements.txt` sem conferir as versões do runtime.
+Instale as extensões Python, Jupyter e Google Colab. Abra o notebook no VS
+Code, use o seletor de kernel para conectar a um runtime hospedado pelo Colab
+e escolha um runtime com GPU. O nome exato dos comandos pode variar conforme
+a versão da extensão; procure por comandos como **Colab: Connect to Colab
+Runtime** na Command Palette.
+
+Depois de conectar:
+
+1. abra [code/Colab_Setup.ipynb](./code/Colab_Setup.ipynb);
+2. execute as células em ordem;
+3. confirme que `tf.config.list_physical_devices("GPU")` retorna uma GPU;
+4. execute os notebooks de avaliação no mesmo runtime.
+
+Nesse fluxo, os comandos Python são executados remotamente no Colab, e não no
+Python local nem no WSL2. A extensão Google Colab gerencia a conexão; não é
+necessário iniciar `jupyter lab`, copiar URL ou configurar `LD_LIBRARY_PATH`.
+Consulte [gpu_tensorflow_compatibility.md](./gpu_tensorflow_compatibility.md)
+para detalhes de diagnóstico.
+
+### Execução no Google Colab pelo navegador
+
+Para usar a interface web, siga [COLAB_BROWSER.md](./COLAB_BROWSER.md). Esse
+fluxo usa os menus `Runtime` do Colab, que não fazem parte do fluxo conectado
+ao VS Code.
 
 ### Ordem recomendada
 

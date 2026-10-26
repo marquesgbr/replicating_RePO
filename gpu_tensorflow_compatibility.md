@@ -195,123 +195,54 @@ por essa versão antiga.
 Além disso, misturar versões antigas no mesmo ambiente pode quebrar as
 dependências dos notebooks.
 
-## Uso do Google Colab
+## Uso do Google Colab no VS Code
 
-O Google Colab fornece um ambiente Linux remoto e pode disponibilizar uma GPU
-NVIDIA mesmo quando o computador local não possui GPU física. O processamento
-ocorre nos servidores do Colab; a GPU do computador local não é utilizada.
+O fluxo preferencial para este projeto é usar a extensão Google Colab no VS
+Code. Nesse modo, o notebook aberto no VS Code se conecta a um runtime remoto
+do Colab; o código é executado na infraestrutura do Colab, não no Python local
+e não no WSL2.
 
-### Ativar uma GPU
+### Configurar a conexão
 
-No Colab, selecione:
-
-```text
-Runtime → Change runtime type → Hardware accelerator → GPU
-```
-
-Em uma interface traduzida, a opção pode aparecer como:
+Instale as extensões **Python**, **Jupyter** e **Google Colab** no VS Code.
+Abra um notebook do projeto e use o seletor de kernel para conectar a um
+runtime Colab. Também é possível procurar na Command Palette por um comando
+semelhante a:
 
 ```text
-Ambiente de execução → Alterar tipo de ambiente de execução → Acelerador de hardware → GPU
+Colab: Connect to Colab Runtime
 ```
 
-A disponibilidade e o modelo da GPU dependem da cota e do tipo de conta. O
-Colab pode fornecer, por exemplo, uma NVIDIA T4 ou L4.
+Os nomes e a posição dos comandos podem variar conforme a versão da extensão.
+Autentique-se quando solicitado e escolha um runtime com GPU. Não é necessário
+iniciar `jupyter lab`, copiar URL ou configurar `LD_LIBRARY_PATH` nesse fluxo.
 
-Confirme a GPU atribuída:
+Depois de conectar, execute
+[code/Colab_Setup.ipynb](./code/Colab_Setup.ipynb) no mesmo runtime. A primeira
+célula confirma a versão do Python, TensorFlow e a GPU; as demais configuram o
+repositório e testam os modelos.
+
+Para verificar a conexão dentro do notebook:
 
 ```python
-!nvidia-smi
-```
-
-Depois confirme que o TensorFlow a detectou:
-
-```python
+import sys
 import tensorflow as tf
 
-gpus = tf.config.list_physical_devices("GPU")
-
+print("Python remoto:", sys.executable)
 print("TensorFlow:", tf.__version__)
-print("GPUs disponíveis:", gpus)
-
-if not gpus:
-    raise RuntimeError(
-        "Nenhuma GPU foi detectada. Selecione uma GPU nas configurações "
-        "do ambiente de execução do Colab."
-    )
-
-for gpu in gpus:
-    tf.config.experimental.set_memory_growth(gpu, True)
+print("GPUs:", tf.config.list_physical_devices("GPU"))
 ```
 
-O `set_memory_growth` faz com que o TensorFlow aloque memória conforme a
-necessidade, em vez de reservar toda a memória da GPU no início.
+O caminho será um Python remoto do Colab, e não o `.venv` local. Isso é
+esperado. Como a sessão é temporária, salve resultados importantes fora do
+runtime antes de desconectar.
 
-### Baixar e executar o projeto
+## Uso do Google Colab no navegador
 
-```python
-%cd /content
-!git clone https://github.com/marquesgbr/replicating_RePO.git
-%cd /content/replicating_RePO/code
-```
-
-Os notebooks utilizam caminhos relativos à pasta `code`, portanto é importante
-executá-los a partir dessa pasta.
-
-O TensorFlow já costuma estar instalado no Colab. Antes de instalar uma nova
-versão, verifique o ambiente:
-
-```python
-!python --version
-!pip show tensorflow keras
-```
-
-Evite executar automaticamente `pip install -r requirements.txt` no Colab,
-porque o requisito `tensorflow` não fixa uma versão e pode substituir a versão
-pré-configurada do Colab. Essa substituição pode criar incompatibilidades com
-CUDA, Keras ou outras bibliotecas do runtime.
-
-Instale somente dependências que estejam faltando. Por exemplo:
-
-```python
-%pip install pandas numpy ipykernel
-```
-
-Se for necessário instalar uma versão específica do TensorFlow, reinicie o
-runtime depois da instalação:
-
-```python
-%pip install "tensorflow==2.18.*"
-```
-
-Em seguida, use:
-
-```text
-Runtime → Restart session
-```
-
-### Versões antigas do Python no Colab
-
-O Colab oferece algumas versões anteriores do runtime por meio de:
-
-```text
-Runtime → Change runtime type → Runtime Version
-```
-
-Essa opção é preferível a instalar manualmente outro Python dentro da sessão,
-porque mantém Python, TensorFlow, CUDA e as bibliotecas do sistema compatíveis.
-Runtimes antigos podem deixar de estar disponíveis depois de determinado
-período.
-
-Não é necessário usar Python antigo apenas para habilitar CUDA no Colab. O
-Colab já utiliza Linux e fornece um ambiente preparado para GPU. A utilização
-de TensorFlow 2.10 só seria relevante para o caso específico de GPU CUDA
-nativa no Windows.
-
-Instalar outro Python manualmente dentro do Colab pode causar problemas no
-kernel do Jupyter, nos caminhos do `pip` e nas bibliotecas binárias do
-TensorFlow. Só faça isso se houver uma necessidade específica de reproduzir
-um ambiente antigo.
+Para o procedimento baseado na interface web, consulte
+[COLAB_BROWSER.md](./COLAB_BROWSER.md). Os menus `Runtime` e a instalação de
+GPU descritos nesse documento se aplicam ao navegador, não ao fluxo conectado
+ao VS Code.
 
 ## Carregamento dos modelos deste projeto
 
