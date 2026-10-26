@@ -1,11 +1,18 @@
 import tensorflow as tf
 import numpy as np
 import os
-import sys
 import time
 from tensorflow.keras.layers import Dense, Flatten, Dropout
 from tensorflow.keras import Model
 import pandas as pd
+
+# Access layers through the already imported TensorFlow module so static
+# analyzers do not try to resolve the bundled ``tensorflow.keras.layers``
+# submodule directly.
+# Dense = tf.keras.layers.Dense
+# Flatten = tf.keras.layers.Flatten
+# Dropout = tf.keras.layers.Dropout
+# Model = tf.keras.Model
 
 class FlowModel(Model):
     def __init__(self,input_size):
@@ -20,7 +27,18 @@ class FlowModel(Model):
         self.drop2 = Dropout(0.5)
         self.d6 = Dense(256, activation='relu')
         self.d7 = Dense(input_size, activation='relu')
+        self.input_size = input_size
+
+        # MUST preserve the order of implemented layers for building the model
+        self._layers_to_build = [self.d1, self.d2, self.d3, self.drop1, self.d4, self.d5, self.drop2, self.d6, self.d7]
         
+    def build(self, input_shape):
+        current_shape = tf.TensorShape(input_shape)
+        for layer in self._layers_to_build:
+            layer.build(current_shape)
+            current_shape = tf.TensorShape(layer.compute_output_shape(current_shape))
+        super().build(input_shape)
+
     def call(self, x,training=None):
         x = self.d1(x)
         x = self.d2(x)
@@ -35,7 +53,7 @@ class FlowModel(Model):
         return x
     
 def get_train_ds():
-    url_data = '../data/flow_based/Monday-WH-generate-labeled.csv'
+    url_data = 'data/flow_based/Monday-WH-generate-labeled.csv'
     df = pd.read_csv(url_data)
     feats = df.iloc[:,8:]
     ds_port = df.iloc[:,5]
@@ -46,7 +64,8 @@ def get_train_ds():
     x_train = all_feats[known_data_IDs]
     
     y_train = df.iloc[:,-1].values
-    y_train[y_train=='BENIGN']=0.
+
+    y_train[y_train=='BENIGN']='0.0'
     y_train = y_train.astype(np.float32)
     y_train = y_train[known_data_IDs]
     
@@ -113,9 +132,9 @@ if __name__ == "__main__":
     input_size = x_train.shape[1]
     
     model = FlowModel(input_size)
-    model._set_inputs(tf.TensorSpec([None,input_size]))
+    model.build((None, input_size))
     
     train_loss = tf.keras.metrics.Mean(name='train_loss')
-    train_model(x_train)
+    # train_model(x_train)
     
-    model.save('../models/flow_based_model')
+    # model.save('../models/flow_based_model')

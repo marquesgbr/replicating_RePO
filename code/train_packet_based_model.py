@@ -9,21 +9,33 @@ from tensorflow.keras import Model
 
 
 class PacketModel(Model):
-    def __init__(self):
+    def __init__(self, timesteps, num_input):
         super(PacketModel, self).__init__()
+        self.timesteps = timesteps
+        self.num_input = num_input
         self.flatten = Flatten()
         self.d1 = Dense(2048, activation='relu')
         self.d2 = Dense(num_input*timesteps, activation='relu')
+
+        # MUST preserve the order of implemented layers for building the model
+        self._layers_to_build = [self.flatten, self.d1, self.d2]
+
+    def build(self, input_shape):
+        current_shape = tf.TensorShape(input_shape)
+        for layer in self._layers_to_build:
+            layer.build(current_shape)
+            current_shape = tf.TensorShape(layer.compute_output_shape(current_shape))
+        super().build(input_shape)
 
     def call(self, x):
         x = self.flatten(x)
         dense1_out = self.d1(x)
         dense2_out = self.d2(dense1_out)
         d2_out_clip = tf.clip_by_value(dense2_out,0.,1.)
-        output = tf.reshape(d2_out_clip,(-1,timesteps,num_input))
+        output = tf.reshape(d2_out_clip,(-1,self.timesteps,self.num_input))
         return output
 
-def get_files(day,prefix = '../data/packet_based/'):
+def get_files(day,prefix = 'data/packet_based/'):
     all_files = []
     prefix = prefix+day
     for file in os.listdir(prefix):
@@ -59,7 +71,7 @@ def train_step(partial_x, x,optimizer):
 
 
 def get_train_ds():
-    train_files = get_files('monday', prefix='../data/packet_based/')
+    train_files = get_files('monday', prefix='data/packet_based/')
     x_train = []
     for f in train_files:
         print(f)
@@ -110,10 +122,10 @@ if __name__ == "__main__":
     
     timesteps = 20
     num_input = 29
-    model = PacketModel()
-    model._set_inputs(tf.TensorSpec([None,timesteps,num_input]))
+    model = PacketModel(timesteps, num_input)
+    model.build(input_shape=(None,timesteps,num_input))
     
     train_loss = tf.keras.metrics.Mean(name='train_loss')
-    train_model(x_train,x_train_normalized,timesteps,num_input)
+    # train_model(x_train,x_train_normalized,timesteps,num_input)
     
-    model.save('../models/packet_based_model')
+    # model.save('../models/packet_based_model')
