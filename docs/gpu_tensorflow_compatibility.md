@@ -240,7 +240,7 @@ runtime antes de desconectar.
 ## Uso do Google Colab no navegador
 
 Para o procedimento baseado na interface web, consulte
-[COLAB_BROWSER.md](./COLAB_BROWSER.md). Os menus `Runtime` e a instalação de
+[colab_browser.md](./colab_browser.md). Os menus `Runtime` e a instalação de
 GPU descritos nesse documento se aplicam ao navegador, não ao fluxo conectado
 ao VS Code.
 
