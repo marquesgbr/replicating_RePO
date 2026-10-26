@@ -46,6 +46,54 @@ para o mesmo ambiente virtual. O documento de compatibilidade também explica
 como configurar as bibliotecas CUDA/cuDNN e como diagnosticar kernels que não
 herdam o ambiente correto.
 
+### Stack do projeto
+
+#### Software e bibliotecas
+
+- Python:
+  - Python 3.13.1 no ambiente nativo Windows usado durante o diagnóstico;
+  - Python 3.12.3 no ambiente WSL2 usado com GPU;
+  - use a versão compatível com o TensorFlow escolhido no ambiente.
+- TensorFlow 2.21.0 e Keras 3.15.1 no ambiente de referência atual;
+- NumPy e pandas para manipulação dos dados;
+- JupyterLab e `ipykernel` para execução dos notebooks;
+- Git para versionamento e clonagem do repositório;
+- LaTeX, `latexmk` e os pacotes do template para compilação do relatório.
+
+As versões instaladas no ambiente podem ser conferidas com:
+
+```bash
+python --version
+python -m pip freeze
+```
+
+No WSL2 com GPU, o TensorFlow utiliza as bibliotecas NVIDIA instaladas com
+`tensorflow[and-cuda]`. O driver NVIDIA do Windows precisa estar instalado e
+`nvidia-smi` deve funcionar dentro do WSL2.
+
+#### Extensões do VS Code
+
+As extensões abaixo cobrem os fluxos de desenvolvimento, notebooks, WSL2,
+Colab e relatório:
+
+| Extensão | Identificador | Uso |
+| --- | --- | --- |
+| Python | `ms-python.python` | Interpretador, ambientes virtuais e execução Python |
+| Jupyter | `ms-toolsai.jupyter` | Execução e seleção de kernels nos notebooks |
+| WSL | `ms-vscode-remote.remote-wsl` | Abrir o projeto no Linux do WSL2 com `code .` |
+| Google Colab | `google.colab` | Abrir e executar notebooks no fluxo do Colab |
+| LaTeX Workshop | `james-yu.latex-workshop` | Compilar e visualizar `report.tex` |
+
+Instale Python e Jupyter para trabalhar com os notebooks localmente. A
+extensão WSL é necessária apenas para o fluxo Windows + WSL2. A extensão
+Google Colab é opcional quando os notebooks forem executados diretamente na
+interface web do Colab. LaTeX Workshop é necessária apenas para editar e
+compilar o relatório.
+
+Extensões de Git, como GitLens ou GitHub Pull Requests and Issues, podem ser
+úteis para colaboração, mas não são necessárias para executar ou reproduzir
+os experimentos.
+
 ### Ambiente Python
 
 Se já possuir um ambiente Python que atenda à `requirements.txt`, pode pular
