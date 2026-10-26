@@ -1,3 +1,15 @@
+# Data files
+
+## Packet Based
+monday/
+tuesday/
+wednesday/
+thursday/
+friday/
+
+## Flow Based
+*.csv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

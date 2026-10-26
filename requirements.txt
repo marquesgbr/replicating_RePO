@@ -1,0 +1,7 @@
+numpy
+pandas
+tensorflow
+
+# Jupyter support for running the notebooks from VS Code or a browser.
+jupyterlab
+ipykernel
