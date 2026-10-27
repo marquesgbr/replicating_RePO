@@ -12,31 +12,31 @@ nas linhas correspondentes.
   - [x] Documentar execução no Colab pelo VS Code.
   - [x] Documentar execução no Colab pelo navegador.
   - [x] Documentar os requisitos do relatório.
-- [ ] Definir o ambiente oficial de execução do grupo.
-  - [ ] Escolher entre Linux/WSL2 com GPU, CPU local ou Colab.
-  - [ ] Registrar Python, TensorFlow, Keras, CUDA/cuDNN, sistema operacional e
+- [x] Definir o ambiente oficial de execução do grupo.
+  - [x] Escolher entre Linux/WSL2 com GPU, CPU local ou Colab.
+  - [x] Registrar Python, TensorFlow, Keras, CUDA/cuDNN, sistema operacional e
         kernel utilizados.
   - [ ] Confirmar que todos os membros conseguem abrir os notebooks no
         ambiente escolhido.
-- [ ] Validar o ambiente.
-  - [ ] Confirmar as versões instaladas.
-  - [ ] Confirmar a disponibilidade da GPU, quando aplicável.
-  - [ ] Confirmar que `load_model_compat` pode ser importado.
-  - [ ] Confirmar que os modelos de fluxo e pacotes podem ser carregados.
-  - [ ] Registrar problemas de instalação e soluções adotadas.
+- [x] Validar o ambiente.
+  - [x] Confirmar as versões instaladas.
+  - [x] Confirmar a disponibilidade da GPU, quando aplicável.
+  - [x] Confirmar que `load_model_compat` pode ser importado.
+  - [x] Confirmar que os modelos de fluxo e pacotes podem ser carregados.
+  - [x] Registrar problemas de instalação e soluções adotadas.
 
 ## 2. Dados
 
-- [ ] Confirmar a origem e a integridade dos arquivos de dados.
-  - [ ] Confirmar os arquivos compactados necessários.
-  - [ ] Confirmar os metadados de normalização em `data/*/x_train_meta/`.
-  - [ ] Verificar se os arquivos grandes não serão adicionados ao Git.
-- [ ] Executar `extract_flow_data.sh`.
-- [ ] Executar `extract_packet_data.sh`.
-- [ ] Verificar as pastas extraídas de fluxo e pacotes.
-- [ ] Verificar quantidades, formatos, shapes, rótulos e valores ausentes.
-- [ ] Registrar a divisão entre treino, validação e teste, quando aplicável.
-- [ ] Registrar o commit e o ambiente usados na preparação dos dados.
+- [x] Confirmar a origem e a integridade dos arquivos de dados.
+  - [x] Confirmar os arquivos compactados necessários.
+  - [x] Confirmar os metadados de normalização em `data/*/x_train_meta/`.
+  - [x] Verificar se os arquivos grandes não serão adicionados ao Git.
+- [x] Executar `extract_flow_data.sh`.
+- [x] Executar `extract_packet_data.sh`.
+- [x] Verificar as pastas extraídas de fluxo e pacotes.
+- [x] Verificar quantidades, formatos, shapes, rótulos e valores ausentes.
+- [x] Registrar a divisão entre treino, validação e teste, quando aplicável.
+- [x] Registrar o commit e o ambiente usados na preparação dos dados.
 
 ## 3. Reprodução dos experimentos de referência
 
@@ -51,8 +51,8 @@ Execute os notebooks normais antes dos adversariais.
 
 ### 3.2 Modelo baseado em pacotes
 
-- [ ] Executar `code/Packet_based_RePO_Normal_Test.ipynb`.
-- [ ] Salvar os resultados relevantes do teste normal.
+- [x] Executar `code/Packet_based_RePO_Normal_Test.ipynb`.
+- [x] Salvar os resultados relevantes do teste normal.
 - [ ] Executar `code/Packet_based_RePO_Adversarial.ipynb`.
 - [ ] Salvar os resultados relevantes do teste adversarial.
 
@@ -205,5 +205,4 @@ Os requisitos detalhados estão em
 
 | Data | Pessoa | Ambiente/kernel | Notebook ou tarefa | Commit | Observações |
 | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |
-
+| 27/10|  Gabriel Marques| Colab (Extension)  |  Packet-Based Normal | eeb96f3 |Reprodução de avaliação   |
