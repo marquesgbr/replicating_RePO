@@ -264,6 +264,38 @@ saída única da assinatura `serving_default` para um tensor, mantendo o cálcul
 de gradientes necessário nos notebooks adversariais. Execute os notebooks a
 partir de `code/` para que o módulo seja encontrado.
 
+### Persistência dos resultados adversariais
+
+O módulo [`code/experiment_results.py`](./code/experiment_results.py) salva o
+melhor threshold, os TPRs da vítima e do atacante e o tempo total de execução
+em segundos. Os notebooks adversariais exportam arrays JSON independentes,
+um arquivo por notebook, e acumulam resultados entre diferentes ataques:
+
+```python
+from experiment_results import ExperimentResult, save_result_json
+
+result = ExperimentResult(
+    best_threshold=thr,
+    victim_tpr=np.sum(mal_scores >= thr) / len(mal_scores),
+    attacker_tpr=cons_as_mal / len(x_test_mal),
+    total_runtime_seconds=time.time() - st,
+    attack_type=attack_type,
+    model_type="flow",
+    normal_tpr=normal_tpr,
+
+)
+save_result_json(result, "../results/flow_based_adversarial_results.json")
+```
+
+Para ler os registros posteriormente:
+
+```python
+from experiment_results import load_results
+
+results = load_results("../results/flow_based_adversarial_results.json")
+```
+
+
 ### Execução por linha de comando (opcional; Não recomendado)
 
 Para executar um notebook sem abrir a interface gráfica, a instalação de

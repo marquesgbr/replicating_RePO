@@ -1,0 +1,12 @@
+[
+  {
+    "best_threshold": 0.012988771498203278,
+    "victim_tpr": 0.8728,
+    "attacker_tpr": 0.7874,
+    "total_runtime_seconds": 11162.6,
+    "attack_type": "DoS Slowhttptest",
+    "model_type": "flow",
+    "normal_tpr": 0.9280
+  }
+]
+    
