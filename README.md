@@ -24,7 +24,7 @@ adversariais em sistemas de detecção de intrusão de rede usando autoencoders.
 
 O TensorFlow pode exigir uma versão específica do Python e do sistema
 operacional. Para os procedimentos de compatibilidade com GPU, consulte
-[gpu_tensorflow_compatibility.md](./docs/gpu_tensorflow_compatibility.md).
+[GPU_TENSORFLOW_COMPATIBILITY.md](./docs/GPU_TENSORFLOW_COMPATIBILITY.md).
 
 Em resumo:
 
@@ -43,7 +43,7 @@ Em resumo:
   `pip install -r requirements.txt`.
 - **Google Colab no navegador:** quando não houver GPU local, use o menu
   `Runtime > Change runtime type > GPU`, confirme a GPU com `nvidia-smi` e
-  siga o guia [colab_browser.md](./docs/colab_browser.md).
+  siga o guia [COLAB_BROWSER.md](./docs/COLAB_BROWSER.md).
 
 Se o TensorFlow for executado apenas na CPU, escolha uma versão de Python
 compatível com a versão instalada e verifique se o kernel do notebook aponta
@@ -108,7 +108,7 @@ os experimentos.
 Se já possuir um ambiente Python que atenda à `requirements.txt`, pode pular
 esta parte, ativá-lo e seguir para a seção de execução. Para GPU no Windows,
 use o fluxo WSL2 descrito em
-[gpu_tensorflow_compatibility.md](./docs/gpu_tensorflow_compatibility.md), em vez
+[GPU_TENSORFLOW_COMPATIBILITY.md](./docs/GPU_TENSORFLOW_COMPATIBILITY.md), em vez
 de instalar o TensorFlow atual no Python nativo do Windows.
 
 Na raiz do repositório:
@@ -207,7 +207,7 @@ Esse fluxo é adequado para CPU. Para GPU, use WSL2.
 Com o ambiente `.venv` configurado dentro do WSL2:
 
 ```bash
-cd /mnt/d/Projects/26.2/TADI/replicating_RePO
+cd replicating_RePO
 source .venv/bin/activate
 code .
 ```
@@ -216,7 +216,7 @@ Na janela do VS Code conectada ao WSL2, abra o notebook e selecione
 `Python (replicating_RePO - GPU)`. Esse fluxo mostra o kernel diretamente e
 evita copiar a URL de um servidor Jupyter. Os detalhes de CUDA, cuDNN,
 `LD_LIBRARY_PATH` e a alternativa de conexão por servidor estão em
-[gpu_tensorflow_compatibility.md](./docs/gpu_tensorflow_compatibility.md).
+[GPU_TENSORFLOW_COMPATIBILITY.md](./docs/GPU_TENSORFLOW_COMPATIBILITY.md).
 
 ### Execução no Google Colab pelo VS Code
 
@@ -236,12 +236,12 @@ Depois de conectar:
 Nesse fluxo, os comandos Python são executados remotamente no Colab, e não no
 Python local nem no WSL2. A extensão Google Colab gerencia a conexão; não é
 necessário iniciar `jupyter lab`, copiar URL ou configurar `LD_LIBRARY_PATH`.
-Consulte [gpu_tensorflow_compatibility.md](./docs/gpu_tensorflow_compatibility.md)
+Consulte [GPU_TENSORFLOW_COMPATIBILITY.md](./docs/GPU_TENSORFLOW_COMPATIBILITY.md)
 para detalhes de diagnóstico.
 
 ### Execução no Google Colab pelo navegador
 
-Para usar a interface web, siga [colab_browser.md](./docs/colab_browser.md). Esse
+Para usar a interface web, siga [COLAB_BROWSER.md](./docs/COLAB_BROWSER.md). Esse
 fluxo usa os menus `Runtime` do Colab, que não fazem parte do fluxo conectado
 ao VS Code.
 
@@ -316,7 +316,7 @@ pasta de saída local e não deve ser versionada sem necessidade.
 
 O arquivo a editar é `report.tex`; `report_template.tex` é uma referência.
 Os requisitos detalhados estão em
-[docs/requisitos_relatório.md](./docs/requisitos_relatório.md). Não há um
+[docs/REPORT_REQUIREMENTS.md](./docs/REPORT_REQUIREMENTS.md). Não há um
 `report.txt` neste repositório. Para editar e compilar pelo VS
 Code:
 
