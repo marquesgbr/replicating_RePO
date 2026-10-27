@@ -45,15 +45,41 @@ Execute os notebooks normais antes dos adversariais.
 ### 3.1 Modelo baseado em fluxos
 
 - [ ] Executar `code/Flow_based_RePO_Normal_Test.ipynb`.
+    - [ ] RePO
+  - [ ] RePO+
 - [ ] Salvar os resultados relevantes do teste normal.
-- [x] Executar `code/Flow_based_RePO_Adversarial.ipynb`.
+- [ ] Executar `code/Flow_based_RePO_Adversarial.ipynb` nos ataques do artigo usando RePO+.
+  - [ ] FTP-Patator
+  - [ ] SSH-Patator
+  - [ ] Slowloris
+  - [x] Slowhttptest
+  - [ ] Hulk
+  - [ ] GoldenEye
+  - [ ] Heartbleed
+  - [ ] Infiltration
+  - [ ] Botnet
+  - [ ] PortScan
+  - [ ] DDoS
 - [ ] Salvar os resultados relevantes do teste adversarial.
 
 ### 3.2 Modelo baseado em pacotes
 
 - [x] Executar `code/Packet_based_RePO_Normal_Test.ipynb`.
+  - [ ] RePO
+  - [x] RePO+
 - [x] Salvar os resultados relevantes do teste normal.
-- [ ] Executar `code/Packet_based_RePO_Adversarial.ipynb`.
+- [ ] Executar `code/Packet_based_RePO_Adversarial.ipynb` nos ataques do artigo usando RePO+.
+    - [ ] FTP-Patator
+  - [ ] SSH-Patator
+  - [ ] Slowloris
+  - [ ] Slowhttptest
+  - [ ] Hulk
+  - [ ] GoldenEye
+  - [ ] Heartbleed
+  - [ ] Infiltration
+  - [ ] Botnet
+  - [ ] PortScan
+  - [ ] DDoS
 - [ ] Salvar os resultados relevantes do teste adversarial.
 
 ### 3.3 Registro de reprodutibilidade
