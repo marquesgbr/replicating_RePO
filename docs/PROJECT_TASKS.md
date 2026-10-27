@@ -46,7 +46,7 @@ Execute os notebooks normais antes dos adversariais.
 
 - [ ] Executar `code/Flow_based_RePO_Normal_Test.ipynb`.
 - [ ] Salvar os resultados relevantes do teste normal.
-- [ ] Executar `code/Flow_based_RePO_Adversarial.ipynb`.
+- [x] Executar `code/Flow_based_RePO_Adversarial.ipynb`.
 - [ ] Salvar os resultados relevantes do teste adversarial.
 
 ### 3.2 Modelo baseado em pacotes
@@ -205,4 +205,5 @@ Os requisitos detalhados estão em
 
 | Data | Pessoa | Ambiente/kernel | Notebook ou tarefa | Commit | Observações |
 | --- | --- | --- | --- | --- | --- |
-| 27/10|  Gabriel Marques| Colab (Extension)  |  Packet-Based Normal | eeb96f3 |Reprodução de avaliação   |
+| 27/10|  Gabriel Marques| Colab (Extension)  |  Packet-Based Normal | eeb96f3 |Reproduzir avaliação   |
+| 27/10|  Gabriel Marques| Colab (Extension)  |  Flow-Based Adversarial | d016f65|Reproduzir avaliação (DoS Slowhttptest - 186min)   |
