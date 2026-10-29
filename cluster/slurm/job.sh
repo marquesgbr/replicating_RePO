@@ -19,6 +19,7 @@ source "${SCRIPT_DIR}/../common.sh"
 
 load_python_module
 activate_venv
+cd "${REPO_ROOT}"
 
 : "${TASK:?defina TASK=train|normal|adversarial}"
 
