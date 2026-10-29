@@ -22,11 +22,15 @@ source "${CLUSTER_DIR}/common.sh"
 SKIP_DATA=0
 SKIP_VENV=0
 FORCE=0
+FORCE_DATA=0
+FORCE_VENV=0
 while (($#)); do
   case "$1" in
     --skip-data) SKIP_DATA=1 ;;
     --skip-venv) SKIP_VENV=1 ;;
     --force) FORCE=1 ;;
+    --force-data) FORCE_DATA=1 ;;
+    --force-venv) FORCE_VENV=1 ;;
     -h|--help)
       sed -n '2,18p' "$0"
       exit 0
@@ -61,8 +65,8 @@ if command -v df >/dev/null 2>&1; then
 fi
 
 if (( ! SKIP_VENV )); then
-  if [[ ! -f "${VENV}/bin/activate" ]] || (( FORCE )); then
-    if (( FORCE )) && [[ -d "${VENV}" ]]; then
+  if [[ ! -f "${VENV}/bin/activate" ]] || (( FORCE || FORCE_VENV )); then
+    if (( FORCE || FORCE_VENV )) && [[ -d "${VENV}" ]]; then
       echo "[setup] removendo venv anterior: ${VENV}"
       rm -rf "${VENV}"
     fi
@@ -111,7 +115,7 @@ if (( ! SKIP_DATA )); then
   PACKET_DATA_DIR="${DATA_ROOT}/packet_based"
   mkdir -p "${FLOW_DATA_DIR}" "${PACKET_DATA_DIR}"
 
-  if (( FORCE )) || [[ ! -s "${FLOW_DATA_DIR}/Monday-WH-generate-labeled.csv" ]]; then
+  if (( FORCE || FORCE_DATA )) || [[ ! -s "${FLOW_DATA_DIR}/Monday-WH-generate-labeled.csv" ]]; then
     echo "[setup] extraindo fluxos para ${FLOW_DATA_DIR}"
     DATA_ROOT="${FLOW_DATA_DIR}" ZIP_DIR="${REPO_ROOT}/data/flow_based" \
       bash "${REPO_ROOT}/extract_flow_data.sh"
@@ -119,7 +123,7 @@ if (( ! SKIP_DATA )); then
     echo "[setup] fluxos já extraídos: ${FLOW_DATA_DIR}"
   fi
 
-  if (( FORCE )) || [[ ! -s "${PACKET_DATA_DIR}/tuesday/part_00000.npy" ]]; then
+  if (( FORCE || FORCE_DATA )) || [[ ! -s "${PACKET_DATA_DIR}/tuesday/part_00000.npy" ]]; then
     echo "[setup] extraindo pacotes para ${PACKET_DATA_DIR} (pode demorar)"
     DATA_ROOT="${PACKET_DATA_DIR}" ZIP_DIR="${REPO_ROOT}/data/packet_based" \
       bash "${REPO_ROOT}/extract_packet_data.sh"

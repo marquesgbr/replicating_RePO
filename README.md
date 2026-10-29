@@ -331,7 +331,9 @@ bash cluster/submit.sh export
 ```
 
 O runbook completo, incluindo partições, armazenamento, smoke test, retomada
-e coleta, está em [`cluster/README.md`](./cluster/README.md).
+e coleta, está em [`cluster/README.md`](./cluster/README.md). O passo a passo
+linear, do login até a coleta, está em
+[`docs/APUANA_RUNBOOK.md`](./docs/APUANA_RUNBOOK.md).
 
 ## Escrita e compilação do relatório
 

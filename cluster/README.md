@@ -3,6 +3,10 @@
 Este diretório contém o tooling para executar a replicação do RePO no cluster
 Apuana (CIn/UFPE), fora do Colab e sem depender de notebooks abertos.
 
+O passo a passo linear, do login até a coleta, está em
+[`../docs/APUANA_RUNBOOK.md`](../docs/APUANA_RUNBOOK.md). Este arquivo é a
+referência detalhada de cada componente e decisão.
+
 O desenho segue o que já foi validado no projeto `ml_PIDS`:
 
 - ambiente Python em `$SCRATCH`, preparado uma vez no nó de login;
