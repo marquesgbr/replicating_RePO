@@ -1,12 +1,20 @@
 [
   {
-    "best_threshold": 0.012988771498203278,
+    "best_threshold": 0.012988771498203279,
     "victim_tpr": 0.8728,
     "attacker_tpr": 0.7874,
     "total_runtime_seconds": 11162.6,
     "attack_type": "DoS Slowhttptest",
     "model_type": "flow",
-    "normal_tpr": 0.9280
+    "normal_tpr": 0.928
+  },
+  {
+    "best_threshold": 0.012988771498203279,
+    "victim_tpr": 0.2252,
+    "attacker_tpr": 0.001,
+    "total_runtime_seconds": 668.6164050102234,
+    "attack_type": "FTP-Patator",
+    "model_type": "flow",
+    "normal_tpr": 0.4994
   }
 ]
-    
