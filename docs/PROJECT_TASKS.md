@@ -49,7 +49,7 @@ Execute os notebooks normais antes dos adversariais.
   - [ ] RePO+
 - [ ] Salvar os resultados relevantes do teste normal.
 - [ ] Executar `code/Flow_based_RePO_Adversarial.ipynb` nos ataques do artigo usando RePO+.
-  - [ ] FTP-Patator
+  - [x] FTP-Patator
   - [ ] SSH-Patator
   - [ ] Slowloris
   - [x] Slowhttptest
@@ -234,3 +234,4 @@ Os requisitos detalhados estão em
 | 27/10|  Gabriel Marques| Colab (Extension)  |  Packet-Based Normal | eeb96f3 |Reproduzir avaliação   |
 | 27/10|  Gabriel Marques| Colab (Extension)  |  Flow-Based Adversarial | d016f65|Reproduzir avaliação: DoS Slowhttptest - 186min   |
 | 29/10|  Gabriel Marques|Local GPU|  Packet-Based Adversarial| 3e2019c|Reproduzir avaliação: FTP-Patator - 23h14min   |
+| 29/10|  Gabriel Marques|Local CPU|  Flow-Based Adversarial| 23a17ac|Reproduzir avaliação: FTP-Patator - 11min   |
