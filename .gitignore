@@ -1,5 +1,9 @@
 # Data files
 
+## Cluster Apuana
+cluster/config.env
+models/retrained/
+
 ## Packet Based
 monday/
 tuesday/

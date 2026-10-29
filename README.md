@@ -10,6 +10,9 @@ adversariais em sistemas de detecção de intrusão de rede usando autoencoders.
 ## Estrutura relevante
 
 - `code/`: notebooks de avaliação e scripts de treinamento.
+- `cluster/`: tooling para executar treino, avaliação normal/adversarial e
+  agregação no cluster Apuana, com checkpoints e retomada. Veja o
+  [runbook do cluster](./cluster/README.md).
 - `docs/`: documentação de compatibilidade, execução no Colab e requisitos do
   relatório, além do [checklist do projeto](./docs/PROJECT_TASKS.md).
 - `data/flow_based/` e `data/packet_based/`: arquivos compactados, dados
@@ -311,6 +314,24 @@ python -m jupyter nbconvert --to notebook --execute \
 
 Repita trocando o nome do notebook. A pasta `code/executed/` é apenas uma
 pasta de saída local e não deve ser versionada sem necessidade.
+
+### Execução no cluster Apuana
+
+O diretório `cluster/` contém o fluxo recomendado para rodar a replicação no
+cluster do CIn, com um job SLURM por ataque, checkpoint e retomada:
+
+```bash
+cd "$HOME/Projects/replicating_RePO"
+git switch feat/apuana-cluster
+bash cluster/setup_env.sh
+bash cluster/submit.sh normal flow
+bash cluster/submit.sh adversarial flow "DoS Slowhttptest"
+bash cluster/submit.sh adversarial packet all
+bash cluster/submit.sh export
+```
+
+O runbook completo, incluindo partições, armazenamento, smoke test, retomada
+e coleta, está em [`cluster/README.md`](./cluster/README.md).
 
 ## Escrita e compilação do relatório
 

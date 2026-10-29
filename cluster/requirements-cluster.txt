@@ -1,0 +1,17 @@
+# Ambiente do cluster Apuana (Python >= 3.10, GPU NVIDIA).
+#
+# O extra [and-cuda] instala as bibliotecas CUDA/cuDNN via pip, que é o
+# caminho mais portável nos nós do Apuana. Se o cluster já fornecer CUDA por
+# módulo e o pip não puder baixar as wheels NVIDIA, troque a primeira linha
+# por `tensorflow==2.21.0` e carregue o módulo CUDA no setup.
+tensorflow[and-cuda]==2.21.0
+keras==3.15.1
+numpy==2.2.6
+pandas==2.2.3
+
+# Execução dos notebooks no modo interativo de depuração.
+jupyterlab
+ipykernel
+
+# Testes e agregação (não exigem GPU).
+pytest
