@@ -60,7 +60,7 @@ nvidia-smi
 Em seguida, crie um ambiente virtual dentro do WSL2 e instale o TensorFlow:
 
 ```bash
-cd /mnt/d/Projects/26.2/TADI/replicating_RePO
+cd replicating_RePO
 
 python3 -m venv .venv
 source .venv/bin/activate
@@ -132,7 +132,7 @@ A extensão WSL permite que o comando `code .` abra o projeto em uma janela
 remota Linux, em vez de usar o Python do Windows.
 
 ```bash
-cd /mnt/d/Projects/26.2/TADI/replicating_RePO
+cd replicating_RePO
 source .venv/bin/activate
 code .
 ```
@@ -146,7 +146,7 @@ execute novamente o comando `ipykernel install` dentro do `.venv` e use
 Como alternativa, é possível iniciar o Jupyter manualmente no WSL2:
 
 ```bash
-cd /mnt/d/Projects/26.2/TADI/replicating_RePO
+cd replicating_RePO
 source .venv/bin/activate
 cd code
 jupyter lab
@@ -240,7 +240,7 @@ runtime antes de desconectar.
 ## Uso do Google Colab no navegador
 
 Para o procedimento baseado na interface web, consulte
-[colab_browser.md](./colab_browser.md). Os menus `Runtime` e a instalação de
+[COLAB_BROWSER.md](./COLAB_BROWSER.md). Os menus `Runtime` e a instalação de
 GPU descritos nesse documento se aplicam ao navegador, não ao fluxo conectado
 ao VS Code.
 
