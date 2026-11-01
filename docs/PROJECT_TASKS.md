@@ -16,7 +16,7 @@ nas linhas correspondentes.
   - [x] Escolher entre Linux/WSL2 com GPU, CPU local ou Colab.
   - [x] Registrar Python, TensorFlow, Keras, CUDA/cuDNN, sistema operacional e
         kernel utilizados.
-  - [ ] Confirmar que todos os membros conseguem abrir os notebooks no
+  - [x] Confirmar que todos os membros conseguem abrir os notebooks no
         ambiente escolhido.
 - [x] Validar o ambiente.
   - [x] Confirmar as versões instaladas.
@@ -48,19 +48,19 @@ Execute os notebooks normais antes dos adversariais.
     - [ ] RePO
   - [ ] RePO+
 - [ ] Salvar os resultados relevantes do teste normal.
-- [ ] Executar `code/Flow_based_RePO_Adversarial.ipynb` nos ataques do artigo usando RePO+.
+- [x] Executar `code/Flow_based_RePO_Adversarial.ipynb` nos ataques do artigo usando RePO+.
   - [x] FTP-Patator
-  - [ ] SSH-Patator
-  - [ ] Slowloris
-  - [x] Slowhttptest
-  - [ ] Hulk
-  - [ ] GoldenEye
-  - [ ] Heartbleed
-  - [ ] Infiltration
-  - [ ] Botnet
-  - [ ] PortScan
-  - [ ] DDoS
-- [ ] Salvar os resultados relevantes do teste adversarial.
+  - [x] SSH-Patator
+  - [x] DoS Slowloris
+  - [x] DoS Slowhttptest
+  - [x] DoS Hulk
+  - [x] DoS GoldenEye
+  - [x] Heartbleed
+  - [x] Infiltration
+  - [x] Botnet
+  - [x] PortScan
+  - [x] DDoS
+- [x] Salvar os resultados relevantes do teste adversarial.
 
 ### 3.2 Modelo baseado em pacotes
 
@@ -71,10 +71,10 @@ Execute os notebooks normais antes dos adversariais.
 - [ ] Executar `code/Packet_based_RePO_Adversarial.ipynb` nos ataques do artigo usando RePO+.
     - [x] FTP-Patator
   - [ ] SSH-Patator
-  - [ ] Slowloris
-  - [ ] Slowhttptest
-  - [ ] Hulk
-  - [ ] GoldenEye
+  - [ ] DoS Slowloris
+  - [ ] DoS Slowhttptest
+  - [ ] DoS Hulk
+  - [ ] DoS GoldenEye
   - [ ] Heartbleed
   - [ ] Infiltration
   - [ ] Botnet
@@ -84,11 +84,9 @@ Execute os notebooks normais antes dos adversariais.
 
 ### 3.3 Registro de reprodutibilidade
 
-- [ ] Registrar o notebook executado.
-- [ ] Registrar o kernel e o interpretador Python.
-- [ ] Registrar as versões das bibliotecas.
-- [ ] Registrar o sistema operacional e a GPU, quando aplicável.
-- [ ] Registrar a data e o commit do repositório.
+- [x] Registrar o notebook executado.
+- [x] Registrar o kernel e o interpretador Python.
+- [x] Registrar as versões das bibliotecas.
 - [ ] Preservar ou exportar as saídas necessárias para o relatório.
 
 ## 4. Análise dos resultados de referência
@@ -235,3 +233,5 @@ Os requisitos detalhados estão em
 | 27/10|  Gabriel Marques| Colab (Extension)  |  Flow-Based Adversarial | d016f65|Reproduzir avaliação: DoS Slowhttptest - 186min   |
 | 29/10|  Gabriel Marques|Local GPU|  Packet-Based Adversarial| 3e2019c|Reproduzir avaliação: FTP-Patator - 23h14min   |
 | 29/10|  Gabriel Marques|Local CPU|  Flow-Based Adversarial| 23a17ac|Reproduzir avaliação: FTP-Patator - 11min   |
+| 30/10|  Gabriel Marques|Local CPU|  Flow-Based Adversarial| 163195f|Reproduzir avaliação: SSH-Patator, Slowloris, Slowhttptest,Hulk, GoldenEye, Heartbleed, Infiltration   |
+| 31/10|  Gabriel Marques|Local CPU|  Flow-Based Adversarial| 163195f|Reproduzir avaliação:  Botnet, Portscan, DDoS  |
