@@ -16,5 +16,86 @@
     "attack_type": "FTP-Patator",
     "model_type": "flow",
     "normal_tpr": 0.4994
+  },
+  {
+    "best_threshold": 0.012988771498203279,
+    "victim_tpr": 0.003,
+    "attacker_tpr": 0.0002,
+    "total_runtime_seconds": 24.313448429107666,
+    "attack_type": "SSH-Patator",
+    "model_type": "flow",
+    "normal_tpr": 0.0014
+  },
+  {
+    "best_threshold": 0.012988771498203279,
+    "victim_tpr": 0.6094,
+    "attacker_tpr": 0.5128,
+    "total_runtime_seconds": 9304.925881624222,
+    "attack_type": "DoS slowloris",
+    "model_type": "flow",
+    "normal_tpr": 0.6842
+  },
+  {
+    "best_threshold": 0.012988771498203279,
+    "victim_tpr": 0.884,
+    "attacker_tpr": 0.7134,
+    "total_runtime_seconds": 17685.292502880096,
+    "attack_type": "DoS Hulk",
+    "model_type": "flow",
+    "normal_tpr": 0.986
+  },
+  {
+    "best_threshold": 0.012988771498203279,
+    "victim_tpr": 0.6754,
+    "attacker_tpr": 0.534,
+    "total_runtime_seconds": 17731.793644428253,
+    "attack_type": "DoS GoldenEye",
+    "model_type": "flow",
+    "normal_tpr": 0.7444
+  },
+  {
+    "best_threshold": 0.012988771498203279,
+    "victim_tpr": 1.0,
+    "attacker_tpr": 1.0,
+    "total_runtime_seconds": 57.48231911659241,
+    "attack_type": "Heartbleed",
+    "model_type": "flow",
+    "normal_tpr": 1.0
+  },
+  {
+    "best_threshold": 0.012988771498203279,
+    "victim_tpr": 0.5833333333333334,
+    "attacker_tpr": 0.4444444444444444,
+    "total_runtime_seconds": 110.93332195281982,
+    "attack_type": "Infiltration",
+    "model_type": "flow",
+    "normal_tpr": 0.6944444444444444
+  },
+  {
+    "best_threshold": 0.012988771498203279,
+    "victim_tpr": 0.02965235173824131,
+    "attacker_tpr": 0.023006134969325152,
+    "total_runtime_seconds": 284.67080450057983,
+    "attack_type": "Bot",
+    "model_type": "flow",
+    "normal_tpr": 0.03016359918200409
+  },
+  {
+    "best_threshold": 0.012988771498203279,
+    "victim_tpr": 0.1366,
+    "attacker_tpr": 0.0814,
+    "total_runtime_seconds": 2869.2967166900635,
+    "attack_type": "PortScan",
+    "model_type": "flow",
+    "normal_tpr": 0.1262
+  },
+  {
+    "best_threshold": 0.012988771498203279,
+    "victim_tpr": 0.5884,
+    "attacker_tpr": 0.5662,
+    "total_runtime_seconds": 15063.69916343689,
+    "attack_type": "DDoS",
+    "model_type": "flow",
+    "normal_tpr": 0.5772
   }
 ]
