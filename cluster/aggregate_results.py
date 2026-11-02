@@ -52,7 +52,14 @@ SUMMARY_FIELDS = [
 def iter_result_files(root: Path) -> Iterable[Path]:
     for path in sorted(root.rglob("*.json")):
         relative = path.relative_to(root)
-        if relative.parts and relative.parts[0] in {"manifests", "training", "attack-lists", "logs"}:
+        if relative.parts and relative.parts[0] in {
+            "manifests",
+            "training",
+            "attack-lists",
+            "logs",
+            "pilots",
+            "smoke",
+        }:
             continue
         if path.name.endswith("training_manifest.json"):
             continue
