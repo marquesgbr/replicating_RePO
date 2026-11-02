@@ -129,7 +129,9 @@ task_normal() {
       *) echo "[error] modo inválido: ${mode}" >&2; exit 2 ;;
     esac
   done
+  # O --export do SLURM separa variáveis por vírgula; use '+' no ambiente.
   local joined="${modes//[[:space:]]/}"
+  joined="${joined//,/\+}"
   local job_id
   job_id="$(submit_gpu_job "repo-normal-${model}" "${WALLTIME_NORMAL}" \
     "$(export_args normal "${model}" "SCORE_MODE=${joined}")")"

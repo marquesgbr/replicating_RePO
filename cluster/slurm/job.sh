@@ -79,6 +79,7 @@ case "${TASK}" in
     ;;
   normal)
     MODES="${SCORE_MODE:-repo,repo_plus}"
+    MODES="${MODES//+/,}"
     exec "${PY}" "${REPO_ROOT}/cluster/repo_runner.py" normal \
       "${COMMON_ARGS[@]}" \
       --modes "${MODES}"
