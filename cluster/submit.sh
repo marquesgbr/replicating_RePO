@@ -81,6 +81,9 @@ submit_gpu_job() {
     extra_args+=("$@")
     shift
   done
+  if [[ -n "${NODELIST:-}" ]]; then
+    extra_args+=(--nodelist "${NODELIST}")
+  fi
   sbatch --parsable \
     --job-name="${job_name}" \
     --chdir "${REPO_ROOT}" \

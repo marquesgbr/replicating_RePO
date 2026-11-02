@@ -286,8 +286,13 @@ def compute_class_rates(
         )
 
     rates: dict[str, dict[str, Any]] = {}
+    numeric_labels = np.issubdtype(label_array.dtype, np.number)
     for index, name in enumerate(label_names):
-        mask = label_array == (index if np.issubdtype(label_array.dtype, np.integer) else name)
+        # Rótulos de pacotes são carregados como float64 pelo numpy; comparar
+        # com o nome da classe nunca casaria. Use o índice para qualquer
+        # dtype numérico (int ou float).
+        target = index if numeric_labels else name
+        mask = label_array == target
         count = int(mask.sum())
         if count == 0:
             rates[name] = {"rate": None, "count": 0}

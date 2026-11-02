@@ -128,3 +128,12 @@ def test_model_fingerprint_changes_with_content(tmp_path):
     (model_dir / "saved_model.pb").write_bytes(b"second")
     second = metrics.model_fingerprint(model_dir)
     assert first["sha256"] != second["sha256"]
+
+
+def test_compute_class_rates_with_float_labels():
+    # labels.npy do dataset de pacotes é float64.
+    scores = np.array([0.9, 0.9, 0.8, 0.2])
+    labels = np.array([0.0, 1.0, 1.0, 0.0])
+    rates = metrics.compute_class_rates(scores, labels, ("Benign", "FTP-Patator"), 0.5)
+    assert rates["Benign"] == {"rate": 0.5, "count": 2}
+    assert rates["FTP-Patator"] == {"rate": 1.0, "count": 2}
