@@ -10,6 +10,15 @@
   },
   {
     "best_threshold": 0.08106673508882523,
+    "victim_tpr": 0.72028,
+    "attacker_tpr": 0.7559247397918335,
+    "total_runtime_seconds": 15861.196375608444,
+    "attack_type": "FTP-Patator",
+    "model_type": "packet",
+    "normal_tpr": 0.7559247397918335
+  },
+  {
+    "best_threshold": 0.08106673508882523,
     "victim_tpr": 0.1578,
     "attacker_tpr": 0.1976781425140112,
     "total_runtime_seconds": 6944.213263034821,
