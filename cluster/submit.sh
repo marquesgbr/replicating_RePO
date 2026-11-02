@@ -82,7 +82,8 @@ submit_gpu_job() {
     shift
   done
   if [[ -n "${NODELIST:-}" ]]; then
-    extra_args+=(--nodelist "${NODELIST}")
+    # Sem --nodes=1 o Slurm trata cada host do --nodelist como um nó pedido.
+    extra_args+=(--nodes 1 --nodelist "${NODELIST}")
   fi
   sbatch --parsable \
     --job-name="${job_name}" \
