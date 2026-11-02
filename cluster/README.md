@@ -336,6 +336,11 @@ thresholds sem repetir a avaliação.
 
 ## 14. Diagnóstico
 
+- **`Illegal instruction` ao importar TensorFlow no login**: o nó de login do
+  Apuana não tem AVX. Isso é esperado; valide TensorFlow dentro de um job.
+- **`python: No such file or directory` no job**: o venv foi criado com o
+  Python do miniforge, que só existe nos nós de login. Recrie com
+  `/usr/bin/python3.10` (`bash cluster/setup_env.sh --force-venv`).
 - **`module` não encontrado**: rode `source /etc/profile` ou use um shell de
   login; o setup avisa e tenta o `python3` do PATH.
 - **TensorFlow não vê GPU**: confira `nvidia-smi`, a partição e se o job pediu

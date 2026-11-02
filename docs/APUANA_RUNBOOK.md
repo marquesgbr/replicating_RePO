@@ -97,18 +97,17 @@ O arquivo `cluster/config.env` é ignorado pelo Git e não deve ser commitado.
 
 ## 3. Descobrir o módulo Python
 
+> **Atenção (Apuana, nov/2026):** o `miniforge3` existe **apenas nos nós de
+> login**. Um venv criado a partir dele quebra nos jobs com
+> `No such file or directory` ao chamar `python`. Use o **Python 3.10 do
+> sistema** (`/usr/bin/python3.10`), que existe em todos os nós.
+
 ```bash
-module avail 2>&1 | grep -i python
+/usr/bin/python3.10 --version   # deve ser >= 3.10
 ```
 
-Se aparecer, por exemplo, `Python/3.10`, fixe o nome exato:
-
-```bash
-export PYTHON_MODULE="Python/3.10"
-```
-
-Se não aparecer nada, o setup tenta descobrir automaticamente. Nesse caso,
-confira também se `python3 --version` é pelo menos 3.10.
+Não defina `PYTHON_MODULE` no `cluster/config.env`. O setup usa o Python do
+sistema por padrão.
 
 ## 4. Preparar o ambiente e os dados (uma vez, no login)
 
@@ -178,12 +177,18 @@ validada no smoke, dentro de um nó de compute.
 
 ## 6. Smoke test (obrigatório)
 
-A partição `debug` é interativa e tem limite de 30 minutos:
+> **Atenção:** o nó de login do Apuana é um Xeon sem AVX. `import tensorflow`
+> nele aborta com `Illegal instruction (core dumped)`. Isso **não** indica
+> problema na instalação: valide sempre dentro de um nó de computação.
+
+Em nov/2026 a partição `debug` estava inutilizável (todo job caía no
+`cluster-node9`, que falhava no launch). Use `short-simple` com nó fixo:
 
 ```bash
 cd "$HOME/Projects/replicating_RePO"
 
-srun --partition=debug --gres=gpu:1 -c 8 --mem=32G --time=00:30:00 --pty bash
+srun --partition=short-simple --nodelist=cluster-node6 \
+  --gres=gpu:1 -c 8 --mem=32G --time=00:30:00 --pty bash
 ```
 
 Já dentro do nó:
@@ -448,6 +453,10 @@ O treino não tem checkpoint; se for interrompido, reenvie o job.
 
 | Sintoma | Causa provável | Solução |
 |---|---|---|
+| `Illegal instruction (core dumped)` ao importar TensorFlow no login | CPU do nó de login sem AVX | normal; valide TensorFlow dentro de um job (`srun`) |
+| `python: No such file or directory` dentro do job | venv criado com o Python do miniforge (só existe no login) | recrie o venv com `/usr/bin/python3.10` |
+| `keras==3.15.1` não encontrado | Keras 3.13+ exige Python ≥3.11 | use `keras==3.12.4` |
+| Job falha no launch em node4/node9/node10 | nós com defeito | `NODELIST=cluster-node5,cluster-node6,cluster-node7` |
 | `module: command not found` | shell não-login ou módulos não carregados | `source /etc/profile` ou abra um shell de login |
 | `No module named tensorflow` | venv não ativado | `source "$SCRATCH/replicating-repo-venv/bin/activate"` |
 | GPU vazia em `tf.config.list_physical_devices("GPU")` | job sem GPU ou rodando no login | submeta com `--gres=gpu:1` e verifique `nvidia-smi` |
