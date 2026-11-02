@@ -70,7 +70,7 @@ Execute os notebooks normais antes dos adversariais.
 - [x] Salvar os resultados relevantes do teste normal.
 - [ ] Executar `code/Packet_based_RePO_Adversarial.ipynb` nos ataques do artigo usando RePO+.
     - [x] FTP-Patator
-  - [ ] SSH-Patator
+  - [x] SSH-Patator
   - [ ] DoS Slowloris
   - [ ] DoS Slowhttptest
   - [ ] DoS Hulk
@@ -229,9 +229,11 @@ Os requisitos detalhados estão em
 
 | Data | Pessoa | Ambiente/kernel | Notebook ou tarefa | Commit | Observações |
 | --- | --- | --- | --- | --- | --- |
-| 27/10|  Gabriel Marques| Colab (Extension)  |  Packet-Based Normal | eeb96f3 |Reproduzir avaliação   |
-| 27/10|  Gabriel Marques| Colab (Extension)  |  Flow-Based Adversarial | d016f65|Reproduzir avaliação: DoS Slowhttptest - 186min   |
+| 27/10|  Gabriel Marques| Colab GPU: T4|  Packet-Based Normal | eeb96f3 |Reproduzir avaliação   |
+| 27/10|  Gabriel Marques| Colab GPU: T4  |  Flow-Based Adversarial | d016f65|Reproduzir avaliação: DoS Slowhttptest - 186min   |
 | 29/10|  Gabriel Marques|Local GPU|  Packet-Based Adversarial| 3e2019c|Reproduzir avaliação: FTP-Patator - 23h14min   |
 | 29/10|  Gabriel Marques|Local CPU|  Flow-Based Adversarial| 23a17ac|Reproduzir avaliação: FTP-Patator - 11min   |
 | 30/10|  Gabriel Marques|Local CPU|  Flow-Based Adversarial| 163195f|Reproduzir avaliação: SSH-Patator, Slowloris, Slowhttptest,Hulk, GoldenEye, Heartbleed, Infiltration   |
 | 31/10|  Gabriel Marques|Local CPU|  Flow-Based Adversarial| 163195f|Reproduzir avaliação:  Botnet, Portscan, DDoS  |
+| 01/11|  Gabriel Marques|Colab GPU: T4|  Packet-Based Adversarial| 547518f|Reproduzir avaliação:  SSH-Patator - 1h55min  |
+| 01/11|  Gabriel Marques|Colab GPU: T4|  Packet-Based Adversarial| 3edcbf7|Reproduzir avaliação:  FTP-Patator - 3h56min  |
