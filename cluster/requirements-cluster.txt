@@ -1,5 +1,9 @@
 # Ambiente do cluster Apuana (Python >= 3.10, GPU NVIDIA).
 #
+# Cuidado: no Apuana o Python do miniforge existe apenas nos nós de login.
+# O venv precisa ser criado com /usr/bin/python3.10 para funcionar nos nós
+# de computação. Veja cluster/setup_env.sh e docs/APUANA_RUNBOOK.md.
+#
 # O extra [and-cuda] instala as bibliotecas CUDA/cuDNN via pip, que é o
 # caminho mais portável nos nós do Apuana. Se o cluster já fornecer CUDA por
 # módulo e o pip não puder baixar as wheels NVIDIA, troque a primeira linha
@@ -8,10 +12,6 @@ tensorflow[and-cuda]==2.21.0
 keras==3.15.1
 numpy==2.2.6
 pandas==2.2.3
-
-# Execução dos notebooks no modo interativo de depuração.
-jupyterlab
-ipykernel
 
 # Testes e agregação (não exigem GPU).
 pytest

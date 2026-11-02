@@ -29,40 +29,31 @@ export TF_CPP_MIN_LOG_LEVEL="${TF_CPP_MIN_LOG_LEVEL:-2}"
 export PYTHONUNBUFFERED="${PYTHONUNBUFFERED:-1}"
 
 load_python_module() {
+  # No Apuana, o miniforge existe apenas nos nós de login; um venv criado a
+  # partir dele fica quebrado nos nós de computação. Por padrão usamos o
+  # Python do sistema (3.10), disponível em todos os nós. Defina
+  # PYTHON_MODULE apenas se o cluster realmente precisar de um módulo.
+  if [[ -z "${PYTHON_MODULE:-}" ]]; then
+    if command -v python3 >/dev/null 2>&1; then
+      echo "[env] usando python3 do sistema: $(command -v python3) ($(python3 -V 2>&1))"
+      return 0
+    fi
+    echo "[error] python3 não encontrado e PYTHON_MODULE não definido" >&2
+    return 2
+  fi
+
   if ! command -v module >/dev/null 2>&1; then
     echo "[warn] comando module ausente; usando ${PYTHON_BIN:-python3} do PATH" >&2
     return 0
   fi
 
-  if [[ -n "${PYTHON_MODULE:-}" ]]; then
-    if module load "${PYTHON_MODULE}" >/dev/null 2>&1; then
-      echo "[env] module ${PYTHON_MODULE} carregado"
-      return 0
-    fi
-    echo "[error] não foi possível carregar PYTHON_MODULE=${PYTHON_MODULE}" >&2
-    echo "[hint] veja os módulos: module avail 2>&1 | grep -i python" >&2
-    return 2
+  if module load "${PYTHON_MODULE}" >/dev/null 2>&1; then
+    echo "[env] module ${PYTHON_MODULE} carregado"
+    return 0
   fi
-
-  local candidates=(Python/3.13 Python/3.12 Python/3.11 Python/3.10 Python3.13 Python3.12 Python3.11 Python3.10 python/3.13 python/3.12 python/3.11 python/3.10 python3.13 python3.12 python3.11 python3.10 miniforge3/2025.07 miniforge3)
-  local discovered
-  discovered="$(module avail 2>&1 | tr ' ()' '\n' \
-    | grep -iE '^python3?/3\.[0-9]+' | sort -V | tail -n1 || true)"
-  if [[ -n "${discovered}" ]]; then
-    candidates+=("${discovered}")
-  fi
-
-  local mod
-  for mod in "${candidates[@]}"; do
-    if module load "${mod}" >/dev/null 2>&1; then
-      echo "[env] module ${mod} carregado"
-      return 0
-    fi
-  done
-
-  echo "[warn] nenhum módulo Python carregado; usando ${PYTHON_BIN:-python3}" >&2
-  echo "[hint] módulos disponíveis: module avail 2>&1 | grep -i python" >&2
-  return 0
+  echo "[error] não foi possível carregar PYTHON_MODULE=${PYTHON_MODULE}" >&2
+  echo "[hint] veja os módulos: module avail 2>&1 | grep -i python" >&2
+  return 2
 }
 
 require_python_310() {
