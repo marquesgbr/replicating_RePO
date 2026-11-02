@@ -179,16 +179,39 @@ de otimização por pacote, não só a GPU.
 | `long-complex` | não | nó completo (≤4 GPU) | 7 dias |
 | `emergency` | não | nó completo | 1 dia |
 
+### Limites observados na prática (nov/2026)
+
+| Limite | Valor observado | Consequência |
+|---|---|---|
+| GPUs simultâneas por usuário | **2** | `CONCURRENCY=2` no máximo |
+| Memória simultânea por usuário | ~32 GB no total | use `MEM=16G` por job |
+| `--nodelist` com vários hosts | pede 1 nó por host | use `--exclude` para evitar nós ruins |
+| Nós com defeito | `cluster-node4`, `cluster-node10` | `EXCLUDE="cluster-node4,cluster-node10"` |
+| Partição `debug` | jobs falhavam no launch | smoke em `short-simple` |
+| AVX no nó de login | ausente | não importe TensorFlow no login |
+| `/opt/miniforge3` | só no login | venv com `/usr/bin/python3.10` |
+
 Defaults do `submit.sh`:
 
 - `PARTITION=short-simple`
 - `CPUS_PER_TASK=8`
-- `MEM=32G`
+- `MEM=16G`
 - `GRES=gpu:1`
 - `CONCURRENCY=2`
+- `EXCLUDE="cluster-node4,cluster-node10"`
 - `WALLTIME_ADV=1-23:00:00` (47 h; cabe nos 2 dias do `short-simple`)
-- `WALLTIME_NORMAL=02:00:00`
+- `WALLTIME_NORMAL=06:00:00`
 - `WALLTIME_TRAIN=1-00:00:00`
+
+### Custos medidos (A100 80 GB, nov/2026)
+
+| Etapa | Custo |
+|---|---|
+| Normal fluxo (2,3 M amostras, RePO+RePO+) | ~10 min |
+| Normal pacotes (2,2 M janelas, RePO+RePO+) | ~5 min |
+| Adversarial fluxo, FTP-Patator (5.000) | ~14 min |
+| Adversarial fluxo, Slowloris/Slowhttptest | ~1,5–2 h |
+| Adversarial pacotes (piloto, 81 pacotes) | ~1,0 s/pacote → ~7 h para 25.000 |
 
 Para usar A100, por exemplo:
 

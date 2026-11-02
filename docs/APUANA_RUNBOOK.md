@@ -328,18 +328,26 @@ bash cluster/submit.sh adversarial packet all
 Os pilotos já concluídos são detectados pelo `config_hash` e ignorados; não há
 custo em reenviar `all`.
 
-Estimativas:
+Estimativas medidas no Apuana (A100, nov/2026):
 
 | Modelo | Ataques | Tempo por ataque | Com 2 concorrentes |
 |---|---|---|---|
-| fluxo | 11 | ~3 h | ~17 h |
-| pacotes | 11 | ~23 h | ~6 dias |
+| fluxo | 11 | 15 min – 2 h | ~6–10 h |
+| pacotes | 11 | ~7 h | ~40 h |
+
+Limites reais observados:
+
+- **2 GPUs** simultâneas por usuário;
+- **~32 GB de memória** simultânea no total → `MEM=16G` por job;
+- `--nodelist` com vários hosts faz o Slurm pedir um nó por host; use
+  `EXCLUDE` para evitar nós ruins;
+- `cluster-node4` e `cluster-node10` estavam com defeito em nov/2026.
 
 Acompanhe o array:
 
 ```bash
 squeue -u "$USER"
-sacct -u "$USER" --format=JobID,JobName%30,State,Elapsed,MaxRSS
+ls -1 "$SCRATCH/replicating-repo-results/logs/"repo-adv-*_*.out
 ```
 
 ## 11. Se um job for interrompido
