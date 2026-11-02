@@ -58,7 +58,7 @@ export_args() {
   local task="$1"
   local model="$2"
   local extra="$3"
-  local exports="ALL,TASK=${task},MODEL=${model},RESULTS_ROOT=${RESULTS_ROOT},SEED=${SEED},MODEL_SOURCE=${MODEL_SOURCE:-pretrained},FORCE=${FORCE:-0}"
+  local exports="ALL,TASK=${task},MODEL=${model},RESULTS_ROOT=${RESULTS_ROOT},SEED=${SEED},MODEL_SOURCE=${MODEL_SOURCE:-pretrained},FORCE=${FORCE:-0},CLUSTER_DIR=${CLUSTER_DIR}"
   if [[ -n "${MODEL_DIR:-}" ]]; then
     exports+=",MODEL_DIR=${MODEL_DIR}"
   fi
@@ -83,6 +83,7 @@ submit_gpu_job() {
   done
   sbatch --parsable \
     --job-name="${job_name}" \
+    --chdir "${REPO_ROOT}" \
     --partition "${PARTITION}" \
     --gres "${GRES}" \
     --cpus-per-task "${CPUS_PER_TASK}" \
