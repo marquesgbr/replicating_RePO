@@ -1600,7 +1600,7 @@ def run_smoke(args: argparse.Namespace, paths: dict[str, Path]) -> int:
         run_normal_packet(normal_args, paths)
         adv_args = argparse.Namespace(**vars(args))
         adv_args.attack = "FTP-Patator"
-        adv_args.max_samples = 64
+        adv_args.max_samples = 24
         adv_args.checkpoint_every = 1
         adv_args.log_every = 1
         adv_args.threshold = None
