@@ -1622,7 +1622,7 @@ def add_common_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--data-root")
     parser.add_argument("--results-root")
     parser.add_argument("--seed", type=int, default=int(os.environ.get("SEED", metrics.DEFAULT_SEED)))
-    parser.add_argument("--batch-size", type=int, default=100)
+    parser.add_argument("--batch-size", type=int, default=512)
     parser.add_argument("--max-samples", type=int, default=None)
     parser.add_argument("--force", action="store_true")
 
