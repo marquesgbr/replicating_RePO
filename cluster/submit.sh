@@ -85,6 +85,8 @@ submit_gpu_job() {
     # --exclude não altera a contagem de nós (ao contrário de --nodelist).
     extra_args+=(--exclude "${EXCLUDE}")
   fi
+  local out_pattern="${OUTPUT_PATTERN:-%x-%j.out}"
+  local err_pattern="${out_pattern%.out}.err"
   sbatch --parsable \
     --job-name="${job_name}" \
     --chdir "${REPO_ROOT}" \
@@ -96,8 +98,8 @@ submit_gpu_job() {
     --requeue \
     "${extra_args[@]}" \
     --export "${exports}" \
-    --output "${RESULTS_ROOT}/logs/%x-%j.out" \
-    --error "${RESULTS_ROOT}/logs/%x-%j.err" \
+    --output "${RESULTS_ROOT}/logs/${out_pattern}" \
+    --error "${RESULTS_ROOT}/logs/${err_pattern}" \
     "${CLUSTER_DIR}/slurm/job.sh"
 }
 
@@ -176,7 +178,7 @@ PY
   if [[ -n "${MAX_SAMPLES:-}" ]]; then
     extra+=",MAX_SAMPLES=${MAX_SAMPLES}"
   fi
-  job_id="$(submit_gpu_job "${job_name}" "${WALLTIME_ADV}" \
+  job_id="$(OUTPUT_PATTERN='%x-%A_%a.out' submit_gpu_job "${job_name}" "${WALLTIME_ADV}" \
     "$(export_args adversarial "${model}" "${extra}")" \
     --array="${array_spec}")"
   echo "[submit] adversarial ${model}: array ${array_spec} -> ${job_id}"
