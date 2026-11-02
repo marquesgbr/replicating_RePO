@@ -95,7 +95,7 @@ Execute os notebooks normais antes dos adversariais.
 - [x] Validar TensorFlow e GPU em nó de computação (A100 80 GB).
 - [x] Executar smoke tests de fluxo e pacotes.
 - [x] Avaliação normal de fluxo e pacotes (RePO e RePO+).
-- [ ] Pilotos adversariais (fluxo e pacotes).
+- [x] Pilotos adversariais (fluxo: 1,16 s/amostra; pacotes: ~1,0 s/pacote).
 - [ ] Rodada adversarial completa de fluxo (11 ataques, 5.000 amostras cada).
 - [ ] Rodada adversarial completa de pacotes (11 ataques, 25.000 pacotes cada).
 - [ ] Agregar resultados e arquivar.
