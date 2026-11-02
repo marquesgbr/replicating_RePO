@@ -13,9 +13,15 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="${CLUSTER_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+if [[ -n "${CLUSTER_DIR:-}" ]]; then
+  SCRIPT_DIR="${CLUSTER_DIR}"
+  COMMON_SH="${CLUSTER_DIR}/common.sh"
+else
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  COMMON_SH="${SCRIPT_DIR}/../common.sh"
+fi
 # shellcheck source=../common.sh
-source "${SCRIPT_DIR}/../common.sh"
+source "${COMMON_SH}"
 
 load_python_module
 activate_venv
