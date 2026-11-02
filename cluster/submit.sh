@@ -172,8 +172,12 @@ PY
   if [[ "${attack}" != "all" ]]; then
     job_name+="-$(echo "${attack}" | tr ' /' '--' | tr -cd '[:alnum:]._-')"
   fi
+  local extra="ATTACK_LIST_FILE=${list_file},CHECKPOINT_EVERY=${checkpoint_every},LOG_EVERY=${log_every}"
+  if [[ -n "${MAX_SAMPLES:-}" ]]; then
+    extra+=",MAX_SAMPLES=${MAX_SAMPLES}"
+  fi
   job_id="$(submit_gpu_job "${job_name}" "${WALLTIME_ADV}" \
-    "$(export_args adversarial "${model}" "ATTACK_LIST_FILE=${list_file},CHECKPOINT_EVERY=${checkpoint_every},LOG_EVERY=${log_every}")" \
+    "$(export_args adversarial "${model}" "${extra}")" \
     --array="${array_spec}")"
   echo "[submit] adversarial ${model}: array ${array_spec} -> ${job_id}"
   echo "[list] ${list_file}"
