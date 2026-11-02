@@ -113,18 +113,23 @@ task_train() {
 task_normal() {
   local model="$1"
   local modes="${2:-repo repo_plus}"
-  modes="${modes//,/ }"
+  # Uma única execução pontua as amostras uma vez e deriva RePO e RePO+ dos
+  # mesmos erros por máscara. Dois jobs separados repetiriam todo o scoring.
+  modes="${modes// /,}"
+  modes="${modes//,,/,}"
   local mode
-  for mode in ${modes}; do
+  IFS=',' read -r -a mode_list <<< "${modes}"
+  for mode in "${mode_list[@]}"; do
     case "${mode}" in
       repo|repo_plus) ;;
       *) echo "[error] modo inválido: ${mode}" >&2; exit 2 ;;
     esac
-    local job_id
-    job_id="$(submit_gpu_job "repo-normal-${model}-${mode}" "${WALLTIME_NORMAL}" \
-      "$(export_args normal "${model}" "SCORE_MODE=${mode}")")"
-    echo "[submit] normal ${model}/${mode}: ${job_id}"
   done
+  local joined="${modes//[[:space:]]/}"
+  local job_id
+  job_id="$(submit_gpu_job "repo-normal-${model}" "${WALLTIME_NORMAL}" \
+    "$(export_args normal "${model}" "SCORE_MODE=${joined}")")"
+  echo "[submit] normal ${model} (${joined}): ${job_id}"
 }
 
 task_adversarial() {
