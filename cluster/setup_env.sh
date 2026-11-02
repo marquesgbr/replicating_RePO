@@ -94,11 +94,12 @@ if (( ! SKIP_VENV )); then
   "${PY}" -m pip install --upgrade pip
   "${PY}" -m pip install -r "${CLUSTER_DIR}/requirements-cluster.txt"
 
-  if ! python_runs; then
-    echo "[error] TensorFlow/NumPy/Pandas não importam no venv" >&2
-    exit 2
-  fi
-  "${PY}" - <<'PY'
+  # Nós de login do Apuana podem não ter AVX; as wheels oficiais do
+  # TensorFlow são compiladas com AVX e abortam com "Illegal instruction".
+  # A validação real do TensorFlow/GPU acontece no job (smoke) em um nó de
+  # computação, por isso aqui a falha é apenas um aviso.
+  if python_runs; then
+    "${PY}" - <<'PY'
 import tensorflow as tf
 import numpy as np
 import pandas as pd
@@ -106,6 +107,11 @@ import pandas as pd
 print(f"[setup] TensorFlow={tf.__version__} Keras={tf.keras.__version__}")
 print(f"[setup] NumPy={np.__version__} Pandas={pd.__version__}")
 PY
+  else
+    echo "[warn] TensorFlow não importa neste nó de login (provavelmente sem AVX)." >&2
+    echo "[warn] Isso é esperado no Apuana; a validação será feita no nó de computação." >&2
+    echo "[warn] Rode o smoke via SLURM antes de submeter os experimentos." >&2
+  fi
   "${PY}" -m pip freeze > "${RESULTS_ROOT}/env-lock.txt"
   echo "[setup] lock gravado em ${RESULTS_ROOT}/env-lock.txt"
 fi
@@ -170,8 +176,8 @@ echo "[ok] dados:   ${DATA_ROOT}"
 echo "[ok] results: ${RESULTS_ROOT}"
 echo
 echo "Próximos passos:"
-echo "  1) teste interativo (partição debug):"
-echo "     srun --partition=debug --gres=${GRES:-gpu:1} -c 8 --mem=32G --time=00:30:00 --pty bash"
+echo "  1) valide TensorFlow/GPU em um nó de computação (o login pode não ter AVX):"
+echo "     srun --partition=${PARTITION:-short-simple} --nodelist=${NODELIST:-cluster-node6} --gres=${GRES:-gpu:1} -c 8 --mem=32G --time=00:30:00 --pty bash"
 echo "     source ${VENV}/bin/activate"
 echo "     python cluster/repo_runner.py smoke --model flow"
 echo "     python cluster/repo_runner.py smoke --model packet"
