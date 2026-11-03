@@ -16,6 +16,10 @@
 - Os thresholds adversariais publicados (0,016235… no fluxo e 0,081066… nos
   pacotes) reproduziram **FPR ≈ 0,10** nos nossos dados (0,1005 e 0,0997),
   validando a calibração do artigo.
+- No cenário adversarial de fluxo, o TPR de vítima ponderado por amostras foi
+  **0,4663** (artigo: 0,4702) e **8 de 11** ataques permaneceram acima do
+  FPR = 0,10 (artigo: 9 de 11). O FTP-Patator foi o ataque mais eficaz
+  (−40,7 pontos percentuais).
 - Foram encontrados problemas de metodologia e de código que afetam a
   interpretação dos números: falta de normalização no notebook normal de
   fluxo, métrica de pacotes duplicada, comparação de rótulos com dtype
@@ -218,6 +222,7 @@ poucas amostras. O runner usa `SEED=2019` e registra o seed no manifesto.
 | RePO atinge 27,65% nos pacotes | 31,85% — acima |
 | Thresholds de FPR 0,10 calibrados | FPR 0,1005 e 0,0997 — confere |
 | RePO+ melhora sobre RePO | melhora, mas menor que no artigo |
+| Adversarial fluxo: 47,02% de detecção média | 46,63% ponderado; 8/11 acima do FPR |
 | Inferência de 17.550 fluxos/s (Titan V) | ~33.000 fluxos/s (A100) |
 | Inferência de 3.285 pacotes/s (Titan V) | ~12.000 pacotes/s (A100) |
 
@@ -230,7 +235,82 @@ do ganho é sensível ao treino, às máscaras e ao conjunto de avaliação.
 
 ### 6.1 Fluxo
 
-> Preenchido ao final do array `18701` (11 ataques, 5.000 amostras cada).
+Array `18701`, 11 ataques, 5.000 amostras por ataque (ou todas, quando o ataque
+tem menos), 2 tarefas concorrentes. Tempo de parede: ~9,7 h; soma de GPU: 11,4 h.
+
+| Ataque | n | TPR normal (FPR 0,1) | TPR vítima | Queda absoluta | Fooled | Tempo (min) |
+|---|---|---|---|---|---|---|
+| FTP-Patator | 5.000 | 0,4994 | 0,0920 | −0,4074 | 0,4984 | 13,9 |
+| SSH-Patator | 5.000 | 0,0014 | 0,0010 | −0,0004 | 0,0016 | 5,1 |
+| DoS slowloris | 5.000 | 0,6824 | 0,6202 | −0,0622 | 0,1784 | 106,6 |
+| DoS Slowhttptest | 5.000 | 0,9048 | 0,8708 | −0,0340 | 0,1694 | 151,7 |
+| DoS Hulk | 5.000 | 0,9860 | 0,9432 | −0,0428 | 0,2862 | 130,6 |
+| DoS GoldenEye | 5.000 | 0,7454 | 0,6718 | −0,0736 | 0,2244 | 130,1 |
+| Heartbleed | 11 | 1,0000 | 1,0000 | 0,0000 | 0,0000 | 0,5 |
+| Infiltration | 36 | 0,6944 | 0,6389 | −0,0555 | 0,3611 | 0,9 |
+| Bot | 1.956 | 0,0302 | 0,0261 | −0,0041 | 0,0102 | 4,1 |
+| PortScan | 5.000 | 0,1128 | 0,1174 | **+0,0046** | 0,0448 | 25,8 |
+| DDoS | 5.000 | 0,5746 | 0,5836 | **+0,0090** | 0,0286 | 112,6 |
+
+Médias (o artigo reporta 47,02%):
+
+| Forma de média | TPR vítima médio |
+|---|---|
+| Média simples sobre os 11 ataques | 0,5059 |
+| Média sobre os 9 ataques com n ≥ 100 | 0,4362 |
+| Média ponderada por amostras | **0,4663** |
+
+O valor depende de como se trata Heartbleed (11 amostras, TPR 1,0) e
+Infiltration (36 amostras, TPR 0,64). O artigo não informa se a média é
+macro (por ataque) ou micro (por amostra). Essa ambiguidade muda o número em
+até 7 pontos percentuais. A média ponderada por amostras é a que mais se
+aproxima do valor publicado (47,02%).
+
+Ataques detectados acima do FPR = 0,10 depois do ataque: **8 de 11**
+(DDoS, GoldenEye, Hulk, Slowhttptest, slowloris, Heartbleed, Infiltration,
+PortScan). O artigo reporta 9 de 11.
+
+Observações específicas:
+
+1. **FTP-Patator é o ataque mais eficaz**: o TPR cai de 0,499 para 0,092
+   (−40,7 pontos). É também o único em que quase metade das amostras
+   (49,8%) recebeu uma modificação adversarial bem-sucedida.
+2. **PortScan e DDoS "melhoraram" após o ataque** (+0,5 e +0,9 ponto). Como o
+   RePO+ é estocástico, a reavaliação com outra máscara pode aumentar o escore.
+   Isso mostra que uma única reavaliação por amostra tem ruído da ordem do
+   efeito que se quer medir nesses ataques.
+3. **A "taxa de sucesso do ataque" superestima o efeito** quando o TPR inicial
+   já é baixo. Em SSH-Patator, `1 − victim_tpr = 99,9%`, mas o TPR normal já era
+   0,14%; a queda entre as amostras originalmente detectadas é de apenas
+   ~0,04 ponto. O mesmo vale para Bot (TPR 3%).
+4. **Hulk, Slowhttptest e slowloris continuam detectados com TPR alto**
+   (0,94, 0,87 e 0,62), apesar de 17–29% das amostras terem sido modificadas
+   com sucesso. O ataque não consegue converter a modificação em evasão.
+5. **Heartbleed tem 11 amostras**: o TPR de 1,0 não tem significado estatístico
+   e deveria ser reportado com intervalo de confiança ou excluído da média.
+
+### 6.1.1 Comparação com o artigo (fluxo)
+
+| Métrica | Artigo | Nossa replicação |
+|---|---|---|
+| TPR vítima médio | 47,02% | 50,59% (macro, 11) / 43,62% (macro, 9) / **46,63% (ponderada)** |
+| Ataques acima do FPR após ataque | 9 de 11 | 8 de 11 |
+| Maior queda | não detalhada | FTP-Patator (−40,7 pp) |
+
+A média ponderada por amostras fica **0,4 ponto abaixo** do artigo, e a média
+macro fica entre 3,4 pontos abaixo e 3,6 pontos acima, dependendo do tratamento
+das classes minúsculas. A diferença é pequena frente à variabilidade entre
+ataques (de +0,9 a −40,7 pontos), o que reforça a crítica de que a média
+esconde comportamentos muito distintos.
+
+### 6.1.2 Efeito da amostragem "primeiras 5.000" no cenário adversarial
+
+O DDoS já era o caso mais sensível no cenário normal. No adversarial, o TPR
+normal medido nas primeiras 5.000 amostras é 0,5746, enquanto no conjunto
+completo é 0,3974 (seção 3.2). Ou seja, o adversarial do DDoS parte de uma
+população **mais fácil** do que a média do ataque. Comparar o TPR adversarial
+com o TPR normal do conjunto completo seria comparar populações diferentes.
+
 
 ### 6.2 Pacotes
 
@@ -266,8 +346,18 @@ do ganho é sensível ao treino, às máscaras e ao conjunto de avaliação.
 3. **Os thresholds publicados são válidos**: reproduziram FPR = 0,10, o que
    sustenta a comparação adversarial.
 4. **O procedimento de amostragem "primeiras N" é uma fragilidade
-   metodológica** com efeito grande em pelo menos um ataque (DDoS no fluxo).
-5. **Os notebooks têm erros que não aparecem nos números do artigo** (métrica
+   metodológica** com efeito grande em pelo menos um ataque (DDoS no fluxo:
+   0,397 → 0,289).
+5. **O RePO+ é estocástico e isso afeta a medição**: em DDoS e PortScan o TPR
+   "depois do ataque" ficou *maior* que o TPR antes, porque a reavaliação usa
+   outra máscara aleatória. Relatar uma única reavaliação por amostra, como
+   fazem os notebooks, confunde ruído com efeito do ataque.
+6. **"Taxa de sucesso do ataque" não é comparável entre ataques** quando o TPR
+   inicial difere: `1 − victim_tpr` inclui amostras que já não eram detectadas.
+   A queda condicional (entre as originalmente detectadas) é a métrica
+   apropriada; no FTP-Patator ela é de ~82%, mas no SSH-Patator o número
+   aparente de 99,9% esconde uma queda absoluta ínfima.
+7. **Os notebooks têm erros que não aparecem nos números do artigo** (métrica
    duplicada, normalização comentada, dtype de rótulos), o que recomenda usar
    o runner do cluster como implementação de referência para novos
    experimentos.

@@ -51,19 +51,22 @@ Execute os notebooks normais antes dos adversariais.
   - Evidência (cluster Apuana, 02/11/2026): RePO TPR médio 0,2443;
     RePO+ 0,2525 (artigo: 0,2161 e 0,2549); FPR 0,0100 nos dois;
     FPR no threshold adversarial do artigo 0,1005 (RePO) e 0,0997 (RePO+).
-- [ ] Executar `code/Flow_based_RePO_Adversarial.ipynb` nos ataques do artigo usando RePO+.
-  - [ ] FTP-Patator
-  - [ ] SSH-Patator
-  - [ ] Slowloris
+- [x] Executar `code/Flow_based_RePO_Adversarial.ipynb` nos ataques do artigo usando RePO+.
+  - [x] FTP-Patator
+  - [x] SSH-Patator
+  - [x] Slowloris
   - [x] Slowhttptest
-  - [ ] Hulk
-  - [ ] GoldenEye
-  - [ ] Heartbleed
-  - [ ] Infiltration
-  - [ ] Botnet
-  - [ ] PortScan
-  - [ ] DDoS
-- [ ] Salvar os resultados relevantes do teste adversarial.
+  - [x] Hulk
+  - [x] GoldenEye
+  - [x] Heartbleed
+  - [x] Infiltration
+  - [x] Botnet
+  - [x] PortScan
+  - [x] DDoS
+- [x] Salvar os resultados relevantes do teste adversarial.
+  - Evidência (03/11/2026): TPR de vítima ponderado 0,4663 (artigo 0,4702);
+    8 de 11 ataques acima do FPR 0,10; maior queda em FTP-Patator (−40,7 pp).
+    Ver `docs/REPLICATION_ANALYSIS.md`.
 
 ### 3.2 Modelo baseado em pacotes
 
@@ -96,7 +99,7 @@ Execute os notebooks normais antes dos adversariais.
 - [x] Executar smoke tests de fluxo e pacotes.
 - [x] Avaliação normal de fluxo e pacotes (RePO e RePO+).
 - [x] Pilotos adversariais (fluxo: 1,16 s/amostra; pacotes: ~1,0 s/pacote).
-- [ ] Rodada adversarial completa de fluxo (11 ataques, 5.000 amostras cada).
+- [x] Rodada adversarial completa de fluxo (11 ataques, 5.000 amostras cada).
 - [ ] Rodada adversarial completa de pacotes (11 ataques, 25.000 pacotes cada).
 - [ ] Agregar resultados e arquivar.
 - [ ] Atualizar o relatório com os números do cluster.
