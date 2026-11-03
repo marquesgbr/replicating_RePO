@@ -324,6 +324,11 @@ com o TPR normal do conjunto completo seria comparar populações diferentes.
 - Cada resultado JSON contém `config_hash`, impressão digital do modelo,
   hash dos arquivos de normalização, commit do Git e manifesto do ambiente.
 - Checkpoints a cada 50 amostras/pacotes permitem retomar sem perder trabalho.
+- A rodada final de pacotes usa `PACKET_GPU_LOOP=1`: o laço de 300 iterações
+  por pacote roda em `tf.while_loop` compilado (otimização do commit `449a8d3`
+  do `main`). A validação A/B em 200 pacotes do FTP-Patator, mesma GPU e seed,
+  deu resultado idêntico (`victim_tpr` 0,6350, `fooled` 3) e ganho de **2,6×**
+  (245,1 s → 94,3 s). A flag entra no `config_hash`.
 
 ## 8. Limitações desta replicação
 
@@ -335,6 +340,10 @@ com o TPR normal do conjunto completo seria comparar populações diferentes.
 4. Não comparamos com as baselines do artigo (Kitsune, DAGMM, BiGAN).
 5. O cluster tinha nós com defeito e limites de 2 GPUs por usuário, o que
    serializou parte dos experimentos.
+6. A rodada adversarial de pacotes usa o laço compilado (`PACKET_GPU_LOOP=1`),
+   que não é o caminho do notebook original. A equivalência foi verificada em
+   200 pacotes do FTP-Patator (mesmos TPR e `fooled`), mas não em todas as
+   amostras dos 11 ataques.
 
 ## 9. Conclusões
 
