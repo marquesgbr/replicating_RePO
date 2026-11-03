@@ -71,8 +71,8 @@ Execute os notebooks normais antes dos adversariais.
 - [ ] Executar `code/Packet_based_RePO_Adversarial.ipynb` nos ataques do artigo usando RePO+.
     - [x] FTP-Patator
   - [x] SSH-Patator
-  - [ ] DoS Slowloris
-  - [ ] DoS Slowhttptest
+  - [x] DoS Slowloris
+  - [x] DoS Slowhttptest
   - [ ] DoS Hulk
   - [ ] DoS GoldenEye
   - [ ] Heartbleed
@@ -237,3 +237,4 @@ Os requisitos detalhados estão em
 | 31/10|  Gabriel Marques|Local CPU|  Flow-Based Adversarial| 163195f|Reproduzir avaliação:  Botnet, Portscan, DDoS  |
 | 01/11|  Gabriel Marques|Colab GPU: T4|  Packet-Based Adversarial| 547518f|Reproduzir avaliação:  SSH-Patator - 1h55min  |
 | 01/11|  Gabriel Marques|Colab GPU: T4|  Packet-Based Adversarial| 3edcbf7|Reproduzir avaliação:  FTP-Patator - 3h56min  |
+| 02/11|  Gabriel Marques|Colab GPU: T4|  Packet-Based Adversarial| 5d688a3|Reproduzir avaliação: Slowloris, Slowhttptest  |
