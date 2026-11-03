@@ -25,5 +25,23 @@
     "attack_type": "SSH-Patator",
     "model_type": "packet",
     "normal_tpr": 0.1976781425140112
+  },
+  {
+    "best_threshold": 0.08106673508882523,
+    "victim_tpr": 0.8736,
+    "attacker_tpr": 0.8849479583666934,
+    "total_runtime_seconds": 23708.729494333267,
+    "attack_type": "Slowloris",
+    "model_type": "packet",
+    "normal_tpr": 0.8849479583666934
+  },
+  {
+    "best_threshold": 0.08106673508882523,
+    "victim_tpr": 0.9092,
+    "attacker_tpr": 0.9153322658126501,
+    "total_runtime_seconds": 24135.927427768707,
+    "attack_type": "Slowhttptest",
+    "model_type": "packet",
+    "normal_tpr": 0.9153322658126501
   }
 ]
