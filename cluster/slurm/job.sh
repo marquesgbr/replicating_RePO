@@ -112,6 +112,9 @@ case "${TASK}" in
     if [[ -n "${REAL_THRESHOLD:-}" ]]; then
       ADV_ARGS+=(--real-threshold "${REAL_THRESHOLD}")
     fi
+    if [[ "${PACKET_GPU_LOOP:-0}" == "1" && "${MODEL}" == "packet" ]]; then
+      ADV_ARGS+=(--packet-gpu-loop)
+    fi
     exec "${PY}" "${REPO_ROOT}/cluster/repo_runner.py" adversarial \
       "${COMMON_ARGS[@]}" \
       "${ADV_ARGS[@]}"

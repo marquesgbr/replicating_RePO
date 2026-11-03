@@ -178,6 +178,9 @@ PY
   if [[ -n "${MAX_SAMPLES:-}" ]]; then
     extra+=",MAX_SAMPLES=${MAX_SAMPLES}"
   fi
+  if [[ "${PACKET_GPU_LOOP:-0}" == "1" && "${model}" == "packet" ]]; then
+    extra+=",PACKET_GPU_LOOP=1"
+  fi
   job_id="$(OUTPUT_PATTERN='%x-%A_%a.out' submit_gpu_job "${job_name}" "${WALLTIME_ADV}" \
     "$(export_args adversarial "${model}" "${extra}")" \
     --array="${array_spec}")"

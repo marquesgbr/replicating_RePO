@@ -661,6 +661,7 @@ class PacketAttack:
         timesteps: int = 20,
         num_input: int = 29,
         threshold: float,
+        use_gpu_loop: bool = False,
     ) -> None:
         t = tf()
         self.model = model
@@ -669,6 +670,7 @@ class PacketAttack:
         self.timesteps = int(timesteps)
         self.num_input = int(num_input)
         self.threshold = float(threshold)
+        self.use_gpu_loop = bool(use_gpu_loop)
 
         self.alpha_delay = t.Variable(
             np.zeros((1, 1, self.num_input), dtype=np.float32), name="delay"
@@ -708,6 +710,9 @@ class PacketAttack:
         self._delay_optim = self._make_delay_optim(t)
         self._get_injected = self._make_get_injected(t)
         self._inject_optim = self._make_inject_optim(t)
+        if self.use_gpu_loop:
+            self._compiled_delay_loop = self._make_compiled_delay_loop(t)
+            self._compiled_inject_loop = self._make_compiled_inject_loop(t)
 
     def _make_test_step(self, t):
         @t.function
@@ -793,6 +798,90 @@ class PacketAttack:
 
         return inject_optim
 
+    def _make_compiled_delay_loop(self, t):
+        """Versão compilada do laço de 300 iterações de delay/split.
+
+        Equivalente a ``delay_and_split``, mas mantém todo o laço no grafo da
+        GPU (``tf.while_loop``), evitando 300 sincronizações CPU↔GPU por
+        pacote. Ver commit 449a8d3 do branch ``main``.
+        """
+
+        @t.function
+        def compiled_delay_loop(x, p_len, threshold):
+            self.alpha_delay.assign(t.zeros_like(self.alpha_delay))
+            self.alpha_split.assign(t.zeros_like(self.alpha_split))
+
+            def cond(i, fooled, adv_x):
+                return t.logical_and(i < 300, t.logical_not(fooled))
+
+            def body(i, fooled, adv_x):
+                self._delay_optim(x, p_len)
+                ax = self._get_delayed(x, p_len)
+                # O laço original arredonda apenas o último pacote (índices
+                # 1..3); os pacotes anteriores permanecem intactos.
+                last = t.concat(
+                    (ax[:, -1:, :1], t.math.round(ax[:, -1:, 1:4]), ax[:, -1:, 4:]),
+                    axis=-1,
+                )
+                ax_round = t.concat((ax[:, :-1], last), axis=1)
+                score = self._test_step(ax_round)
+                return i + 1, score < threshold, ax_round
+
+            init_ax = self._get_delayed(x, p_len)
+            _, fooled, final_adv_x = t.while_loop(
+                cond,
+                body,
+                loop_vars=[t.constant(0), t.constant(False), init_ax],
+                parallel_iterations=1,
+            )
+            return fooled, final_adv_x
+
+        return compiled_delay_loop
+
+    def _make_compiled_inject_loop(self, t):
+        """Versão compilada do laço de 300 iterações de injeção."""
+
+        @t.function
+        def compiled_inject_loop(x, mask, threshold):
+            self.alpha_inject.assign(t.zeros_like(self.alpha_inject))
+
+            def cond(i, fooled, adv_x1, adv_x2):
+                return t.logical_and(i < 300, t.logical_not(fooled))
+
+            def body(i, fooled, adv_x1, adv_x2):
+                self._inject_optim(x, mask)
+                ax1, ax2 = self._get_injected(x, mask)
+                ax1_round = t.concat(
+                    (ax1[:, :, :1], t.math.round(ax1[:, :, 1:])), axis=-1
+                )
+                ax2_round = t.concat(
+                    (ax2[:, :, :1], t.math.round(ax2[:, :, 1:])), axis=-1
+                )
+                score1 = self._test_step(ax1_round)
+                score2 = self._test_step(ax2_round)
+                return (
+                    i + 1,
+                    t.logical_and(score1 < threshold, score2 < threshold),
+                    ax1_round,
+                    ax2_round,
+                )
+
+            init_ax1, init_ax2 = self._get_injected(x, mask)
+            _, fooled, final_ax1, _ = t.while_loop(
+                cond,
+                body,
+                loop_vars=[
+                    t.constant(0),
+                    t.constant(False),
+                    init_ax1,
+                    init_ax2,
+                ],
+                parallel_iterations=1,
+            )
+            return fooled, final_ax1[0, -1]
+
+        return compiled_inject_loop
+
     def score(self, sample: np.ndarray, *, seed: int) -> float:
         t = tf()
         t.random.set_seed(int(seed))
@@ -810,6 +899,8 @@ class PacketAttack:
         return self.inject(np.copy(x))
 
     def delay_and_split(self, x: np.ndarray) -> list[np.ndarray] | None:
+        if self.use_gpu_loop:
+            return self._delay_and_split_compiled(x)
         self.alpha_delay.assign(np.zeros((1, 1, self.num_input), dtype=np.float32))
         self.alpha_split.assign(np.zeros((1,), dtype=np.float32))
         len_last = x[0, -1, 1]
@@ -841,9 +932,50 @@ class PacketAttack:
             return None
         return result
 
+    def _delay_and_split_compiled(self, x: np.ndarray) -> list[np.ndarray] | None:
+        t = tf()
+        len_last = x[0, -1, 1]
+        init_ax = self._get_delayed(x, len_last).numpy()
+        if float(self._test_step(init_ax).numpy()) < self.threshold:
+            return [init_ax]
+
+        fooled, final_adv_x = self._compiled_delay_loop(
+            x,
+            len_last,
+            t.constant(self.threshold, dtype=t.float32),
+        )
+        if not bool(fooled.numpy()):
+            return None
+
+        adv_x = final_adv_x.numpy()
+        first_part = np.copy(adv_x)
+        diff = len_last - adv_x[0, -1, 1]
+        if diff > 0:
+            adv_x[0, -1, 1] = diff + 60
+            adv_x[0, -1, 0] = 0
+            adv_x[0, -1, 3] = diff + 60 - 14
+            second_part = self.delay_and_split(adv_x)
+            if second_part is None:
+                return None
+            return [first_part, *second_part]
+        return [first_part]
+
     def inject(self, x: np.ndarray, mask_type: str = "tcp") -> Any:
-        self.alpha_inject.assign(np.zeros((1, 1, self.num_input), dtype=np.float32))
         current_mask = self.tcp_mask if mask_type == "tcp" else self.udp_mask
+        if self.use_gpu_loop:
+            t = tf()
+            fooled, fake_packet = self._compiled_inject_loop(
+                x,
+                t.constant(current_mask, dtype=t.float32),
+                t.constant(self.threshold, dtype=t.float32),
+            )
+            if bool(fooled.numpy()):
+                packet = fake_packet.numpy()
+                self.fake_packets.append(packet)
+                return ("inject", packet)
+            return None
+
+        self.alpha_inject.assign(np.zeros((1, 1, self.num_input), dtype=np.float32))
         for _ in range(300):
             self._inject_optim(x, current_mask)
             adv_x1, adv_x2 = self._get_injected(x, current_mask)
@@ -1379,6 +1511,8 @@ def run_adversarial_packet(args: argparse.Namespace, paths: dict[str, Path]) -> 
         threshold=threshold, max_samples=max_samples,
     )
     config.update({"day": day, "label": label, "timesteps": timesteps})
+    if args.model == "packet":
+        config["packet_gpu_loop"] = bool(getattr(args, "packet_gpu_loop", False))
     config_hash = metrics.config_hash(config)
 
     if _completed_result(result_path, config_hash) and not args.force:
@@ -1402,7 +1536,13 @@ def run_adversarial_packet(args: argparse.Namespace, paths: dict[str, Path]) -> 
 
     train_min, train_max = load_meta(norm_dir)
     model = load_saved_model(model_dir)
-    attack = PacketAttack(model, train_min, train_max, threshold=threshold)
+    attack = PacketAttack(
+        model,
+        train_min,
+        train_max,
+        threshold=threshold,
+        use_gpu_loop=bool(getattr(args, "packet_gpu_loop", False)),
+    )
 
     checkpoint = _load_checkpoint(checkpoint_path)
     if checkpoint is not None:
@@ -1642,6 +1782,11 @@ def build_parser() -> argparse.ArgumentParser:
     adversarial.add_argument("--real-threshold", type=float, default=None, help="threshold real do fluxo (default: paper)")
     adversarial.add_argument("--checkpoint-every", type=int, default=50)
     adversarial.add_argument("--log-every", type=int, default=50)
+    adversarial.add_argument(
+        "--packet-gpu-loop",
+        action="store_true",
+        help="compila o laço de 300 iterações do ataque de pacotes na GPU",
+    )
 
     smoke = subparsers.add_parser("smoke", help="teste rápido de dados/modelo/GPU")
     add_common_arguments(smoke)
