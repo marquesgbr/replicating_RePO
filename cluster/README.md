@@ -157,12 +157,35 @@ O script cria uma lista em
 `$RESULTS_ROOT/attack-lists/<modelo>-<timestamp>.txt` e submete um job array
 com `--array=0-N%CONCURRENCY`. Cada índice executa um ataque diferente.
 
-Estimativas na GPU usada antes (RTX 2060):
+### Loop compilado no ataque de pacotes (`PACKET_GPU_LOOP=1`)
+
+Os notebooks originais fazem 300 iterações de otimização por pacote em Python,
+sincronizando CPU↔GPU a cada passo. A branch `main` adotou um `tf.while_loop`
+compilado (`compiled_delay_loop` / `compiled_inject_loop`); o runner reproduz a
+mesma otimização atrás da flag `--packet-gpu-loop`:
+
+```bash
+FORCE=1 PACKET_GPU_LOOP=1 bash cluster/submit.sh adversarial packet all
+```
+
+Validação A/B em 200 pacotes do FTP-Patator, mesma GPU e mesma seed:
+
+| Caso | Tempo do ataque | victim_tpr | fooled |
+|---|---|---|---|
+| sem otimização | 245,1 s | 0,6350 | 3 |
+| `PACKET_GPU_LOOP=1` | **94,3 s** | 0,6350 | 3 |
+
+Ganho de **2,6×** com resultados idênticos. A flag entra no `config_hash`, então
+checkpoints antigos não são reaproveitados por engano (use `FORCE=1` para
+descartá-los).
+
+Estimativas na GPU usada antes (RTX 2060 sem o loop compilado):
 
 | Modelo | Ataques | Tempo por ataque | 2 concorrentes |
 |---|---|---|---|
 | fluxo | 11 | ~3 h | ~17 h |
-| pacotes | 11 | ~23 h | ~6 dias |
+| pacotes (loop Python) | 11 | ~23 h | ~6 dias |
+| pacotes (loop compilado) | 11 | ~9 h | ~2 dias |
 
 Em A100/L40S o tempo deve cair; o gargalo dos pacotes é o número de iterações
 de otimização por pacote, não só a GPU.
