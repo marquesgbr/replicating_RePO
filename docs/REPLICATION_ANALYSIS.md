@@ -1,8 +1,8 @@
 # Consolidação da replicação do RePO no cluster Apuana
 
 > Documento gerado durante a execução no cluster Apuana (CIn/UFPE).
-> Resultados normais completos; resultados adversariais de fluxo e pacotes
-> conforme o andamento indicado em cada seção.
+> Avaliações normais e rodadas adversariais completas, executadas no cluster
+> Apuana (CIn/UFPE).
 
 ## 1. Resumo executivo
 
@@ -20,6 +20,13 @@
   **0,4663** (artigo: 0,4702) e **8 de 11** ataques permaneceram acima do
   FPR = 0,10 (artigo: 9 de 11). O FTP-Patator foi o ataque mais eficaz
   (−40,7 pontos percentuais).
+- No cenário adversarial de pacotes, foram avaliadas **259.890 amostras em 11
+  ataques**. O TPR de vítima ponderado foi **0,5995** e o macro **0,6020**,
+  ante **0,6207** no artigo (diferenças de −2,12 e −1,87 p.p.,
+  respectivamente); o TPR vítima ficou acima de 0,10 em **10 de 11** ataques.
+- O laço de ataque de pacotes compilado reduziu o tempo no teste A/B de 200
+  pacotes de **245,1 s para 94,3 s (2,6×)**, sem diferença nas métricas
+  observadas (`victim_tpr` 0,6350; `fooled` 3 nos dois modos).
 - Foram encontrados problemas de metodologia e de código que afetam a
   interpretação dos números: falta de normalização no notebook normal de
   fluxo, métrica de pacotes duplicada, comparação de rótulos com dtype
@@ -314,7 +321,67 @@ com o TPR normal do conjunto completo seria comparar populações diferentes.
 
 ### 6.2 Pacotes
 
-> Preenchido após o array de pacotes (11 ataques, 25.000 pacotes cada).
+O array `18836` concluiu os 11 ataques em 5/11/2026 (horário local de Recife).
+Cada ataque usou o prefixo de até 25.000 pacotes, seguindo o protocolo da
+reprodução; o arquivo do Botnet contém 9.890 amostras disponíveis. No total,
+foram avaliadas **259.890 amostras**. A tabela apresenta o TPR normal no mesmo
+conjunto, o TPR após o ataque e a queda condicional entre as amostras que eram
+detectadas antes do ataque. `1 − TPR vítima` não deve ser interpretado
+isoladamente como taxa de sucesso, pois inclui falsos negativos preexistentes.
+
+| Ataque | n | TPR normal | TPR vítima | Δ TPR (p.p.) | Queda condicional | Tempo (h) |
+|---|---:|---:|---:|---:|---:|---:|
+| Botnet | 9.890 | 0,6653 | 0,6438 | −2,16 | 3,24% | 9,02 |
+| DDoS | 25.000 | 0,6542 | 0,6003 | −5,39 | 8,24% | 23,05 |
+| FTP-Patator | 25.000 | 0,7451 | 0,7157 | −2,94 | 3,95% | 3,63 |
+| GoldenEye | 25.000 | 0,5785 | 0,5435 | −3,50 | 6,05% | 24,88 |
+| Heartbleed | 25.000 | 0,0261 | 0,0001 | −2,60 | 99,54% | 0,30 |
+| Hulk | 25.000 | 0,9832 | 0,9719 | −1,13 | 1,15% | 5,26 |
+| Infiltration | 25.000 | 0,2360 | 0,2354 | −0,06 | 0,27% | 9,45 |
+| PortScan | 25.000 | 0,9913 | 0,9852 | −0,60 | 0,61% | 21,29 |
+| SSH-Patator | 25.000 | 0,1730 | 0,1436 | −2,94 | 17,00% | 0,90 |
+| Slowhttptest | 25.000 | 0,9149 | 0,9096 | −0,54 | 0,59% | 5,75 |
+| Slowloris | 25.000 | 0,8822 | 0,8725 | −0,97 | 1,10% | 5,71 |
+
+#### Comparação com o artigo
+
+O artigo reporta TPR adversarial de pacotes de **0,6207 (62,07%)**. Como não
+especifica claramente a regra de agregação entre ataques, reportamos as três
+formas de média:
+
+| Agregação do TPR vítima | Replicação | Artigo | Diferença |
+|---|---:|---:|---:|
+| Macro dos 11 ataques | 0,6020 (60,20%) | 0,6207 (62,07%) | −1,87 p.p. |
+| Macro, ataques com n ≥ 100 | 0,6020 (60,20%) | 0,6207 (62,07%) | −1,87 p.p. |
+| Ponderada por amostras | 0,5995 (59,95%) | 0,6207 (62,07%) | −2,12 p.p. |
+
+Todos os ataques têm pelo menos 9.890 amostras, portanto o filtro n ≥ 100 não
+altera a média macro. A média ponderada fica um pouco abaixo da macro devido à
+ponderação pelo tamanho dos ataques; o Botnet tem menos dados que os demais.
+Dez ataques tiveram TPR vítima acima de 0,10. Heartbleed é a única exceção,
+mas já tinha TPR normal de apenas 0,0261: a queda condicional de
+99,54% não significa que o ataque tornou indetectável uma população que antes
+era bem reconhecida. As maiores quedas absolutas foram em DDoS (5,39 p.p.),
+GoldenEye (3,50 p.p.) e FTP-/SSH-Patator (2,94 p.p. cada). Em Infiltration, a
+queda observada foi de apenas 0,06 p.p.
+
+O tempo somado reportado pelos jobs foi de aproximadamente **109,2 horas de
+GPU**; esse total é tempo de execução acumulado, não tempo de parede, pois os
+jobs rodaram em paralelo e em GPUs diferentes.
+
+#### Efeito da otimização do laço de ataque
+
+A rodada completa usou `PACKET_GPU_LOOP=1`, que executa as 300 iterações por
+pacote dentro de `tf.while_loop` compilado, reduzindo as sincronizações entre
+Python e GPU. No teste A/B controlado de 200 pacotes do FTP-Patator, com a
+mesma GPU e seed, o tempo caiu de **245,1 s para 94,3 s**: economia de 150,8 s
+(61,5%) e aceleração de **2,6×**. `victim_tpr` permaneceu em 0,6350 e `fooled`
+em 3 nos dois modos.
+
+Esse ganho foi medido no teste A/B, não por uma repetição de todo o array sem
+otimização. Portanto, não atribuímos um fator de aceleração de 2,6× ao tempo
+total da rodada. A execução final distribuiu ataques por RTX 3090 e A100; a
+variação de GPU e do custo por ataque também afeta os tempos da tabela.
 
 ## 7. Reprodutibilidade
 
@@ -343,7 +410,8 @@ com o TPR normal do conjunto completo seria comparar populações diferentes.
 6. A rodada adversarial de pacotes usa o laço compilado (`PACKET_GPU_LOOP=1`),
    que não é o caminho do notebook original. A equivalência foi verificada em
    200 pacotes do FTP-Patator (mesmos TPR e `fooled`), mas não em todas as
-   amostras dos 11 ataques.
+   amostras dos 11 ataques. O ganho de 2,6× é do microbenchmark; não foi feita
+   uma rodada integral de controle sem a otimização.
 
 ## 9. Conclusões
 
@@ -370,3 +438,10 @@ com o TPR normal do conjunto completo seria comparar populações diferentes.
    duplicada, normalização comentada, dtype de rótulos), o que recomenda usar
    o runner do cluster como implementação de referência para novos
    experimentos.
+8. **A reprodução adversarial de pacotes ficou próxima, mas abaixo do artigo**:
+   a média macro foi 60,20% e a ponderada 59,95%, contra 62,07%. A conclusão
+   varia ligeiramente conforme a agregação, que o artigo não deixa explícita.
+9. **A otimização compilada tornou a avaliação mais eficiente sem alterar as
+   métricas observadas no teste A/B**: 2,6× em 200 pacotes, com o mesmo TPR
+   vítima e o mesmo número de amostras `fooled`. Esse resultado não substitui
+   uma comparação integral de ponta a ponta.

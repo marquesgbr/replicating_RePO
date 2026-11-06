@@ -100,9 +100,15 @@ Execute os notebooks normais antes dos adversariais.
 - [x] Avaliação normal de fluxo e pacotes (RePO e RePO+).
 - [x] Pilotos adversariais (fluxo: 1,16 s/amostra; pacotes: ~1,0 s/pacote).
 - [x] Rodada adversarial completa de fluxo (11 ataques, 5.000 amostras cada).
-- [ ] Rodada adversarial completa de pacotes (11 ataques, 25.000 pacotes cada).
-- [ ] Agregar resultados e arquivar.
-- [ ] Atualizar o relatório com os números do cluster.
+- [x] Rodada adversarial completa de pacotes (11 ataques, até 25.000 pacotes
+      por ataque; Botnet contém 9.890 amostras disponíveis). Array SLURM
+      `18836`, concluído em 05/11/2026 (horário de Recife), com 11/11 JSONs
+      completos.
+- [x] Agregar resultados e arquivar. 259.890 amostras; TPR vítima macro
+      0,6020 e ponderado 0,5995. Ver `docs/REPLICATION_ANALYSIS.md`, seção 6.2.
+- [x] Atualizar o relatório com os números do cluster, a comparação com o
+      artigo (0,6207) e a medição A/B da otimização compilada (2,6× em 200
+      pacotes, métricas iguais).
 
 ### 3.3 Registro de reprodutibilidade
 
