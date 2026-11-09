@@ -219,7 +219,13 @@ class Chunk:
 
 @dataclass(frozen=True)
 class DatasetInfo:
-    """Summary of a validated dataset pair."""
+    """Summary of a validated dataset pair.
+
+    ``constant_features`` holds the indices of the features that are constant
+    in the training split (``train_max == train_min``).  The normalization of
+    those features divides by ``1e-6`` only, so their scaled values explode;
+    the indices are reported so the validation output can make them visible.
+    """
 
     train_sha256: str
     test_sha256: str
@@ -228,6 +234,7 @@ class DatasetInfo:
     test_valid_rows: int
     test_dropped_invalid: int
     class_counts: dict[str, int]
+    constant_features: tuple[int, ...] = ()
 
 
 def canonical_label(value: object) -> str:
@@ -326,7 +333,12 @@ def load_metadata(meta_dir: Path) -> tuple[np.ndarray, np.ndarray]:
 def constant_feature_indices(
     train_min: np.ndarray, train_max: np.ndarray
 ) -> list[int]:
-    """Indices of the features that are constant in the training split."""
+    """Indices of the features that are constant in the training split.
+
+    ``validate_dataset`` reports them in ``DatasetInfo.constant_features`` so
+    the validation output can make them visible (the normalization of those
+    features divides by the ``1e-6`` epsilon only).
+    """
     train_min = np.asarray(train_min).ravel()
     train_max = np.asarray(train_max).ravel()
     return [int(index) for index in np.flatnonzero(train_max == train_min)]
@@ -468,6 +480,29 @@ def _scan_csv(
     return rows, valid_rows, dict(sorted(counts.items()))
 
 
+def _apply_reservoir_draws(
+    reservoir_x: np.ndarray,
+    reservoir_idx: np.ndarray,
+    draws: np.ndarray,
+    rows: np.ndarray,
+    indices: np.ndarray,
+) -> None:
+    """Apply the Algorithm R replacements, keeping the last draw per slot.
+
+    ``draws[j]`` is the reservoir slot chosen by the ``j``-th candidate.  When
+    two candidates choose the same slot the later one wins, which is the
+    sequential behaviour of the algorithm.  The last draw of every slot is
+    selected explicitly (reverse + ``np.unique``) instead of relying on the
+    order of repeated indices in NumPy advanced assignment, which is not
+    documented and therefore must not be part of the correctness argument.
+    """
+    if len(draws) == 0:
+        return
+    slots, first_positions = np.unique(draws[::-1], return_index=True)
+    reservoir_x[slots] = rows[::-1][first_positions]
+    reservoir_idx[slots] = indices[::-1][first_positions]
+
+
 def select_attack_samples(
     csv_path: Path,
     attack: str,
@@ -538,13 +573,17 @@ def select_attack_samples(
 
         if max_samples > 0 and len(rows) > 0:
             # Algorithm R: the i-th item replaces a random slot with
-            # probability k/i.  Duplicated draws keep the last item, which is
-            # exactly the sequential behaviour of the algorithm.
+            # probability k/i.
             draws = rng.integers(0, ranks)
             keep = draws < max_samples
             if keep.any():
-                reservoir_x[draws[keep]] = rows[keep]
-                reservoir_idx[draws[keep]] = indices[keep]
+                _apply_reservoir_draws(
+                    reservoir_x,
+                    reservoir_idx,
+                    draws[keep],
+                    rows[keep],
+                    indices[keep],
+                )
 
     if mode == "first":
         selected_x, selected_idx = prefix_x, prefix_idx
@@ -567,6 +606,10 @@ def validate_dataset(
     * the training CSV contains ``BENIGN`` rows only;
     * the test CSV contains ``BENIGN`` and the nine attack classes;
     * labels outside the expected set abort the validation.
+
+    The summary also reports the features that are constant in the training
+    split (``constant_features``), because their normalization divides by the
+    ``1e-6`` epsilon only.
     """
     train_csv = Path(train_csv)
     test_csv = Path(test_csv)
@@ -578,7 +621,7 @@ def validate_dataset(
 
     validate_header(read_header(train_csv))
     validate_header(read_header(test_csv))
-    load_metadata(meta_dir)
+    train_min, train_max = load_metadata(meta_dir)
 
     train_rows, _train_valid, train_counts = _scan_csv(train_csv)
     if BENIGN_LABEL not in train_counts:
@@ -590,9 +633,13 @@ def validate_dataset(
         )
 
     test_rows, test_valid_rows, class_counts = _scan_csv(test_csv)
-    missing = [label for label in ATTACK_LABELS if label not in class_counts]
+    missing = [
+        label
+        for label in (BENIGN_LABEL,) + ATTACK_LABELS
+        if label not in class_counts
+    ]
     if missing:
-        raise ValueError(f"{test_csv} is missing expected attack classes: {missing}")
+        raise ValueError(f"{test_csv} is missing expected classes: {missing}")
 
     return DatasetInfo(
         train_sha256=sha256_file(train_csv),
@@ -602,4 +649,5 @@ def validate_dataset(
         test_valid_rows=test_valid_rows,
         test_dropped_invalid=test_rows - test_valid_rows,
         class_counts=class_counts,
+        constant_features=tuple(constant_feature_indices(train_min, train_max)),
     )

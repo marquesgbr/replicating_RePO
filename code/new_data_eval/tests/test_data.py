@@ -216,6 +216,74 @@ def test_select_attack_samples_is_case_insensitive(synthetic_project):
     assert x.shape == (2, N_FEATURES)
 
 
+def test_select_attack_samples_is_chunk_size_invariant(synthetic_project):
+    small, n_small = select_attack_samples(
+        synthetic_project.test_csv, "ddos", max_samples=2, mode="random",
+        seed=2019, chunksize=7,
+    )
+    large, n_large = select_attack_samples(
+        synthetic_project.test_csv, "ddos", max_samples=2, mode="random",
+        seed=2019, chunksize=64,
+    )
+    assert n_small == n_large == 3
+    np.testing.assert_allclose(small, large)
+
+
+def test_select_attack_samples_changes_with_the_seed(synthetic_project):
+    first, _ = select_attack_samples(
+        synthetic_project.test_csv, "ddos", max_samples=2, mode="random", seed=2019
+    )
+    second, _ = select_attack_samples(
+        synthetic_project.test_csv, "ddos", max_samples=2, mode="random", seed=7
+    )
+    assert not np.array_equal(first, second)
+
+
+def test_select_attack_samples_random_mode_is_not_the_prefix(
+    synthetic_frame, tmp_path
+):
+    labels = ["ddos"] * 40 + ["xss"] * 10
+    csv_path = tmp_path / "single_class.csv"
+    synthetic_frame(labels, seed=5).to_csv(csv_path, index=False)
+
+    random_a, available = select_attack_samples(
+        csv_path, "ddos", max_samples=5, mode="random", seed=2019
+    )
+    random_b, _ = select_attack_samples(
+        csv_path, "ddos", max_samples=5, mode="random", seed=2020
+    )
+    prefix, _ = select_attack_samples(
+        csv_path, "ddos", max_samples=5, mode="first", seed=2019
+    )
+
+    assert available == 40
+    assert random_a.shape == (5, N_FEATURES)
+    # The random mode is neither the prefix nor a function of the chunk size.
+    assert not np.array_equal(random_a, prefix)
+    assert not np.array_equal(random_a, random_b)
+    chunked, _ = select_attack_samples(
+        csv_path, "ddos", max_samples=5, mode="random", seed=2019, chunksize=7
+    )
+    np.testing.assert_allclose(random_a, chunked)
+
+
+def test_select_attack_samples_keeps_the_last_draw_per_slot(
+    synthetic_frame, tmp_path
+):
+    """The reservoir must not depend on NumPy's repeated-index assignment."""
+    labels = ["ddos"] * 40
+    csv_path = tmp_path / "single_class.csv"
+    synthetic_frame(labels, seed=5).to_csv(csv_path, index=False)
+
+    selected, _ = select_attack_samples(
+        csv_path, "ddos", max_samples=5, mode="random", seed=2019, chunksize=7
+    )
+    repeated, _ = select_attack_samples(
+        csv_path, "ddos", max_samples=5, mode="random", seed=2019, chunksize=64
+    )
+    np.testing.assert_allclose(selected, repeated)
+
+
 def test_select_attack_samples_returns_every_row_when_not_truncated(synthetic_project):
     x, available = select_attack_samples(
         synthetic_project.test_csv, "ddos", max_samples=100, mode="random", seed=2019
@@ -280,6 +348,51 @@ def test_validate_dataset_rejects_a_missing_attack_class(synthetic_project):
 
     with pytest.raises(ValueError, match=ATTACK_LABELS[-1]):
         validate_dataset(synthetic_project.train_csv, reduced, synthetic_project.meta_dir)
+
+
+def test_validate_dataset_rejects_a_test_csv_without_benign(synthetic_project):
+    frame = pd.read_csv(synthetic_project.test_csv)
+    frame = frame[frame["Label"] != "BENIGN"]
+    without_benign = synthetic_project.data_dir / "without_benign.csv"
+    frame.to_csv(without_benign, index=False)
+
+    with pytest.raises(ValueError, match="BENIGN"):
+        validate_dataset(
+            synthetic_project.train_csv, without_benign, synthetic_project.meta_dir
+        )
+
+
+def test_validate_dataset_reports_constant_features(synthetic_project):
+    train_min = np.zeros(77, dtype=np.float32)
+    train_max = np.full(77, 10.0, dtype=np.float32)
+    train_min[3] = 5.0
+    train_max[3] = 5.0
+    np.save(synthetic_project.meta_dir / "train_min.npy", train_min)
+    np.save(synthetic_project.meta_dir / "train_max.npy", train_max)
+
+    info = validate_dataset(
+        synthetic_project.train_csv,
+        synthetic_project.test_csv,
+        synthetic_project.meta_dir,
+    )
+    assert info.constant_features == (3,)
+
+
+def test_validate_dataset_reports_no_constant_features_by_default(synthetic_project):
+    info = validate_dataset(
+        synthetic_project.train_csv,
+        synthetic_project.test_csv,
+        synthetic_project.meta_dir,
+    )
+    assert info.constant_features == ()
+
+
+def test_constant_feature_indices_lists_the_constant_features():
+    from new_data_eval.data import constant_feature_indices
+
+    train_min = np.zeros(4, dtype=np.float32)
+    train_max = np.array([1.0, 0.0, 3.0, 2.0], dtype=np.float32)
+    assert constant_feature_indices(train_min, train_max) == [1]
 
 
 def test_validate_dataset_rejects_a_wrong_header(synthetic_project):

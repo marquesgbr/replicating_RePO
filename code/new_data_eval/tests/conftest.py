@@ -103,6 +103,12 @@ def meta():
 
 
 @pytest.fixture
+def synthetic_frame():
+    """Factory building canonical frames (``labels``, ``seed``, ``invalid``)."""
+    return _synthetic_frame
+
+
+@pytest.fixture
 def synthetic_project(tmp_path):
     """A self contained project with synthetic CSVs, metadata and a model.
 
