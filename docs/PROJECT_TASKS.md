@@ -44,30 +44,39 @@ Execute os notebooks normais antes dos adversariais.
 
 ### 3.1 Modelo baseado em fluxos
 
-- [ ] Executar `code/Flow_based_RePO_Normal_Test.ipynb`.
-    - [ ] RePO
-  - [ ] RePO+
-- [ ] Salvar os resultados relevantes do teste normal.
+- [x] Executar `code/Flow_based_RePO_Normal_Test.ipynb`.
+    - [x] RePO
+  - [x] RePO+
+- [x] Salvar os resultados relevantes do teste normal.
+  - Evidência (cluster Apuana, 02/11/2026): RePO TPR médio 0,2443;
+    RePO+ 0,2525 (artigo: 0,2161 e 0,2549); FPR 0,0100 nos dois;
+    FPR no threshold adversarial do artigo 0,1005 (RePO) e 0,0997 (RePO+).
 - [x] Executar `code/Flow_based_RePO_Adversarial.ipynb` nos ataques do artigo usando RePO+.
   - [x] FTP-Patator
   - [x] SSH-Patator
-  - [x] DoS Slowloris
-  - [x] DoS Slowhttptest
-  - [x] DoS Hulk
-  - [x] DoS GoldenEye
+  - [x] Slowloris
+  - [x] Slowhttptest
+  - [x] Hulk
+  - [x] GoldenEye
   - [x] Heartbleed
   - [x] Infiltration
   - [x] Botnet
   - [x] PortScan
   - [x] DDoS
 - [x] Salvar os resultados relevantes do teste adversarial.
+  - Evidência (03/11/2026): TPR de vítima ponderado 0,4663 (artigo 0,4702);
+    8 de 11 ataques acima do FPR 0,10; maior queda em FTP-Patator (−40,7 pp).
+    Ver `docs/REPLICATION_ANALYSIS.md`.
 
 ### 3.2 Modelo baseado em pacotes
 
 - [x] Executar `code/Packet_based_RePO_Normal_Test.ipynb`.
-  - [ ] RePO
+  - [x] RePO
   - [x] RePO+
 - [x] Salvar os resultados relevantes do teste normal.
+  - Evidência (cluster Apuana, 02/11/2026): RePO TPR médio 0,3185;
+    RePO+ 0,3472 (artigo: 0,2765 e 0,3477); FPR 0,0100 nos dois;
+    FPR no threshold adversarial do artigo 0,0997 (RePO+).
 - [ ] Executar `code/Packet_based_RePO_Adversarial.ipynb` nos ataques do artigo usando RePO+.
     - [x] FTP-Patator
   - [x] SSH-Patator
@@ -81,6 +90,25 @@ Execute os notebooks normais antes dos adversariais.
   - [ ] PortScan
   - [ ] DDoS
 - [ ] Salvar os resultados relevantes do teste adversarial.
+
+### 3.3 Execução no cluster Apuana
+
+- [x] Preparar ambiente no cluster (Python 3.10, TensorFlow 2.21, Keras 3.12.4).
+- [x] Extrair dados e criar symlinks.
+- [x] Validar TensorFlow e GPU em nó de computação (A100 80 GB).
+- [x] Executar smoke tests de fluxo e pacotes.
+- [x] Avaliação normal de fluxo e pacotes (RePO e RePO+).
+- [x] Pilotos adversariais (fluxo: 1,16 s/amostra; pacotes: ~1,0 s/pacote).
+- [x] Rodada adversarial completa de fluxo (11 ataques, 5.000 amostras cada).
+- [x] Rodada adversarial completa de pacotes (11 ataques, até 25.000 pacotes
+      por ataque; Botnet contém 9.890 amostras disponíveis). Array SLURM
+      `18836`, concluído em 05/11/2026 (horário de Recife), com 11/11 JSONs
+      completos.
+- [x] Agregar resultados e arquivar. 259.890 amostras; TPR vítima macro
+      0,6020 e ponderado 0,5995. Ver `docs/REPLICATION_ANALYSIS.md`, seção 6.2.
+- [x] Atualizar o relatório com os números do cluster, a comparação com o
+      artigo (0,6207) e a medição A/B da otimização compilada (2,6× em 200
+      pacotes, métricas iguais).
 
 ### 3.3 Registro de reprodutibilidade
 
