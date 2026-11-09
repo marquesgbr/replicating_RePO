@@ -154,6 +154,51 @@ require_packet_data() {
   fi
 }
 
+new_data_model_dir_for() {
+  local source="${1:-${MODEL_SOURCE}}"
+  if [[ -n "${MODEL_DIR:-}" ]]; then
+    printf '%s\n' "${MODEL_DIR}"
+    return 0
+  fi
+  if [[ "${source}" == "retrained" ]]; then
+    printf '%s\n' "${REPO_ROOT}/models/retrained/new_data_model"
+  else
+    printf '%s\n' "${REPO_ROOT}/models/new_data_model"
+  fi
+}
+
+new_data_results_root() {
+  printf '%s\n' "${RESULTS_ROOT}/new_data"
+}
+
+require_new_data() {
+  local source="${1:-${MODEL_SOURCE}}"
+  local missing=0
+  local file
+  for file in \
+    "${REPO_ROOT}/data/new_data/new_train.csv" \
+    "${REPO_ROOT}/data/new_data/new_test.csv" \
+    "${REPO_ROOT}/data/new_data/x_train_meta/train_min.npy" \
+    "${REPO_ROOT}/data/new_data/x_train_meta/train_max.npy"; do
+    if [[ ! -s "${file}" ]]; then
+      echo "[error] arquivo ausente ou vazio: ${file}" >&2
+      missing=1
+    fi
+  done
+
+  local model_dir
+  model_dir="$(new_data_model_dir_for "${source}")"
+  if [[ ! -f "${model_dir}/saved_model.pb" ]]; then
+    echo "[error] SavedModel ausente: ${model_dir}/saved_model.pb" >&2
+    missing=1
+  fi
+
+  if (( missing )); then
+    echo "[hint] rode bash cluster/setup_env.sh (ou use --skip-new-data se só precisa de fluxo/pacotes)" >&2
+    return 2
+  fi
+}
+
 print_runtime_env() {
   echo "[env] repo=${REPO_ROOT}"
   echo "[env] host=$(hostname) user=${USER:-$(id -un)}"
@@ -171,3 +216,4 @@ print_runtime_env() {
 }
 
 mkdir -p "${RESULTS_ROOT}/logs" "${RESULTS_ROOT}/manifests" "${RESULTS_ROOT}/attack-lists"
+mkdir -p "$(new_data_results_root)/logs" "$(new_data_results_root)/attack-lists"

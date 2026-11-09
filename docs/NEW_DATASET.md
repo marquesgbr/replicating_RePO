@@ -6,9 +6,10 @@ RePO/RePO+ fora dos dados do artigo de referência. A fonte canônica é o ZIP
 `data/new_data/preprocess_new_data.py` é legado: ele não reproduz o ZIP e não
 é necessário para executar a avaliação.
 
-> **Escopo:** a implementação e os comandos vivem em `code/new_data_eval/`.
-> Nada deste fluxo altera os resultados de fluxo/pacotes do artigo nem usa
-> `cluster/`.
+> **Escopo:** a implementação e os comandos locais vivem em
+> `code/new_data_eval/`. A integração com o cluster Apuana fica em `cluster/`
+> (`submit.sh new-data ...`) e no `docs/APUANA_RUNBOOK.md`. Nada deste fluxo
+> altera os resultados ou notebooks de fluxo/pacotes do artigo.
 
 ## Fonte e citação
 
@@ -326,6 +327,25 @@ de smoke.
 O treino grava `training_manifest.json` no diretório de saída com o hash
 SHA-256 do CSV, seed, versões de Python/NumPy/pandas/TensorFlow/Keras, número
 de epochs, batch size, loss final e shape da matriz de treino.
+
+## Cluster Apuana
+
+A branch `feat/apuana-cluster` expõe o novo dataset sem alterar o runner de
+fluxo/pacotes:
+
+```bash
+bash cluster/setup_env.sh                 # extrai em $DATA_ROOT/new_data
+SMOKE=1 bash cluster/submit.sh new-data smoke ddos
+bash cluster/submit.sh new-data normal
+bash cluster/submit.sh new-data adversarial all primary
+bash cluster/submit.sh new-data export
+```
+
+O normal completo precisa terminar antes do adversarial; o job adversarial
+falha se `$RESULTS_ROOT/new_data/normal/repo_plus.json` não existir. As
+sensibilidades usam `sensitivity_first_n` e `sensitivity_paper_0.8`. O
+passo a passo detalhado está em `docs/APUANA_RUNBOOK.md` e
+`cluster/README.md`, seção 16.
 
 ## Limitações
 

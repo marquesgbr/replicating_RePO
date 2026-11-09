@@ -11,6 +11,7 @@
 # Uso:
 #   bash cluster/setup_env.sh
 #   bash cluster/setup_env.sh --skip-data
+#   bash cluster/setup_env.sh --skip-new-data
 #   bash cluster/setup_env.sh --force
 
 set -euo pipefail
@@ -21,16 +22,20 @@ source "${CLUSTER_DIR}/common.sh"
 
 SKIP_DATA=0
 SKIP_VENV=0
+SKIP_NEW_DATA=0
 FORCE=0
 FORCE_DATA=0
 FORCE_VENV=0
+FORCE_NEW_DATA=0
 while (($#)); do
   case "$1" in
     --skip-data) SKIP_DATA=1 ;;
     --skip-venv) SKIP_VENV=1 ;;
+    --skip-new-data) SKIP_NEW_DATA=1 ;;
     --force) FORCE=1 ;;
     --force-data) FORCE_DATA=1 ;;
     --force-venv) FORCE_VENV=1 ;;
+    --force-new-data) FORCE_NEW_DATA=1 ;;
     -h|--help)
       sed -n '2,18p' "$0"
       exit 0
@@ -160,14 +165,48 @@ if (( ! SKIP_DATA )); then
   done
 fi
 
+if (( ! SKIP_NEW_DATA )); then
+  NEW_DATA_DIR="${DATA_ROOT}/new_data"
+  mkdir -p "${NEW_DATA_DIR}"
+
+  if (( FORCE || FORCE_DATA || FORCE_NEW_DATA )) \
+     || [[ ! -s "${NEW_DATA_DIR}/new_train.csv" ]]; then
+    echo "[setup] extraindo novo dataset para ${NEW_DATA_DIR}"
+    OUTPUT_DIR="${NEW_DATA_DIR}" \
+    ZIP_PATH="${REPO_ROOT}/data/new_data/New-dataset-split-clean.zip" \
+      bash "${REPO_ROOT}/extract_new_data.sh"
+  else
+    echo "[setup] novo dataset já extraído: ${NEW_DATA_DIR}"
+  fi
+
+  for name in new_train.csv new_test.csv; do
+    source_file="${NEW_DATA_DIR}/${name}"
+    destination="${REPO_ROOT}/data/new_data/${name}"
+    if [[ -L "${destination}" || ! -e "${destination}" ]]; then
+      ln -sfn "${source_file}" "${destination}"
+    else
+      echo "[warn] mantendo arquivo existente: ${destination}" >&2
+    fi
+  done
+fi
+
 # Preflight de dados e modelos pré-treinados.
 require_flow_data
 require_packet_data
 require_pretrained_models flow pretrained
 require_pretrained_models packet pretrained
 
+if (( ! SKIP_NEW_DATA )); then
+  require_new_data "${MODEL_SOURCE}"
+else
+  echo "[warn] novo dataset ignorado (--skip-new-data)" >&2
+fi
+
 echo "[setup] amostras de dados:"
 du -sh "${DATA_ROOT}/flow_based" "${DATA_ROOT}/packet_based" 2>/dev/null || true
+if (( ! SKIP_NEW_DATA )); then
+  du -sh "${DATA_ROOT}/new_data" 2>/dev/null || true
+fi
 
 echo
 echo "[ok] ambiente pronto."
@@ -185,3 +224,7 @@ echo "  2) piloto e execução completa:"
 echo "     bash cluster/submit.sh normal flow"
 echo "     bash cluster/submit.sh adversarial flow \"DoS Slowhttptest\""
 echo "     bash cluster/submit.sh adversarial packet all"
+echo "  3) novo dataset:"
+echo "     SMOKE=1 bash cluster/submit.sh new-data smoke ddos"
+echo "     bash cluster/submit.sh new-data normal"
+echo "     bash cluster/submit.sh new-data adversarial all primary"

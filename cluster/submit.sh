@@ -10,10 +10,17 @@
 #   bash cluster/submit.sh adversarial packet all
 #   bash cluster/submit.sh smoke flow
 #   bash cluster/submit.sh export
+#   bash cluster/submit.sh new-data normal
+#   bash cluster/submit.sh new-data adversarial all primary
+#   bash cluster/submit.sh new-data smoke ddos
+#   bash cluster/submit.sh new-data train
+#   bash cluster/submit.sh new-data export
 #
 # Variáveis úteis (ou use cluster/config.env):
 #   PARTITION, CPUS_PER_TASK, MEM, GRES, CONCURRENCY,
 #   WALLTIME_TRAIN, WALLTIME_NORMAL, WALLTIME_ADV,
+#   WALLTIME_NEW_DATA_NORMAL, WALLTIME_NEW_DATA_ADV,
+#   WALLTIME_NEW_DATA_TRAIN,
 #   MODEL_SOURCE=pretrained|retrained, MODEL_DIR, SEED, FORCE=1, NODELIST.
 
 set -euo pipefail
@@ -53,6 +60,9 @@ CONCURRENCY="${CONCURRENCY:-2}"
 WALLTIME_TRAIN="${WALLTIME_TRAIN:-1-00:00:00}"
 WALLTIME_NORMAL="${WALLTIME_NORMAL:-02:00:00}"
 WALLTIME_ADV="${WALLTIME_ADV:-1-23:00:00}"
+WALLTIME_NEW_DATA_NORMAL="${WALLTIME_NEW_DATA_NORMAL:-02:00:00}"
+WALLTIME_NEW_DATA_ADV="${WALLTIME_NEW_DATA_ADV:-1-23:00:00}"
+WALLTIME_NEW_DATA_TRAIN="${WALLTIME_NEW_DATA_TRAIN:-1-00:00:00}"
 
 export_args() {
   local task="$1"
@@ -218,8 +228,175 @@ task_export() {
   echo "  tar cJf \"\${ARCHIVE:-\$HOME}/replicating-repo-results-$(date -u +%Y%m%d).tar.xz\" -C \"${RESULTS_ROOT}\" ."
 }
 
+new_data_variant_settings() {
+  local variant="$1"
+  case "${variant}" in
+    primary)
+      printf 'random calibrated\n'
+      ;;
+    sensitivity_first_n)
+      printf 'first calibrated\n'
+      ;;
+    sensitivity_paper_0.8)
+      printf 'random paper_0.8\n'
+      ;;
+    smoke)
+      printf 'random calibrated\n'
+      ;;
+    *)
+      echo "[error] variante inválida: ${variant}" >&2
+      return 2
+      ;;
+  esac
+}
+
+task_new_data_normal() {
+  local modes="${1:-repo repo_plus}"
+  modes="${modes// /,}"
+  local mode
+  IFS=',' read -r -a mode_list <<< "${modes}"
+  for mode in "${mode_list[@]}"; do
+    case "${mode}" in
+      repo|repo_plus) ;;
+      *) echo "[error] modo inválido: ${mode}" >&2; exit 2 ;;
+    esac
+  done
+  local joined="${modes//,/\+}"
+  local job_id
+  job_id="$(submit_gpu_job "repo-new-data-normal" "${WALLTIME_NEW_DATA_NORMAL}" \
+    "$(export_args new_data_normal new_data "DATASET=new_data,NEW_DATA_RESULTS=${RESULTS_ROOT}/new_data,NEW_DATA_MODES=${joined},BATCH_SIZE=${BATCH_SIZE:-1024}")")"
+  echo "[submit] new-data normal (${joined}): ${job_id}"
+}
+
+task_new_data_adversarial() {
+  local attack="$1"
+  local variant="${2:-primary}"
+  local settings
+  settings="$(new_data_variant_settings "${variant}")" || exit 2
+  local sample_mode policy
+  read -r sample_mode policy <<< "${settings}"
+
+  local list_dir="${RESULTS_ROOT}/new_data/attack-lists"
+  mkdir -p "${list_dir}"
+  local list_file
+  list_file="$(mktemp "${list_dir}/attacks-XXXXXXXX.txt")"
+  if [[ "${attack}" == "all" ]]; then
+    PYTHONPATH="${REPO_ROOT}/code" "${VENV}/bin/python" - "${list_file}" <<'PY'
+import sys
+from pathlib import Path
+
+from new_data_eval.data import ATTACK_LABELS
+
+destination = Path(sys.argv[1])
+destination.write_text("\n".join(ATTACK_LABELS) + "\n", encoding="utf-8")
+print(f"[list] {len(ATTACK_LABELS)} ataques -> {destination}")
+PY
+  else
+    printf '%s\n' "${attack}" > "${list_file}"
+    echo "[list] 1 ataque -> ${list_file}"
+  fi
+
+  local count
+  count="$(grep -cve '^[[:space:]]*$' "${list_file}")"
+  local array_spec="0-$((count - 1))%${CONCURRENCY}"
+  local extra="DATASET=new_data,NEW_DATA_RESULTS=${RESULTS_ROOT}/new_data,ATTACK_LIST_FILE=${list_file},VARIANT=${variant},SAMPLE_MODE=${sample_mode},THRESHOLD_POLICY=${policy},BATCH_SIZE=${BATCH_SIZE:-1024},CHECKPOINT_EVERY=${CHECKPOINT_EVERY:-50}"
+  if [[ -n "${MAX_SAMPLES:-}" ]]; then
+    extra+=",MAX_SAMPLES=${MAX_SAMPLES}"
+  fi
+  if [[ -n "${N_MASKS:-}" ]]; then
+    extra+=",N_MASKS=${N_MASKS}"
+  fi
+  if [[ -n "${SCORE_REPEATS:-}" ]]; then
+    extra+=",SCORE_REPEATS=${SCORE_REPEATS}"
+  fi
+  if [[ "${PAIRED_SCORING:-0}" == "1" ]]; then
+    extra+=",PAIRED_SCORING=1"
+  fi
+
+  local job_name="repo-new-data-adv-${variant}"
+  if [[ "${attack}" != "all" ]]; then
+    job_name+="-$(echo "${attack}" | tr ' /' '--' | tr -cd '[:alnum:]._-')"
+  fi
+  local job_id
+  job_id="$(OUTPUT_PATTERN='%x-%A_%a.out' submit_gpu_job "${job_name}" "${WALLTIME_NEW_DATA_ADV}" \
+    "$(export_args new_data_adversarial new_data "${extra}")" \
+    --array="${array_spec}")"
+  echo "[submit] new-data adversarial ${variant}: array ${array_spec} -> ${job_id}"
+  echo "[list] ${list_file}"
+}
+
+task_new_data_smoke() {
+  local attack="${1:-ddos}"
+  local model_dir
+  model_dir="$(new_data_model_dir_for new_data "${MODEL_SOURCE:-pretrained}")"
+  echo "O smoke do novo dataset deve ser interativo (partição debug, máx. 30 min):"
+  echo
+  echo "  srun --partition=debug --gres=${GRES} -c ${CPUS_PER_TASK} --mem=${MEM} --time=00:30:00 --pty bash"
+  echo "  source ${VENV}/bin/activate"
+  echo "  PYTHONPATH=${REPO_ROOT}/code python -m new_data_eval smoke \\"
+  echo "      --data-dir ${REPO_ROOT}/data/new_data \\"
+  echo "      --model-dir ${model_dir} \\"
+  echo "      --meta-dir ${REPO_ROOT}/data/new_data/x_train_meta \\"
+  echo "      --results-dir ${RESULTS_ROOT}/new_data \\"
+  echo "      --attack ${attack}"
+  echo
+  echo "Alternativa não interativa (fila normal):"
+  echo "  SMOKE=1 bash cluster/submit.sh new-data smoke ${attack}"
+  if [[ "${SMOKE:-0}" == "1" ]]; then
+    local job_id
+    job_id="$(submit_gpu_job "repo-new-data-smoke-${attack}" "00:30:00" \
+      "$(export_args new_data_smoke new_data "DATASET=new_data,NEW_DATA_RESULTS=${RESULTS_ROOT}/new_data,ATTACK=${attack},BATCH_SIZE=${BATCH_SIZE:-1024}")")"
+    echo "[submit] new-data smoke ${attack}: ${job_id}"
+  fi
+}
+
+task_new_data_train() {
+  local model_dir="${MODEL_DIR:-${REPO_ROOT}/models/retrained/new_data_model}"
+  if [[ "${model_dir}" == "${REPO_ROOT}/models/new_data_model" ]]; then
+    echo "[error] treino recusa sobrescrever o modelo dos autores: ${model_dir}" >&2
+    echo "[hint] use MODEL_DIR=.../models/retrained/new_data_model" >&2
+    exit 2
+  fi
+  local saved_model_dir="${MODEL_DIR:-}"
+  MODEL_DIR="${model_dir}"
+  local job_id
+  job_id="$(submit_gpu_job "repo-new-data-train" "${WALLTIME_NEW_DATA_TRAIN}" \
+    "$(export_args new_data_train new_data "DATASET=new_data,EPOCHS=${EPOCHS:-5},TRAIN_BATCH_SIZE=${TRAIN_BATCH_SIZE:-256}")")"
+  MODEL_DIR="${saved_model_dir}"
+  echo "[submit] new-data train (${model_dir}): ${job_id}"
+}
+
+task_new_data_export() {
+  local out_dir="${OUT_DIR:-${REPO_ROOT}/results/cluster/new_data}"
+  "${VENV}/bin/python" "${CLUSTER_DIR}/aggregate_new_data.py" \
+    --results-dir "${RESULTS_ROOT}/new_data" \
+    --out "${out_dir}"
+  echo "[ok] resumo do novo dataset em ${out_dir}"
+}
+
 usage() {
-  sed -n '2,25p' "$0"
+  cat <<'EOF'
+Uso: bash cluster/submit.sh <comando> [argumentos]
+
+Comandos do artigo (fluxo/pacotes):
+  train <flow|packet>
+  normal <flow|packet> [repo repo_plus]
+  adversarial <flow|packet> <ataque|all> [checkpoint_every] [log_every]
+  smoke <flow|packet>
+  export
+
+Novo dataset:
+  new-data normal [repo repo_plus]
+  new-data adversarial <ataque|all> [primary|sensitivity_first_n|sensitivity_paper_0.8|smoke]
+  new-data smoke [ataque]
+  new-data train
+  new-data export
+
+Variáveis: PARTITION, CPUS_PER_TASK, MEM, GRES, CONCURRENCY,
+  WALLTIME_* (inclui WALLTIME_NEW_DATA_*), MODEL_SOURCE, MODEL_DIR,
+  SEED, FORCE=1, NODELIST, MAX_SAMPLES, N_MASKS, BATCH_SIZE,
+  CHECKPOINT_EVERY, SMOKE=1.
+EOF
 }
 
 command="${1:-}"
@@ -243,6 +420,21 @@ case "${command}" in
     ;;
   export)
     task_export
+    ;;
+  new-data)
+    subcommand="${1:-}"
+    shift || true
+    case "${subcommand}" in
+      normal) task_new_data_normal "${1:-repo repo_plus}" ;;
+      adversarial)
+        [[ $# -ge 1 ]] || { usage; exit 2; }
+        task_new_data_adversarial "$1" "${2:-primary}"
+        ;;
+      smoke) task_new_data_smoke "${1:-ddos}" ;;
+      train) task_new_data_train ;;
+      export) task_new_data_export ;;
+      *) usage; exit 2 ;;
+    esac
     ;;
   status)
     squeue -u "${USER:-$(id -un)}"

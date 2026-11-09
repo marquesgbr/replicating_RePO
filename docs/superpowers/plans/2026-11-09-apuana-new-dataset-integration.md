@@ -421,7 +421,6 @@ new_data_normal)
   [[ -n "${N_MASKS:-}" ]] && ND_ARGS+=(--n-masks "${N_MASKS}")
   [[ -n "${SCORE_REPEATS:-}" ]] && ND_ARGS+=(--score-repeats "${SCORE_REPEATS}")
   [[ "${PAIRED_SCORING:-0}" == "1" ]] && ND_ARGS+=(--paired-scoring)
-  [[ -n "${MAX_SAMPLES:-}" ]] && ND_ARGS+=(--max-samples "${MAX_SAMPLES}")
   mkdir -p "${NEW_DATA_RESULTS}"
   exec "${PY}" -m new_data_eval normal "${ND_ARGS[@]}"
   ;;
@@ -479,7 +478,7 @@ new_data_smoke)
     --data-dir "${NEW_DATA_DIR}"
     --model-dir "${NEW_DATA_MODEL_DIR}"
     --meta-dir "${NEW_DATA_META_DIR}"
-    --results-dir "${NEW_DATA_RESULTS}/smoke"
+    --results-dir "${NEW_DATA_RESULTS}"
     --attack "${ATTACK:-ddos}"
     --seed "${SEED}"
     --batch-size "${BATCH_SIZE:-1024}"

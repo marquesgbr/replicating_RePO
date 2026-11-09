@@ -2,22 +2,28 @@
 #
 # Extract the processed new dataset into data/new_data/.
 #
-# The archive (data/new_data/New-dataset-split-clean.zip) is stored with Git
-# LFS, so the real file has to be pulled before it can be unzipped.  The
-# script pulls the archive, unzips it and verifies that the two CSVs exist,
-# are not LFS pointers and reports their row count and SHA-256.
+# The archive is stored with Git LFS.  The script pulls it with git-lfs when
+# available; when git-lfs is missing (or the checkout still holds a pointer),
+# it falls back to cluster/lfs_fetch.py, which downloads the object through
+# the GitHub LFS batch API and verifies its size and SHA-256.
 #
-# Usage: bash extract_new_data.sh
+# `OUTPUT_DIR` and `ZIP_PATH` make the extraction reusable by the Apuana
+# setup, which keeps the CSVs in $DATA_ROOT and exposes them by symlink.
+#
+# Usage:
+#   bash extract_new_data.sh
+#   OUTPUT_DIR="$DATA_ROOT/new_data" bash extract_new_data.sh
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_ROOT"
 
-DATA_DIR="data/new_data"
-ZIP_PATH="${DATA_DIR}/New-dataset-split-clean.zip"
-TRAIN_CSV="${DATA_DIR}/new_train.csv"
-TEST_CSV="${DATA_DIR}/new_test.csv"
+DATA_DIR="${DATA_DIR:-${REPO_ROOT}/data/new_data}"
+OUTPUT_DIR="${OUTPUT_DIR:-${DATA_DIR}}"
+ZIP_PATH="${ZIP_PATH:-${DATA_DIR}/New-dataset-split-clean.zip}"
+TRAIN_CSV="${OUTPUT_DIR}/new_train.csv"
+TEST_CSV="${OUTPUT_DIR}/new_test.csv"
 
 log() {
     printf '%s\n' "$*"
@@ -43,21 +49,47 @@ else
 fi
 
 command -v git >/dev/null 2>&1 || die "git is required but was not found in PATH."
-if ! git lfs version >/dev/null 2>&1; then
-    die "git-lfs is required but is not available. Install it (https://git-lfs.com), run 'git lfs install' and try again."
-fi
 command -v unzip >/dev/null 2>&1 || die "unzip is required but was not found in PATH."
 
-log "Pulling ${ZIP_PATH} with Git LFS..."
-git lfs pull --include="${ZIP_PATH}"
+mkdir -p "$OUTPUT_DIR"
 
-[ -f "$ZIP_PATH" ] || die "Expected archive not found after 'git lfs pull': ${ZIP_PATH}"
-if is_lfs_pointer "$ZIP_PATH"; then
-    die "${ZIP_PATH} is still a Git LFS pointer. Check your network access and run 'git lfs pull' again."
+# Path relative to the repository, used by `git lfs pull --include`.
+ZIP_REL=""
+case "$ZIP_PATH" in
+    "$REPO_ROOT"/*) ZIP_REL="${ZIP_PATH#"$REPO_ROOT"/}" ;;
+    /*) ZIP_REL="" ;;
+    *) ZIP_REL="$ZIP_PATH" ;;
+esac
+
+if [[ -f "$ZIP_PATH" ]] && ! is_lfs_pointer "$ZIP_PATH"; then
+    log "Archive already materialized: ${ZIP_PATH}"
+else
+    if [[ -n "$ZIP_REL" ]] && git lfs version >/dev/null 2>&1; then
+        log "Pulling ${ZIP_REL} with Git LFS..."
+        git lfs pull --include="${ZIP_REL}" || true
+    fi
+
+    if [[ ! -f "$ZIP_PATH" ]]; then
+        die "Expected archive not found: ${ZIP_PATH}"
+    fi
+
+    if is_lfs_pointer "$ZIP_PATH"; then
+        log "git-lfs unavailable or pointer remains; using the API fallback..."
+        LFS_ARGS=(--pointer "$ZIP_PATH" --output "$ZIP_PATH")
+        if [[ -n "${LFS_REPOSITORY:-}" ]]; then
+            LFS_ARGS+=(--repository "$LFS_REPOSITORY")
+        fi
+        "${PYTHON_BIN}" "${REPO_ROOT}/cluster/lfs_fetch.py" "${LFS_ARGS[@]}" \
+            || die "could not download ${ZIP_PATH}; check network access or copy the real ZIP manually"
+    fi
 fi
 
-log "Extracting ${ZIP_PATH} into ${DATA_DIR}/..."
-unzip -o "$ZIP_PATH" -d "${DATA_DIR}/"
+if is_lfs_pointer "$ZIP_PATH"; then
+    die "${ZIP_PATH} is still a Git LFS pointer."
+fi
+
+log "Extracting ${ZIP_PATH} into ${OUTPUT_DIR}/..."
+unzip -o "$ZIP_PATH" -d "${OUTPUT_DIR}/"
 
 for csv in "$TRAIN_CSV" "$TEST_CSV"; do
     [ -f "$csv" ] || die "Expected CSV not found after extraction: ${csv}"

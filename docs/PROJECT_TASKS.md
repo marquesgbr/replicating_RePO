@@ -155,6 +155,8 @@ dados além dos dados usados pelo artigo de referência.
 - [ ] Executar a avaliação da solução de referência no dataset adicional.
   - Pendente: somente smoke local em CPU foi executado; a avaliação normal
     completa e os 9 ataques adversariais exigem GPU/Apuana.
+  - Tooling pronto: `cluster/submit.sh new-data smoke|normal|adversarial|train|export`
+    (ver `docs/APUANA_RUNBOOK.md`, seção 7.1).
 - [ ] Consolidar os resultados para comparação.
   - Pendente: depende da conclusão da avaliação completa acima.
 

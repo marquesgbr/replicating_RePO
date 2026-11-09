@@ -24,7 +24,10 @@ O desenho segue o que já foi validado no projeto `ml_PIDS`:
 | `repo_runner.py normal` | avalia RePO e RePO+ com FPR alvo de 0,01 | job GPU |
 | `repo_runner.py adversarial` | executa um ataque com FPR de referência 0,10 | job GPU |
 | `aggregate_results.py` | consolida JSONs em CSV/Markdown | login |
+| `lfs_fetch.py` | baixa o ZIP do novo dataset sem `git-lfs` | login |
+| `aggregate_new_data.py` | consolida os resultados do novo dataset | login |
 | `submit.sh` | submete os jobs e imprime os IDs | login |
+| `submit.sh new-data ...` | avalia o novo dataset (`data/new_data`) | login |
 
 O runner preserva as fórmulas dos notebooks de referência:
 
@@ -410,3 +413,116 @@ thresholds sem repetir a avaliação.
 7. `adversarial packet all`.
 8. `export` e arquivamento.
 9. Atualizar `docs/PROJECT_TASKS.md` e o relatório com os números.
+
+Para o novo dataset, o fluxo equivalente é:
+
+1. `setup_env.sh` (extrai `data/new_data`; use `--skip-new-data` para pular).
+2. `SMOKE=1 bash cluster/submit.sh new-data smoke ddos`.
+3. `bash cluster/submit.sh new-data normal`.
+4. `bash cluster/submit.sh new-data adversarial all primary`.
+5. Sensibilidades opcionais (`sensitivity_first_n`, `sensitivity_paper_0.8`).
+6. `bash cluster/submit.sh new-data export`.
+
+## 16. Novo dataset (`data/new_data`)
+
+O pacote `code/new_data_eval/` roda no Apuana pelo mesmo esquema dos outros
+datasets, mas com tasks próprias. Ele **não** altera o runner, os resultados ou
+os notebooks de fluxo/pacotes.
+
+### 16.1 Dados e modelo
+
+O setup extrai o ZIP LFS para `$DATA_ROOT/new_data` e cria symlinks:
+
+```text
+$DATA_ROOT/new_data/new_train.csv
+$DATA_ROOT/new_data/new_test.csv
+
+data/new_data/new_train.csv  -> symlink
+data/new_data/new_test.csv   -> symlink
+```
+
+Metadados de normalização (`data/new_data/x_train_meta/`) e o SavedModel
+(`models/new_data_model/`) são versionados no repositório. Se `git-lfs` não
+existir no login, `extract_new_data.sh` baixa o objeto pela API do GitHub e
+verifica tamanho/SHA-256; se a rede bloquear, copie o ZIP manualmente.
+
+Flags úteis:
+
+```bash
+bash cluster/setup_env.sh                 # extrai o novo dataset
+bash cluster/setup_env.sh --skip-new-data # só fluxo/pacotes
+bash cluster/setup_env.sh --force-new-data
+```
+
+### 16.2 Comandos
+
+```bash
+# Smoke isolado em $RESULTS_ROOT/new_data/smoke (30 min)
+SMOKE=1 bash cluster/submit.sh new-data smoke ddos
+
+# Avaliação normal completa: um job, RePO e RePO+
+bash cluster/submit.sh new-data normal
+
+# Adversarial: um job array, um ataque por índice, 2 concorrentes
+bash cluster/submit.sh new-data adversarial all primary
+
+# Sensibilidades (diretórios próprios; não sobrescrevem primary)
+bash cluster/submit.sh new-data adversarial all sensitivity_first_n
+bash cluster/submit.sh new-data adversarial all sensitivity_paper_0.8
+
+# Treino opcional em models/retrained/new_data_model
+bash cluster/submit.sh new-data train
+
+# Resumo CSV/Markdown/JSON em results/cluster/new_data
+bash cluster/submit.sh new-data export
+```
+
+O adversarial canônico exige que o normal já tenha terminado:
+
+```text
+$RESULTS_ROOT/new_data/normal/repo_plus.json
+```
+
+Se o arquivo não existir, o job falha antes de carregar o modelo. Rode o normal
+primeiro; não deixe nove jobs recalcularem o threshold.
+
+### 16.3 Variantes
+
+| Variante | Amostragem | Threshold |
+| --- | --- | --- |
+| `primary` | aleatória (seed 2019) | calibrado no FPR 10% |
+| `sensitivity_first_n` | primeiras N | calibrado no FPR 10% |
+| `sensitivity_paper_0.8` | aleatória | `0,8 ×` threshold real |
+| `smoke` | aleatória | calibrado no FPR 10%; inspeção, não resultado |
+
+### 16.4 Piloto e estimativas
+
+Antes do normal, valide o ambiente com `new-data smoke`. Depois que o normal
+terminar, meça a vazão adversarial com um piloto:
+
+```bash
+MAX_SAMPLES=200 N_MASKS=5 BATCH_SIZE=256 \
+  bash cluster/submit.sh new-data adversarial ddos smoke
+```
+
+Use `smoke` no piloto: `primary` guarda o resultado canônico e um piloto com
+`MAX_SAMPLES` menor bloquearia a rodada completa por causa do checkpoint.
+
+O normal percorre ~3,59 M linhas com 100 máscaras; no A100 usado antes, o normal
+de fluxo (2,3 M) levou ~10 min, então 2 h dão margem. O adversarial usa até
+5.000 amostras por ataque; `ddos` (202), `dos` (145) e `mitm` (517) usam todas
+as disponíveis.
+
+### 16.5 Resultados e retomada
+
+```text
+$RESULTS_ROOT/new_data/normal/repo.json
+$RESULTS_ROOT/new_data/normal/repo_plus.json
+$RESULTS_ROOT/new_data/adversarial/<variante>/<ataque>.json
+$RESULTS_ROOT/new_data/scores/*.npz
+$RESULTS_ROOT/new_data/smoke/...
+```
+
+Checkpoint a cada 50 amostras. Retome reenviando o mesmo comando; se a
+configuração mudou, use `FORCE=1`. `BATCH_SIZE` pode mudar numa retomada após
+OOM porque não entra no hash do checkpoint.
