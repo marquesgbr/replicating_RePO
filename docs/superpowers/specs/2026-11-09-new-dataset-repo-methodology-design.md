@@ -372,7 +372,7 @@ seguindo D12. O resultado principal é sempre `variant="primary"`.
 extract_new_data.sh                  # LFS + unzip + validação
 code/new_data_eval/
   __init__.py
-  __main__.py                        # python -m code.new_data_eval
+  __main__.py                        # PYTHONPATH=code python -m new_data_eval
   data.py                            # CSV, features, labels, metadados, hashes
   scoring.py                         # máscaras, RePO, RePO+, thresholds
   attack.py                          # FlowAttack portado e corrigido
@@ -409,13 +409,17 @@ ZIP LFS
 
 ### 7.2 CLI
 
+O pacote fica em `code/new_data_eval/`, mas é importado como `new_data_eval`
+com `PYTHONPATH=code`. Não criar `code/__init__.py`: isso sombrearia o módulo
+`code` da biblioteca padrão.
+
 ```bash
 bash extract_new_data.sh
-python -m code.new_data_eval validate
-python -m code.new_data_eval normal --modes repo,repo_plus
-python -m code.new_data_eval adversarial --attack ddos --max-samples 100
-python -m code.new_data_eval adversarial --attack all
-python -m code.new_data_eval smoke
+PYTHONPATH=code python -m new_data_eval validate
+PYTHONPATH=code python -m new_data_eval normal --modes repo,repo_plus
+PYTHONPATH=code python -m new_data_eval adversarial --attack ddos --max-samples 100
+PYTHONPATH=code python -m new_data_eval adversarial --attack all
+PYTHONPATH=code python -m new_data_eval smoke
 ```
 
 Opções previstas:
@@ -587,12 +591,14 @@ Regras:
 
 1. Em um clone limpo, `bash extract_new_data.sh` produz
    `data/new_data/new_train.csv` e `new_test.csv` e a validação passa.
-2. `python -m code.new_data_eval validate` confirma:
+2. `PYTHONPATH=code python -m new_data_eval validate` confirma:
    - 85 colunas e nomes esperados;
    - 77 features selecionadas;
    - `new_train.csv` só com `BENIGN`;
    - todas as 9 classes no teste;
-   - metadados com shape `(77,)`, finitos e `max > min`;
+   - metadados com shape `(77,)`, finitos e `max >= min`; features constantes
+  (`max == min`) são aceitas e reportadas, porque os `.npy` commitados contêm
+  oito delas;
    - modelo carrega e aceita `(None, 77)`.
 3. `normal` gera dois JSONs (`repo` e `repo_plus`) com thresholds de 1% e 10%,
    FPR, TPR por classe **em cada threshold**, contagens, médias macro/weighted
