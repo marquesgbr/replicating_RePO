@@ -210,11 +210,13 @@ PYTHONPATH=code python -m new_data_eval normal \
   --modes repo,repo_plus --max-samples 20 --n-masks 5 --batch-size 2
 PYTHONPATH=code python -m new_data_eval adversarial \
   --results-dir results/new_data/notebook_smoke \
-  --attack ddos --max-samples 5 --n-masks 5 --variant primary
+  --attack ddos --max-samples 5 --n-masks 5 --variant smoke
 ```
 
 Rode o normal de smoke antes do adversarial: ele lê o threshold de FPR 10% do
-`repo_plus.json` gravado no mesmo `--results-dir`. A avaliação completa do novo
+`repo_plus.json` gravado no mesmo `--results-dir`. Como esse normal é truncado
+(`--max-samples`), use `--variant smoke`; `--variant primary` exige um normal
+completo e falha antes de escrever qualquer resultado. A avaliação completa do novo
 dataset (normal com ~3,59 milhões de linhas e adversarial nos 9 ataques) ainda
 está pendente e deve rodar em GPU/Apuana; os smoke tests não produzem
 resultados finais.

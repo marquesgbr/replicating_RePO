@@ -176,15 +176,17 @@ Cada amostra atacada termina em um de quatro estados:
 
 | Estado | Significado | Contagem |
 | --- | --- | --- |
-| `evaded` | o ataque passou a ser benigno com a primeira perturbação | `fooled`, `evaded` |
-| `backup` | o ataque só passou a benigno com uma perturbação de reserva | `fooled`, `backup` |
-| `no_change` | nenhuma perturbação mudou a classificação | `cons_as_ben` |
-| `not_fooled` | a amostra já era benigna antes do ataque (falso negativo) | `cons_as_mal` |
+| `evaded` | uma amostra modificada ficou abaixo do threshold de ataque | `fooled`, `evaded` |
+| `backup` | nenhuma amostra ficou abaixo do threshold de ataque, mas uma ficou abaixo do threshold real; é devolvida como melhor esforço | `fooled`, `backup` |
+| `no_change` | a amostra já estava abaixo do threshold de ataque antes do ataque | `cons_as_ben` |
+| `not_fooled` | o otimizador esgotou as tentativas sem devolver amostra modificada | `cons_as_mal` |
 
 `fooled = evaded + backup` e `fooled + cons_as_mal + cons_as_ben = n`.
-`attack_success_rate` é `fooled / n` e inclui os falsos negativos
-pré-existentes no denominador; `conditional_drop = 1 - victim_tpr / normal_tpr`
-é a métrica de evasão condicionada às amostras que o modelo já detectava.
+`fooled_rate = fooled / n`. `attack_success_rate = 1 - victim_tpr` e inclui
+falsos negativos que já existiam antes do ataque, por isso não deve ser lida
+isoladamente como “taxa de sucesso do ataque”; a métrica principal de evasão é
+`conditional_drop = 1 - victim_tpr / normal_tpr`, quando o denominador é maior
+que zero.
 
 O resultado canônico (`variant="primary"`, `sensitivity_*`) exige um resultado
 normal **completo** (`sampling.mode="full"`, `variant="primary"`) do mesmo
