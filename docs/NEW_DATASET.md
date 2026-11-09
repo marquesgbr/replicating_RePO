@@ -50,23 +50,23 @@ Rótulos canônicos: `BENIGN`, `xss`, `password`, `injection`, `scanning`,
 `backdoor`, `ransomware`, `mitm`, `ddos` e `dos`. A comparação ignora caixa e
 espaços nas extremidades; qualquer rótulo desconhecido aborta a validação.
 
-As contagens reais por classe são **geradas pelo comando `validate`** (e
-gravadas nos JSONs de resultado). A tabela abaixo é apenas o esqueleto que a
-Task 9 preenche com os números do dataset extraído; não há contagens
-hardcoded neste documento.
+As contagens reais por classe são **impressas pelo comando `validate`** e
+registradas nos JSONs de resultado da avaliação normal. A tabela abaixo é
+apenas o esqueleto que a Task 9 preenche com os números do dataset extraído;
+não há contagens hardcoded neste documento.
 
 | Classe | Contagem |
 | --- | --- |
-| `BENIGN` | gerada por `validate` |
-| `xss` | gerada por `validate` |
-| `password` | gerada por `validate` |
-| `injection` | gerada por `validate` |
-| `scanning` | gerada por `validate` |
-| `backdoor` | gerada por `validate` |
-| `ransomware` | gerada por `validate` |
-| `mitm` | gerada por `validate` |
-| `ddos` | gerada por `validate` |
-| `dos` | gerada por `validate` |
+| `BENIGN` | impressa por `validate` |
+| `xss` | impressa por `validate` |
+| `password` | impressa por `validate` |
+| `injection` | impressa por `validate` |
+| `scanning` | impressa por `validate` |
+| `backdoor` | impressa por `validate` |
+| `ransomware` | impressa por `validate` |
+| `mitm` | impressa por `validate` |
+| `ddos` | impressa por `validate` |
+| `dos` | impressa por `validate` |
 
 Classes com menos de 100 amostras aparecem nos resultados com a marca
 `low_n: true` e também numa média macro de sensibilidade, para evitar

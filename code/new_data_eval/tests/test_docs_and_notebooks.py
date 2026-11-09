@@ -74,3 +74,28 @@ def test_adversarial_notebook_has_no_hardcoded_threshold_attack_or_result_path()
         "DDoS",
     ):
         assert token not in source
+
+
+def test_notebooks_use_isolated_smoke_results_directory():
+    for name in (
+        "new_data_RePO_Normal_Test.ipynb",
+        "new_data_RePO_Adversarial.ipynb",
+    ):
+        source = _notebook_code(REPO_ROOT / "code" / name)
+        assert "notebook_smoke" in source
+        assignments = [
+            line
+            for line in source.splitlines()
+            if line.strip().startswith("RESULTS_DIR =")
+        ]
+        assert len(assignments) == 1, assignments
+        assert "DEFAULT_RESULTS_DIR" in assignments[0]
+        assert '"notebook_smoke"' in assignments[0]
+        # The canonical results root must never be the notebook output root.
+        for token in (
+            '"results" / "new_data"',
+            "results/new_data/normal",
+            "results/new_data/adversarial",
+            "adversarial/primary",
+        ):
+            assert token not in source
