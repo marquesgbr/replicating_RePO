@@ -175,6 +175,130 @@ def _no_change(self, sample, sample_index):
     return AttackOutcome(kind="no_change", x_adv=None, score=0.0)
 
 
+def test_checkpoint_resume_allows_a_different_batch_size(
+    synthetic_project, monkeypatch
+):
+    """Scores are batch-invariant, so a GPU OOM retry must resume.
+
+    ``--batch-size`` is not part of the checkpoint identity: rerunning with a
+    smaller batch must load the existing checkpoint instead of requiring
+    ``--force``.
+    """
+    monkeypatch.setattr(cli.FlowAttack, "find_adv", _no_change)
+
+    args = _adversarial_args(synthetic_project, "--batch-size", "2")
+    assert main(args) == 0
+    result = synthetic_project.results_dir / "adversarial" / "primary" / "ddos.json"
+    first = json.loads(result.read_text())
+
+    retry = _adversarial_args(synthetic_project, "--batch-size", "4")
+    assert main(retry) == 0
+    second = json.loads(result.read_text())
+    assert second["counts"] == first["counts"]
+    assert second["config_hash"] == first["config_hash"]
+
+
+def test_attack_uses_the_selected_rows_global_indices(
+    synthetic_project, monkeypatch
+):
+    """Masks must be derived from the CSV row indices, not loop positions."""
+    seen_indices: list[int] = []
+
+    def record_find_adv(self, sample, sample_index):
+        seen_indices.append(int(sample_index))
+        return AttackOutcome(kind="no_change", x_adv=None, score=0.0)
+
+    monkeypatch.setattr(cli.FlowAttack, "find_adv", record_find_adv)
+
+    real_score_samples = cli.score_samples
+    score_calls: list[np.ndarray] = []
+
+    def spy(*args, **kwargs):
+        score_calls.append(np.asarray(kwargs["sample_indices"], dtype=np.int64))
+        return real_score_samples(*args, **kwargs)
+
+    monkeypatch.setattr(cli, "score_samples", spy)
+
+    args = _adversarial_args(
+        synthetic_project,
+        "--max-samples",
+        "2",
+        "--sample-mode",
+        "first",
+        "--variant",
+        "sensitivity_first_n",
+    )
+    assert main(args) == 0
+
+    # The fixture places the three ddos rows at global indices 22, 23 and 24.
+    expected = np.array([22, 23], dtype=np.int64)
+    assert sorted(seen_indices) == expected.tolist()
+    assert score_calls
+    for indices in score_calls:
+        np.testing.assert_array_equal(indices, expected)
+
+    with np.load(
+        cli._scores_path(
+            synthetic_project.results_dir, "sensitivity_first_n", "ddos"
+        )
+    ) as data:
+        np.testing.assert_array_equal(data["sample_indices"], expected)
+
+
+@pytest.mark.parametrize("field", ["sample_indices", "n_samples"])
+def test_checkpoint_rejects_a_changed_sampling(
+    synthetic_project, monkeypatch, capsys, field
+):
+    monkeypatch.setattr(cli.FlowAttack, "find_adv", _no_change)
+    args = _adversarial_args(synthetic_project)
+    assert main(args) == 0
+
+    checkpoint = checkpoint_path(synthetic_project.results_dir, "primary", "ddos")
+    with np.load(checkpoint) as data:
+        arrays = {name: np.array(data[name], copy=True) for name in data.files}
+    if field == "sample_indices":
+        arrays[field] = np.asarray(arrays[field], dtype=np.int64) + 1
+    else:
+        arrays[field] = np.asarray([2], dtype=np.int64)
+    np.savez_compressed(checkpoint, **arrays)
+
+    assert main(args) != 0
+    assert "sampling changed" in capsys.readouterr().err
+
+
+def test_smoke_force_is_forwarded():
+    parser = cli.build_parser()
+    assert parser.parse_args(["smoke"]).force is False
+    assert parser.parse_args(["smoke", "--force"]).force is True
+
+
+def test_stable_run_config_excludes_batch_size_and_includes_the_commit():
+    config = cli._stable_run_config(
+        attack="ddos",
+        variant="primary",
+        seed=2019,
+        sample_mode="random",
+        max_samples=1,
+        n_masks=5,
+        score_repeats=1,
+        paired_scoring=False,
+        policy="calibrated",
+        real_threshold=0.5,
+        attack_threshold=0.5,
+        model_sha256="a" * 64,
+        data_sha256="b" * 64,
+        meta_sha256={"train_min": "c" * 64, "train_max": "d" * 64},
+        normal_result={"used": True},
+        git_commit="e" * 40,
+    )
+    assert "batch_size" not in config
+    assert config["git_commit"] == "e" * 40
+
+    other_commit = dict(config)
+    other_commit["git_commit"] = "f" * 40
+    assert cli.config_hash(config) != cli.config_hash(other_commit)
+
+
 def test_checkpoint_with_a_different_config_requires_force(
     synthetic_project, monkeypatch
 ):
@@ -184,15 +308,37 @@ def test_checkpoint_with_a_different_config_requires_force(
     result = synthetic_project.results_dir / "adversarial" / "primary" / "ddos.json"
     first = json.loads(result.read_text())
 
-    # A different seed changes the immutable run parameters, so the existing
-    # checkpoint must be rejected instead of silently mixing two runs.
-    assert main(_adversarial_args(synthetic_project, "--seed", "7")) != 0
+    # A different max_samples changes the immutable run parameters, so the
+    # existing checkpoint must be rejected instead of silently mixing two runs.
+    assert (
+        main(_adversarial_args(synthetic_project, "--max-samples", "2")) != 0
+    )
     assert json.loads(result.read_text()) == first
 
-    assert main(_adversarial_args(synthetic_project, "--seed", "7", "--force")) == 0
+    assert (
+        main(
+            _adversarial_args(
+                synthetic_project, "--max-samples", "2", "--force"
+            )
+        )
+        == 0
+    )
     forced = json.loads(result.read_text())
-    assert forced["config"]["seed"] == 7
-    assert forced["counts"]["n"] == 1
+    assert forced["config"]["max_samples"] == 2
+    assert forced["counts"]["n"] == 2
+
+
+def test_force_does_not_bypass_the_normal_provenance(
+    synthetic_project, monkeypatch, capsys
+):
+    monkeypatch.setattr(cli.FlowAttack, "find_adv", _no_change)
+    _rewrite_normal(
+        synthetic_project,
+        lambda payload: payload["config"].update({"seed": 123}),
+    )
+
+    assert main(_adversarial_args(synthetic_project, "--force")) != 0
+    assert "config.seed" in capsys.readouterr().err
 
 
 def test_attack_all_writes_one_result_per_attack(synthetic_project, monkeypatch):
@@ -332,6 +478,30 @@ def test_invalid_variant_cannot_overwrite_primary(synthetic_project, monkeypatch
         (
             lambda payload: payload.update({"model_type": "flow"}),
             "model_type",
+        ),
+        (
+            lambda payload: payload["config"].update({"seed": 7}),
+            "config.seed",
+        ),
+        (
+            lambda payload: payload["config"]["sampling"].update(
+                {"mode": "first_n"}
+            ),
+            "sampling.mode",
+        ),
+        (
+            lambda payload: payload["config"]["meta_sha256"].update(
+                {"train_min": "0" * 64}
+            ),
+            "meta_sha256.train_min",
+        ),
+        (
+            lambda payload: payload.update({"variant": "smoke"}),
+            "variant",
+        ),
+        (
+            lambda payload: payload.update({"score_mode": "repo"}),
+            "score_mode",
         ),
     ],
 )

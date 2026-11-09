@@ -112,12 +112,38 @@ def test_find_adv_returns_not_fooled_when_no_threshold_is_met(tiny_model, meta):
     assert outcome.score is None
 
 
-def test_group_size_is_n_masks_over_five(tiny_model, meta):
-    attack = _attack(tiny_model, meta)
-    assert attack.group_size == 20
+def test_score_repeats_must_be_positive(tiny_model, meta):
+    with pytest.raises(ValueError, match="score_repeats"):
+        _attack(tiny_model, meta, score_repeats=0)
 
-    small = _attack(tiny_model, meta, n_masks=10)
-    assert small.group_size == 2
+
+def test_score_forwards_the_scoring_options(monkeypatch, tiny_model, meta):
+    import new_data_eval.attack as attack_module
+
+    calls: list[dict[str, object]] = []
+    real_score_samples = attack_module.score_samples
+
+    def spy(*args, **kwargs):
+        calls.append(dict(kwargs))
+        return real_score_samples(*args, **kwargs)
+
+    monkeypatch.setattr(attack_module, "score_samples", spy)
+    attack = _attack(
+        tiny_model, meta, score_repeats=2, paired_seed=7
+    )
+    attack.score(np.zeros(77, dtype=np.float32), sample_index=3, phase=PHASE_ATTACK)
+
+    assert calls
+    assert all(call["score_repeats"] == 2 for call in calls)
+    assert all(call["paired_seed"] == 7 for call in calls)
+
+
+def test_mask_source_indices_are_validated(monkeypatch, tiny_model, meta):
+    import new_data_eval.attack as attack_module
+
+    monkeypatch.setattr(attack_module, "_MINS", (999,))
+    with pytest.raises(ValueError, match="999"):
+        _attack(tiny_model, meta)
 
 
 def test_optimizer_state_round_trip(tiny_model, meta):

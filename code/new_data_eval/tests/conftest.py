@@ -188,11 +188,13 @@ def synthetic_project(tmp_path):
             "at_fpr_0.10_threshold": 0.10,
         },
         "config": {
+            "seed": 2019,
             "model_sha256": _sha256_path(model_dir),
             "meta_sha256": {
                 "train_min": sha256_file(meta_dir / "train_min.npy"),
                 "train_max": sha256_file(meta_dir / "train_max.npy"),
             },
+            "sampling": {"mode": "full", "max_samples": None},
         },
         "config_hash": "a" * 64,
         "variant": "primary",

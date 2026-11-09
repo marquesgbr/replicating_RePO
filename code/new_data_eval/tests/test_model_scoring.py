@@ -302,3 +302,48 @@ def test_load_model_loads_an_exported_saved_model(synthetic_project):
 def test_load_model_rejects_a_missing_path(tmp_path):
     with pytest.raises(FileNotFoundError):
         load_model(tmp_path / "missing_model")
+
+
+def _fake_import_failing_on(module: str, missing: str):
+    import builtins
+
+    real_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == module:
+            raise ModuleNotFoundError(
+                f"No module named {missing!r}", name=missing
+            )
+        return real_import(name, *args, **kwargs)
+
+    return fake_import
+
+
+def test_load_model_reports_a_missing_tensorflow(tmp_path, monkeypatch):
+    import builtins
+
+    model_dir = tmp_path / "model"
+    model_dir.mkdir()
+    monkeypatch.setattr(
+        builtins,
+        "__import__",
+        _fake_import_failing_on("load_model_compat", "tensorflow"),
+    )
+
+    with pytest.raises(ImportError, match="install tensorflow"):
+        load_model(model_dir)
+
+
+def test_load_model_reports_a_missing_compat_module(tmp_path, monkeypatch):
+    import builtins
+
+    model_dir = tmp_path / "model"
+    model_dir.mkdir()
+    monkeypatch.setattr(
+        builtins,
+        "__import__",
+        _fake_import_failing_on("load_model_compat", "load_model_compat"),
+    )
+
+    with pytest.raises(ImportError, match="PYTHONPATH=code"):
+        load_model(model_dir)

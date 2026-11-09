@@ -1,9 +1,11 @@
 """Result schemas, atomic JSON persistence and provenance helpers.
 
-Every evaluation run writes exactly one JSON document through
-:func:`write_json_atomic` (a temporary file is written in the destination
-directory and then ``os.replace``d over the target), so a killed job can never
-leave a half written result and no run ever appends to a previous one.
+Every result document is written through :func:`write_json_atomic` (a
+temporary file is written in the destination directory and then
+``os.replace``d over the target), so a killed job can never leave a half
+written result and no run ever appends to a previous one.  A single command
+may write several documents: the normal evaluation writes one per score mode
+and ``adversarial --attack all`` writes one per attack class.
 
 The builders assemble the schema of the design document
 (``docs/superpowers/specs/2026-11-09-new-dataset-repo-methodology-design.md``,
@@ -386,18 +388,6 @@ def _counts(counts: Mapping[str, Any]) -> dict[str, int]:
     return payload
 
 
-def _config_hash_sections(**sections: Any) -> dict[str, Any]:
-    """Return the canonical run-parameter mapping hashed into ``config_hash``.
-
-    The builders hash the actual parameters of the run instead of trusting the
-    caller-supplied ``config`` to repeat them, so two results that differ only
-    in thresholds, scoring, dataset hashes or adversarial counts cannot share a
-    hash.  The keyword names are the deterministic top-level keys of the
-    serialized mapping.
-    """
-    return dict(sections)
-
-
 def _rate_or_compute(
     kwargs: dict[str, Any],
     name: str,
@@ -449,7 +439,8 @@ def build_normal_result(**kwargs: Any) -> dict[str, Any]:
         Mapping with ``n_masks``, ``score_repeats`` and ``paired_scoring``.
     ``config``
         The run configuration. It is hashed together with the actual
-        thresholds, scoring, dataset and ``score_mode`` of the run.
+        thresholds, scoring, dataset, ``score_mode``, ``variant`` and
+        ``git_commit`` of the run.
     ``runtime_seconds``
         Wall clock runtime of the run.
 
@@ -510,13 +501,16 @@ def build_normal_result(**kwargs: Any) -> dict[str, Any]:
         f"at_{name}": average_attack_tpr(rates[f"at_{name}"])
         for name in threshold_payload
     }
-    run_parameters = _config_hash_sections(
-        config=config,
-        dataset=dataset_payload,
-        score_mode=score_mode,
-        scoring=scoring_payload,
-        thresholds=threshold_payload,
-    )
+    resolved_commit = _commit(commit)
+    run_parameters = {
+        "config": config,
+        "dataset": dataset_payload,
+        "score_mode": score_mode,
+        "scoring": scoring_payload,
+        "thresholds": threshold_payload,
+        "variant": variant,
+        "git_commit": resolved_commit,
+    }
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -535,7 +529,7 @@ def build_normal_result(**kwargs: Any) -> dict[str, Any]:
         "config": config,
         "environment": _environment(environment),
         "config_hash": config_hash(run_parameters),
-        "git_commit": _commit(commit),
+        "git_commit": resolved_commit,
         "started_at": _timestamp(started_at),
         "finished_at": _timestamp(finished_at),
     }
@@ -562,7 +556,8 @@ def build_adversarial_result(**kwargs: Any) -> dict[str, Any]:
     ``config`` / ``runtime_seconds``
         Run configuration and wall clock runtime. The configuration is hashed
         together with the attack, variant, score mode, dataset sampling,
-        thresholds, scoring and counts of the run.
+        thresholds, scoring and ``git_commit`` of the run; the outcome counts
+        are deliberately not part of the hash.
 
     The victim and normal TPRs, the FPR at the attack threshold and the
     rates are computed from the supplied score arrays.  For convenience the
@@ -626,16 +621,17 @@ def build_adversarial_result(**kwargs: Any) -> dict[str, Any]:
         backup_rate = count_payload["backup"] / n_samples
     else:
         fooled_rate = evaded_rate = backup_rate = 0.0
-    run_parameters = _config_hash_sections(
-        attack_type=attack_type,
-        config=config,
-        counts=count_payload,
-        dataset=dataset_payload,
-        score_mode=score_mode,
-        scoring=scoring_payload,
-        thresholds=threshold_payload,
-        variant=variant,
-    )
+    resolved_commit = _commit(commit)
+    run_parameters = {
+        "attack_type": attack_type,
+        "config": config,
+        "dataset": dataset_payload,
+        "score_mode": score_mode,
+        "scoring": scoring_payload,
+        "thresholds": threshold_payload,
+        "variant": variant,
+        "git_commit": resolved_commit,
+    }
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -661,7 +657,7 @@ def build_adversarial_result(**kwargs: Any) -> dict[str, Any]:
         "config": config,
         "environment": _environment(environment),
         "config_hash": config_hash(run_parameters),
-        "git_commit": _commit(commit),
+        "git_commit": resolved_commit,
         "started_at": _timestamp(started_at),
         "finished_at": _timestamp(finished_at),
     }

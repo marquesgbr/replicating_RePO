@@ -281,6 +281,17 @@ def test_build_normal_result_config_hash_covers_run_parameters():
     changed["dataset"]["test_csv_sha256"] = "f" * 64
     assert build_normal_result(**changed)["config_hash"] != base
 
+    # The variant and the code revision are part of the run identity: a smoke
+    # result must never share a hash with the primary one, and a rerun on a
+    # different commit must not either.
+    changed = _normal_inputs()
+    changed["variant"] = "smoke"
+    assert build_normal_result(**changed)["config_hash"] != base
+
+    changed = _normal_inputs()
+    changed["git_commit"] = "d" * 40
+    assert build_normal_result(**changed)["config_hash"] != base
+
 
 def test_build_adversarial_result_matches_the_schema():
     payload = build_adversarial_result(**_adversarial_inputs())
@@ -382,19 +393,27 @@ def test_build_adversarial_result_config_hash_covers_run_parameters():
     changed["dataset"]["seed"] = 2020
     assert build_adversarial_result(**changed)["config_hash"] != base
 
+    # The variant and the code revision are part of the run identity.
+    changed = _adversarial_inputs()
+    changed["variant"] = "sensitivity_first_n"
+    assert build_adversarial_result(**changed)["config_hash"] != base
+
+    changed = _adversarial_inputs()
+    changed["git_commit"] = "d" * 40
+    assert build_adversarial_result(**changed)["config_hash"] != base
+
+    # Outcome counts are not part of the identity: a different outcome with
+    # the same dataset sampling and configuration must keep the same hash.
     changed = _adversarial_inputs()
     changed["counts"] = {
-        "n": 6,
-        "fooled": 2,
+        "n": 4,
+        "fooled": 1,
         "evaded": 1,
-        "backup": 1,
-        "cons_as_mal": 1,
-        "cons_as_ben": 3,
+        "backup": 0,
+        "cons_as_mal": 2,
+        "cons_as_ben": 1,
     }
-    changed["dataset"]["n_samples"] = 6
-    changed["normal_scores"] = np.array([0.9, 0.9, 0.1, 0.1, 0.1, 0.1])
-    changed["victim_scores"] = np.array([0.1, 0.9, 0.1, 0.1, 0.1, 0.1])
-    assert build_adversarial_result(**changed)["config_hash"] != base
+    assert build_adversarial_result(**changed)["config_hash"] == base
 
 
 @pytest.mark.parametrize(

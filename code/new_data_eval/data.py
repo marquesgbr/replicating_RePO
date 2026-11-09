@@ -55,6 +55,7 @@ __all__ = [
     "normalize_features",
     "read_header",
     "select_attack_samples",
+    "select_attack_samples_indexed",
     "sha256_file",
     "validate_dataset",
     "validate_header",
@@ -530,15 +531,15 @@ def _apply_reservoir_draws(
     reservoir_idx[slots] = indices[::-1][first_positions]
 
 
-def select_attack_samples(
+def select_attack_samples_indexed(
     csv_path: Path,
     attack: str,
     max_samples: int,
     mode: str,
     seed: int,
     chunksize: int = DEFAULT_CHUNK_SIZE,
-) -> tuple[np.ndarray, int]:
-    """Select samples of a single attack class.
+) -> tuple[np.ndarray, np.ndarray, int]:
+    """Select samples of a single attack class and their CSV row indices.
 
     ``mode="random"`` uses reservoir sampling (algorithm R) with a seeded
     generator, so the selection depends only on ``seed`` and on the order of
@@ -547,7 +548,11 @@ def select_attack_samples(
     kept as a sensitivity analysis).
 
     Returns the selected **raw** features (ordered by their position in the
-    file) and the total number of valid rows available for the class.
+    file), their **global row indices** and the total number of valid rows
+    available for the class.  The indices are the global positions inside the
+    CSV (the same ``Chunk.indices`` used by the normal evaluation), so the
+    adversarial masks of a sample do not depend on the order in which the
+    attack classes are evaluated.
     """
     target = canonical_label(attack)
     if target not in ATTACK_LABELS:
@@ -618,7 +623,31 @@ def select_attack_samples(
         selected_x, selected_idx = reservoir_x, reservoir_idx
 
     order = np.argsort(selected_idx, kind="stable")
-    return selected_x[order], available
+    return selected_x[order], selected_idx[order], available
+
+
+def select_attack_samples(
+    csv_path: Path,
+    attack: str,
+    max_samples: int,
+    mode: str,
+    seed: int,
+    chunksize: int = DEFAULT_CHUNK_SIZE,
+) -> tuple[np.ndarray, int]:
+    """Select samples of a single attack class.
+
+    Thin wrapper around :func:`select_attack_samples_indexed` that returns
+    only the selected features and the number of available rows.
+    """
+    selected_x, _selected_idx, available = select_attack_samples_indexed(
+        csv_path,
+        attack,
+        max_samples,
+        mode,
+        seed,
+        chunksize=chunksize,
+    )
+    return selected_x, available
 
 
 def validate_dataset(

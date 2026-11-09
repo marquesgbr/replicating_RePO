@@ -191,10 +191,16 @@ def load_model(model_dir: Path) -> Any:
 
     try:
         from load_model_compat import load_model as _load_compat_model
-    except ImportError as exc:  # pragma: no cover - depends on sys.path
+    except ModuleNotFoundError as exc:  # pragma: no cover - depends on sys.path
+        missing = exc.name or ""
+        if missing.split(".")[0] == "load_model_compat":
+            raise ImportError(
+                "load_model_compat could not be imported; the 'code' directory "
+                "of the repository must be on sys.path (PYTHONPATH=code)"
+            ) from exc
         raise ImportError(
-            "load_model_compat could not be imported; the 'code' directory of "
-            "the repository must be on sys.path (PYTHONPATH=code)"
+            "TensorFlow is required to load the model; install tensorflow "
+            f"(missing module: {missing})"
         ) from exc
 
     return _load_compat_model(str(path))

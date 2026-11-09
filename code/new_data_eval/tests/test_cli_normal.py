@@ -7,7 +7,9 @@ import subprocess
 from pathlib import Path
 
 import numpy as np
+import pytest
 
+import new_data_eval.cli as cli
 from new_data_eval.cli import build_parser, main
 from new_data_eval.data import EXPECTED_LABELS
 from new_data_eval.results import file_sha256
@@ -271,6 +273,63 @@ def test_build_parser_exposes_the_documented_defaults():
     assert args.score_repeats == 1
     assert args.seed == 2019
     assert args.max_samples is None
+
+
+def test_parser_rejects_a_negative_seed():
+    parser = build_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args(["normal", "--seed", "-1"])
+
+
+def test_benign_rows_ignore_the_other_labels(synthetic_frame, tmp_path):
+    frame = synthetic_frame(["ddos", "BENIGN", "BENIGN", "xss"], seed=3)
+    # Dst Port is the first model feature, so it identifies the returned rows.
+    frame["Dst Port"] = [11, 22, 33, 44]
+    path = tmp_path / "mixed_train.csv"
+    frame.to_csv(path, index=False)
+
+    rows = cli._benign_rows(path)
+    assert rows.shape == (2, 77)
+    assert sorted(rows[:, 0].tolist()) == [22.0, 33.0]
+
+
+def test_model_hash_ignores_the_training_manifest(tmp_path):
+    model_dir = tmp_path / "model"
+    (model_dir / "variables").mkdir(parents=True)
+    (model_dir / "saved_model.pb").write_bytes(b"graph")
+    (model_dir / "fingerprint.pb").write_bytes(b"fingerprint")
+    (model_dir / "variables" / "variables.index").write_bytes(b"index")
+
+    digest = cli._sha256_path(model_dir)
+
+    manifest = model_dir / "training_manifest.json"
+    manifest.write_text('{"created_at": "2026-11-09T10:00:00Z"}')
+    assert cli._sha256_path(model_dir) == digest
+
+    manifest.write_text('{"created_at": "2026-11-09T11:00:00Z"}')
+    assert cli._sha256_path(model_dir) == digest
+
+    (model_dir / "variables" / "variables.index").write_bytes(b"changed")
+    assert cli._sha256_path(model_dir) != digest
+
+
+def test_write_npz_atomic_fsyncs_the_file_and_the_directory(
+    tmp_path, monkeypatch
+):
+    fsync_calls: list[int] = []
+    directory_calls: list[Path] = []
+    monkeypatch.setattr(cli.os, "fsync", lambda descriptor: fsync_calls.append(descriptor))
+    monkeypatch.setattr(
+        cli, "_fsync_directory", lambda path: directory_calls.append(Path(path))
+    )
+
+    path = tmp_path / "scores" / "values.npz"
+    cli._write_npz_atomic(path, {"values": np.arange(3, dtype=np.float64)})
+
+    assert fsync_calls
+    assert directory_calls == [path.parent]
+    with np.load(path) as data:
+        np.testing.assert_array_equal(data["values"], np.arange(3))
 
 
 def test_normal_rejects_unknown_modes(synthetic_project):

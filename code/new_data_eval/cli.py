@@ -1,8 +1,7 @@
 """Command line interface for the new dataset evaluation.
 
-The package is invoked as ``PYTHONPATH=code python -m new_data_eval``.  Only
-the ``validate`` and ``normal`` commands live here for now; the adversarial
-command is added later on top of the same result builders.
+The package is invoked as ``PYTHONPATH=code python -m new_data_eval``.  The
+``validate``, ``normal``, ``adversarial`` and ``smoke`` commands live here.
 
 ``validate`` checks the canonical header, the labels, the normalization
 metadata and the model.  The model check reuses ``validate_model``, which
@@ -14,6 +13,11 @@ and RePO+ (using the global row offset as ``sample_indices`` so the masks never
 restart inside a chunk), computes the FPR 1% and 10% thresholds on the benign
 scores, and writes one JSON document per score mode under
 ``<results-dir>/normal/``.
+
+``adversarial`` reuses (or recomputes) the normal threshold, attacks every
+requested class and writes one result, checkpoint and score file per attack.
+``smoke`` runs the three stages on a tiny sample under ``<results-dir>/smoke``
+so the pipeline can be exercised without touching the canonical results.
 """
 
 from __future__ import annotations
@@ -44,11 +48,12 @@ from new_data_eval.data import (
     integer_feature_indices,
     iter_test_chunks_detailed,
     load_metadata,
-    select_attack_samples,
+    select_attack_samples_indexed,
     sha256_file,
     validate_dataset,
 )
 from new_data_eval.results import (
+    _fsync_directory,
     build_adversarial_result,
     build_normal_result,
     config_hash,
@@ -199,6 +204,23 @@ def _positive_int(value: str) -> int:
     return number
 
 
+def _non_negative_int(value: str) -> int:
+    """Return ``value`` as a non-negative integer for an argparse option.
+
+    ``--seed`` is fed to ``np.random.default_rng``; a negative seed would
+    otherwise fail late, after the paths and the model have been loaded.
+    """
+    try:
+        number = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"expected an integer, got {value!r}") from exc
+    if number < 0:
+        raise argparse.ArgumentTypeError(
+            f"expected a non-negative integer, got {number}"
+        )
+    return number
+
+
 def _add_common_arguments(parser: argparse.ArgumentParser) -> None:
     """Add the path and randomness options shared by every command."""
     parser.add_argument(
@@ -224,7 +246,7 @@ def _add_common_arguments(parser: argparse.ArgumentParser) -> None:
     )
     parser.add_argument(
         "--seed",
-        type=int,
+        type=_non_negative_int,
         default=2019,
         help="seed of the stateless per-sample masks",
     )
@@ -309,6 +331,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=_positive_int,
         default=DEFAULT_BATCH_SIZE,
         help="masked rows sent to the model per forward pass",
+    )
+    smoke.add_argument(
+        "--force",
+        action="store_true",
+        help="discard an existing smoke result, checkpoint and score file",
     )
 
     return parser
@@ -413,6 +440,13 @@ def _sha256_path(path: Path) -> str:
     For a directory the relative path of every file is hashed first, so the
     digest depends on the file names and their contents but not on the order in
     which the filesystem lists them.
+
+    A top-level ``training_manifest.json`` is deliberately excluded: the
+    training script writes it next to the weights (with a ``created_at``
+    timestamp), so hashing it would make identical weights receive different
+    digests and would let a manifest rewrite change the provenance of an
+    otherwise unchanged model.  The weights and graph (``saved_model.pb``,
+    ``fingerprint.pb``, ``variables/*``) still contribute to the digest.
     """
     path = Path(path)
     if path.is_file():
@@ -421,7 +455,14 @@ def _sha256_path(path: Path) -> str:
         raise FileNotFoundError(f"Model not found: {path}")
 
     digest = hashlib.sha256()
-    files = sorted(item for item in path.rglob("*") if item.is_file())
+    files = sorted(
+        item
+        for item in path.rglob("*")
+        if item.is_file()
+        and not (
+            item.parent == path and item.name == "training_manifest.json"
+        )
+    )
     if not files:
         raise ValueError(f"Model directory is empty: {path}")
     for item in files:
@@ -434,11 +475,16 @@ def _sha256_path(path: Path) -> str:
 
 
 def _benign_rows(train_csv: Path, max_rows: int = VALIDATION_BENIGN_ROWS) -> np.ndarray:
-    """Return up to ``max_rows`` valid BENIGN rows of the training CSV."""
+    """Return up to ``max_rows`` valid BENIGN rows of the training CSV.
+
+    Only rows whose canonical label is ``BENIGN`` are returned; this keeps the
+    model validation correct even when ``validate_dataset`` was skipped and
+    the training CSV happens to contain other labels.
+    """
     collected: list[np.ndarray] = []
     count = 0
     for chunk in iter_test_chunks_detailed(train_csv, VALIDATION_CHUNK_SIZE):
-        rows = chunk.valid_features
+        rows = chunk.features[chunk.valid & (chunk.labels == BENIGN_LABEL)]
         if len(rows):
             take = rows[: max_rows - count]
             collected.append(take)
@@ -922,12 +968,18 @@ def _verify_normal_provenance(
     n_masks: int,
     score_repeats: int,
     paired_scoring: bool,
+    seed: int,
+    meta_sha256: Mapping[str, str],
+    expected_variant: str,
+    expected_sampling_mode: str,
 ) -> None:
     """Raise when the stored normal result does not describe the current run.
 
-    Reusing a threshold computed by another model, dataset or scoring setup
-    would silently mix two experiments, so every provenance field that the
-    normal result records is compared before the threshold is returned.
+    Reusing a threshold computed by another model, dataset, seed or scoring
+    setup would silently mix two experiments, so every provenance field that
+    the normal result records is compared before the threshold is returned.
+    This includes the normalization metadata hashes, the sampling mode, the
+    result variant and the score mode.
     """
     problems: list[str] = []
 
@@ -935,6 +987,17 @@ def _verify_normal_provenance(
         problems.append(
             "model_type is "
             f"{payload.get('model_type')!r}, expected 'new_data_flow'"
+        )
+
+    if payload.get("score_mode") != "repo_plus":
+        problems.append(
+            f"score_mode is {payload.get('score_mode')!r}, expected 'repo_plus'"
+        )
+
+    if payload.get("variant") != expected_variant:
+        problems.append(
+            f"variant is {payload.get('variant')!r}, "
+            f"expected {expected_variant!r}"
         )
 
     dataset = payload.get("dataset")
@@ -952,14 +1015,42 @@ def _verify_normal_provenance(
     config = payload.get("config")
     if not isinstance(config, Mapping):
         problems.append("missing config block")
-        stored_model = None
-    else:
-        stored_model = config.get("model_sha256")
+        config = {}
+    stored_model = config.get("model_sha256")
     if stored_model != model_sha256:
         problems.append(
             f"config.model_sha256 is {stored_model!r}, current model is "
             f"{model_sha256}"
         )
+
+    stored_seed = config.get("seed")
+    if stored_seed != int(seed):
+        problems.append(
+            f"config.seed is {stored_seed!r}, current run uses {int(seed)!r}"
+        )
+
+    stored_meta = config.get("meta_sha256")
+    if not isinstance(stored_meta, Mapping):
+        problems.append("missing config.meta_sha256 block")
+    else:
+        for key, expected in meta_sha256.items():
+            found = stored_meta.get(key)
+            if found != expected:
+                problems.append(
+                    f"config.meta_sha256.{key} is {found!r}, current run uses "
+                    f"{expected!r}"
+                )
+
+    sampling = config.get("sampling")
+    if not isinstance(sampling, Mapping):
+        problems.append("missing config.sampling block")
+    else:
+        stored_mode = sampling.get("mode")
+        if stored_mode != expected_sampling_mode:
+            problems.append(
+                f"config.sampling.mode is {stored_mode!r}, "
+                f"expected {expected_sampling_mode!r}"
+            )
 
     scoring = payload.get("scoring")
     if not isinstance(scoring, Mapping):
@@ -999,16 +1090,20 @@ def _resolve_real_threshold(
     chunk_size: int,
     model_sha256: str,
     data_sha256: str,
+    meta_sha256: Mapping[str, str],
     paired_scoring: bool,
-    force: bool,
+    expected_variant: str,
+    expected_sampling_mode: str,
 ) -> tuple[float, dict[str, Any] | None, dict[str, Any]]:
     """Return the FPR 10% threshold, the normal payload and its provenance.
 
-    A stored normal result is only reused after its dataset, model, model type
-    and scoring parameters match the current run.  ``--force`` bypasses the
-    check explicitly and logs the mismatch.  When the result is missing (or
-    unusable) the threshold is recomputed from the benign rows and the
-    provenance block marks it as recomputed.
+    A stored normal result is only reused after its dataset, model, model type,
+    seed, normalization metadata, sampling mode, variant and scoring parameters
+    match the current run.  A provenance mismatch always raises: ``--force``
+    only discards result/checkpoint/score files, it never lets a threshold from
+    another experiment be reused.  When the result is missing (or unusable) the
+    threshold is recomputed from the benign rows and the provenance block marks
+    it as recomputed.
     """
     path = _normal_result_path(results_dir)
     normal_payload = _read_normal_result(results_dir)
@@ -1036,14 +1131,15 @@ def _resolve_real_threshold(
                     n_masks=n_masks,
                     score_repeats=score_repeats,
                     paired_scoring=paired_scoring,
+                    seed=seed,
+                    meta_sha256=meta_sha256,
+                    expected_variant=expected_variant,
+                    expected_sampling_mode=expected_sampling_mode,
                 )
             except ValueError as exc:
-                if not force:
-                    raise ValueError(
-                        f"{exc}; rerun `normal` with the current model/data or "
-                        "use --force to reuse the stored threshold"
-                    ) from exc
-                LOG.warning("%s; --force reuses the stored threshold", exc)
+                raise ValueError(
+                    f"{exc}; rerun `normal` with the current model/data"
+                ) from exc
             return (
                 threshold,
                 normal_payload,
@@ -1089,7 +1185,6 @@ def _resolve_real_threshold(
 
 def _fpr_at_attack_threshold(
     policy: str,
-    real_threshold: float,
     attack_threshold: float,
     normal_payload: dict[str, Any] | None,
     test_csv: Path,
@@ -1147,7 +1242,6 @@ def _stable_run_config(
     sample_mode: str,
     max_samples: int,
     n_masks: int,
-    batch_size: int,
     score_repeats: int,
     paired_scoring: bool,
     policy: str,
@@ -1157,13 +1251,17 @@ def _stable_run_config(
     data_sha256: str,
     meta_sha256: Mapping[str, str],
     normal_result: Mapping[str, Any],
+    git_commit: str | None,
 ) -> dict[str, Any]:
     """Return the immutable parameters hashed into the checkpoint.
 
-    The adversarial ``config_hash`` of the result builder also covers the
-    mutable per-sample counts, so it cannot be used to decide whether a
-    checkpoint belongs to the current run.  This mapping deliberately holds
-    only parameters that must not change while a checkpoint is resumed.
+    The adversarial ``config_hash`` of the result builder deliberately excludes
+    the outcome counts, but it is still a result-level hash.  This mapping is
+    the checkpoint identity: it holds only parameters that must not change
+    while a checkpoint is resumed.  ``batch_size`` is deliberately absent --
+    scores are batch-invariant, so a GPU OOM retry with a smaller batch must be
+    able to resume.  ``git_commit`` is included: a checkpoint written by a
+    different code revision must not resume silently.
     """
     return {
         "attack": attack,
@@ -1172,7 +1270,6 @@ def _stable_run_config(
         "sample_mode": sample_mode,
         "max_samples": int(max_samples),
         "n_masks": int(n_masks),
-        "batch_size": int(batch_size),
         "score_repeats": int(score_repeats),
         "paired_scoring": bool(paired_scoring),
         "threshold_policy": policy,
@@ -1183,6 +1280,7 @@ def _stable_run_config(
         "meta_sha256": dict(meta_sha256),
         "normal_result": dict(normal_result),
         "code_version": __version__,
+        "git_commit": git_commit,
     }
 
 
@@ -1199,7 +1297,11 @@ def _empty_counts() -> dict[str, int]:
 
 
 def _write_npz_atomic(path: Path, arrays: Mapping[str, np.ndarray]) -> None:
-    """Write a compressed ``.npz`` file atomically."""
+    """Write a compressed ``.npz`` file atomically and durably.
+
+    The temporary file is fsynced before the rename and the parent directory is
+    fsynced afterwards, mirroring :func:`new_data_eval.results.write_json_atomic`.
+    """
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary = tempfile.mkstemp(
@@ -1208,7 +1310,10 @@ def _write_npz_atomic(path: Path, arrays: Mapping[str, np.ndarray]) -> None:
     os.close(descriptor)
     try:
         np.savez_compressed(temporary, **arrays)
+        with open(temporary, "rb+") as handle:
+            os.fsync(handle.fileno())
         os.replace(temporary, target)
+        _fsync_directory(target.parent)
     finally:
         if os.path.exists(temporary):
             os.unlink(temporary)
@@ -1219,6 +1324,7 @@ def _checkpoint_arrays(
     stable_hash: str,
     *,
     next_index: int,
+    sample_indices: np.ndarray,
     original_scores: np.ndarray,
     victim_scores: np.ndarray,
     x_adv: np.ndarray,
@@ -1230,6 +1336,7 @@ def _checkpoint_arrays(
         "config_hash": np.asarray([stable_hash], dtype=np.str_),
         "next_index": np.asarray(next_index, dtype=np.int64),
         "n_samples": np.asarray(len(original_scores), dtype=np.int64),
+        "sample_indices": np.asarray(sample_indices, dtype=np.int64),
         "original_scores": np.asarray(original_scores, dtype=np.float64),
         "victim_scores": np.asarray(victim_scores, dtype=np.float64),
         "x_adv": np.asarray(x_adv, dtype=np.float32),
@@ -1242,7 +1349,7 @@ def _checkpoint_arrays(
 
 
 def _load_checkpoint(
-    path: Path, stable_hash: str, n_samples: int
+    path: Path, stable_hash: str, n_samples: int, sample_indices: np.ndarray
 ) -> dict[str, Any] | None:
     """Load a checkpoint whose immutable configuration matches."""
     path = Path(path)
@@ -1260,6 +1367,8 @@ def _load_checkpoint(
             )
         required = {
             "next_index",
+            "n_samples",
+            "sample_indices",
             "original_scores",
             "victim_scores",
             "x_adv",
@@ -1268,6 +1377,16 @@ def _load_checkpoint(
         if not required.issubset(data.files):
             raise RuntimeError(
                 "checkpoint is incomplete; use --force to discard it "
+                f"({path})"
+            )
+
+        saved_n_samples = int(np.asarray(data["n_samples"]).ravel()[0])
+        saved_indices = np.array(data["sample_indices"], dtype=np.int64)
+        if saved_n_samples != n_samples or saved_indices.shape != (
+            n_samples,
+        ) or not np.array_equal(saved_indices, np.asarray(sample_indices, dtype=np.int64)):
+            raise RuntimeError(
+                "checkpoint sampling changed; use --force to discard it "
                 f"({path})"
             )
 
@@ -1337,7 +1456,7 @@ def _run_attack(
 ) -> int:
     """Run one attack class and write its checkpoint, scores and result."""
     started_at = datetime.now(timezone.utc)
-    x_mal, n_available = select_attack_samples(
+    x_mal, sample_indices, n_available = select_attack_samples_indexed(
         test_csv,
         attack,
         args.max_samples,
@@ -1372,7 +1491,6 @@ def _run_attack(
         sample_mode=args.sample_mode,
         max_samples=args.max_samples,
         n_masks=args.n_masks,
-        batch_size=args.batch_size,
         score_repeats=args.score_repeats,
         paired_scoring=bool(args.paired_scoring),
         policy=args.attack_threshold_policy,
@@ -1382,6 +1500,7 @@ def _run_attack(
         data_sha256=data_sha256,
         meta_sha256=meta_sha256,
         normal_result=normal_result,
+        git_commit=commit,
     )
     stable_hash = config_hash(stable_config)
 
@@ -1395,9 +1514,13 @@ def _run_attack(
         attack_threshold,
         seed=args.seed,
         n_masks=args.n_masks,
+        score_repeats=args.score_repeats,
+        paired_seed=paired_seed,
     )
 
-    checkpoint = _load_checkpoint(output_checkpoint, stable_hash, n_samples)
+    checkpoint = _load_checkpoint(
+        output_checkpoint, stable_hash, n_samples, sample_indices
+    )
     if checkpoint is None:
         original_scores = score_samples(
             model,
@@ -1409,7 +1532,7 @@ def _run_attack(
             batch_size=args.batch_size,
             seed=args.seed,
             phase=PHASE_ORIGINAL,
-            sample_indices=np.arange(n_samples, dtype=np.int64),
+            sample_indices=sample_indices,
             score_repeats=args.score_repeats,
             paired_seed=paired_seed,
         )
@@ -1435,6 +1558,7 @@ def _run_attack(
                 attack_runner,
                 stable_hash,
                 next_index=index,
+                sample_indices=sample_indices,
                 original_scores=original_scores,
                 victim_scores=victim_scores,
                 x_adv=x_adv,
@@ -1444,7 +1568,9 @@ def _run_attack(
         )
 
     for index in range(next_index, n_samples):
-        outcome = attack_runner.find_adv(x_mal[index], sample_index=index)
+        outcome = attack_runner.find_adv(
+            x_mal[index], sample_index=int(sample_indices[index])
+        )
         kind = outcome.kind
         if kind == "no_change":
             counts["cons_as_ben"] += 1
@@ -1483,8 +1609,8 @@ def _run_attack(
             return INTERRUPTED_EXIT_CODE
 
     counts["n"] = n_samples
-    # The victim scores are computed once, with the local sample positions as
-    # the stateless mask indices, so --score-repeats is averaged by
+    # The victim scores are computed once with the selected rows' real dataset
+    # indices as the stateless mask indices, so --score-repeats is averaged by
     # score_samples exactly like the original scores above.
     victim_scores = np.asarray(
         score_samples(
@@ -1497,7 +1623,7 @@ def _run_attack(
             batch_size=args.batch_size,
             seed=args.seed,
             phase=PHASE_VICTIM,
-            sample_indices=np.arange(n_samples, dtype=np.int64),
+            sample_indices=sample_indices,
             score_repeats=args.score_repeats,
             paired_seed=paired_seed,
         ),
@@ -1518,7 +1644,7 @@ def _run_attack(
     _write_npz_atomic(
         output_scores,
         {
-            "sample_indices": np.arange(n_samples, dtype=np.int64),
+            "sample_indices": sample_indices,
             "original_scores": original_scores,
             "victim_scores": victim_scores,
             "kinds": kinds,
@@ -1650,6 +1776,11 @@ def _run_adversarial(args: argparse.Namespace, *, flat: bool) -> int:
     )
 
     paired_seed = args.seed if args.paired_scoring else None
+    # The normal result reused by the canonical run comes from a full `normal`
+    # run (variant "primary", sampling "full"); the smoke run recomputes it
+    # with the smoke normal result (variant "smoke", sampling "first_n").
+    expected_variant = "smoke" if flat else "primary"
+    expected_sampling_mode = "first_n" if flat else "full"
     (
         real_threshold,
         normal_payload,
@@ -1668,8 +1799,10 @@ def _run_adversarial(args: argparse.Namespace, *, flat: bool) -> int:
         chunk_size=args.chunk_size,
         model_sha256=model_sha256,
         data_sha256=data_sha256,
+        meta_sha256=meta_sha256,
         paired_scoring=bool(args.paired_scoring),
-        force=bool(args.force),
+        expected_variant=expected_variant,
+        expected_sampling_mode=expected_sampling_mode,
     )
     attack_threshold = (
         real_threshold
@@ -1678,7 +1811,6 @@ def _run_adversarial(args: argparse.Namespace, *, flat: bool) -> int:
     )
     fpr_at_attack = _fpr_at_attack_threshold(
         args.attack_threshold_policy,
-        real_threshold,
         attack_threshold,
         normal_payload,
         test_csv,
@@ -1754,7 +1886,7 @@ def run_smoke(args: argparse.Namespace) -> int:
     adversarial_args.paired_scoring = False
     adversarial_args.variant = "smoke"
     adversarial_args.checkpoint_every = ADVERSARIAL_CHECKPOINT_EVERY
-    adversarial_args.force = False
+    adversarial_args.force = bool(args.force)
     adversarial_args.dry_run = False
     with _stop_signals():
         return _run_adversarial(adversarial_args, flat=True)

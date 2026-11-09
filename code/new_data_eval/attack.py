@@ -59,8 +59,8 @@ LEARNING_RATES: tuple[float, ...] = (0.001, 0.01, 0.1, 1.0)
 #: Iteration budget of every learning rate of :data:`LEARNING_RATES`.
 ITERATIONS: tuple[int, ...] = (30, 40, 50, 60)
 
-#: Fixed (always kept) features: everything not zeroed by the reference masks.
-_FIXED_INDICES: tuple[int, ...] = (
+#: Features zeroed by the reference fixed mask (they are *masked*, not kept).
+_FIXED_ZEROED_INDICES: tuple[int, ...] = (
     0,
     3,
     4,
@@ -205,6 +205,8 @@ class FlowAttack:
         *,
         seed: int,
         n_masks: int = 100,
+        score_repeats: int = 1,
+        paired_seed: int | None = None,
     ) -> None:
         num_input = int(num_input)
         if num_input != N_FEATURES:
@@ -218,11 +220,17 @@ class FlowAttack:
             raise ValueError(
                 f"n_masks must be divisible by 5, got {n_masks}"
             )
+        score_repeats = int(score_repeats)
+        if score_repeats < 1:
+            raise ValueError(
+                f"score_repeats must be positive, got {score_repeats}"
+            )
 
         self.model = model
         self.num_input = num_input
         self.n_masks = n_masks
-        self.group_size = n_masks // 5
+        self.score_repeats = score_repeats
+        self.paired_seed = None if paired_seed is None else int(paired_seed)
         self.seed = int(seed)
         self.real_threshold = self._finite_threshold(real_threshold, "real_threshold")
         self.attack_threshold = self._finite_threshold(
@@ -288,7 +296,7 @@ class FlowAttack:
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Build the reference fixed mask and its three variants."""
         fixed = np.ones(self.num_input, dtype=np.float32)
-        for index in _FIXED_INDICES:
+        for index in _FIXED_ZEROED_INDICES:
             fixed[index] = 0
         for index in range(58, 65):
             fixed[index] = 0
@@ -309,7 +317,33 @@ class FlowAttack:
         return fixed, mask_l1, mask_l2, mask_l3
 
     def _validate_masks(self) -> None:
-        """Reject masks with an out-of-range feature index."""
+        """Reject a source feature index outside ``[0, num_input)``.
+
+        The masks themselves are always ``num_input`` wide, so a
+        ``np.flatnonzero(mask)`` bound check is dead code.  The source index
+        tuples (zeroed features, duplicates, clamps, flags, aggregates and the
+        extra mask layers) are the only place where an out-of-range index
+        could silently index the wrong feature, so they are validated here.
+        """
+        sources: tuple[tuple[str, Sequence[int]], ...] = (
+            ("_FIXED_ZEROED_INDICES", _FIXED_ZEROED_INDICES),
+            ("_DUPLICATE_FEATURES keys", tuple(_DUPLICATE_FEATURES)),
+            ("_DUPLICATE_FEATURES values", tuple(_DUPLICATE_FEATURES.values())),
+            ("_MINS", _MINS),
+            ("_MAXS", _MAXS),
+            ("_FLAGS", _FLAGS),
+            ("_AGGR_FEATURES", _AGGR_FEATURES),
+            ("_MASK_L2_INDICES", _MASK_L2_INDICES),
+            ("_MASK_L3_INDICES", _MASK_L3_INDICES),
+            ("_FIXED_ZERO_INDICES", _FIXED_ZERO_INDICES),
+        )
+        for name, indices in sources:
+            for index in indices:
+                if not 0 <= int(index) < self.num_input:
+                    raise ValueError(
+                        f"{name} references feature index {index} outside "
+                        f"[0, {self.num_input})"
+                    )
         for name, mask in (
             ("fixed_mask", self.fixed_mask),
             ("mask_l1", self.mask_l1),
@@ -319,12 +353,6 @@ class FlowAttack:
             if mask.shape != (self.num_input,):
                 raise ValueError(
                     f"{name} must have shape ({self.num_input},), got {mask.shape}"
-                )
-            indices = np.flatnonzero(mask)
-            if indices.size and int(indices.max()) >= self.num_input:
-                raise ValueError(
-                    f"{name} references feature index {int(indices.max())} "
-                    f">= num_input ({self.num_input})"
                 )
 
     # -- deterministic masks ------------------------------------------------
@@ -390,8 +418,10 @@ class FlowAttack:
 
         ``sample`` holds the **raw** features of one sample.  The masks are
         derived by :func:`score_samples` from
-        ``(seed, sample_index, phase)``, so the score is deterministic and
-        independent of any batching.
+        ``(seed, sample_index, phase, repeat)``, so the score is deterministic
+        and independent of any batching.  The attack forwards its configured
+        ``score_repeats`` and ``paired_seed`` so the success/victim decisions
+        use the same repeat-averaged scores as the evaluation.
         """
         if phase not in PHASES:
             raise ValueError(
@@ -408,6 +438,8 @@ class FlowAttack:
             seed=self.seed,
             phase=phase,
             sample_indices=[int(sample_index)],
+            score_repeats=self.score_repeats,
+            paired_seed=self.paired_seed,
         )
         return float(scores[0])
 

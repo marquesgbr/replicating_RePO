@@ -25,6 +25,7 @@ from new_data_eval.data import (
     load_metadata,
     normalize_features,
     select_attack_samples,
+    select_attack_samples_indexed,
     validate_dataset,
     validate_header,
 )
@@ -107,6 +108,38 @@ def test_select_attack_samples_is_seeded(synthetic_project):
     )
     assert n_a == n_b
     np.testing.assert_allclose(a, b)
+
+
+def test_select_attack_samples_indexed_returns_the_global_indices(
+    synthetic_project,
+):
+    from new_data_eval.data import iter_test_chunks_detailed
+
+    expected: list[np.ndarray] = []
+    for chunk in iter_test_chunks_detailed(synthetic_project.test_csv, 7):
+        expected.append(chunk.indices[chunk.valid & (chunk.labels == "ddos")])
+    expected_indices = np.concatenate(expected)
+
+    x, indices, available = select_attack_samples_indexed(
+        synthetic_project.test_csv,
+        "ddos",
+        max_samples=2,
+        mode="first",
+        seed=2019,
+        chunksize=7,
+    )
+    wrapped, wrapped_available = select_attack_samples(
+        synthetic_project.test_csv,
+        "ddos",
+        max_samples=2,
+        mode="first",
+        seed=2019,
+        chunksize=7,
+    )
+
+    assert available == wrapped_available == 3
+    np.testing.assert_array_equal(indices, expected_indices[:2])
+    np.testing.assert_allclose(x, wrapped)
 
 
 # --- layout -----------------------------------------------------------------
