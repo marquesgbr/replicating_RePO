@@ -38,7 +38,7 @@ while (($#)); do
     --force-venv) FORCE_VENV=1 ;;
     --force-new-data) FORCE_NEW_DATA=1 ;;
     -h|--help)
-      sed -n '2,19p' "$0"
+      sed -n '2,16p' "$0"
       exit 0
       ;;
     *)

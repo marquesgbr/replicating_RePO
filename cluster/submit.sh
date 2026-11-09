@@ -181,7 +181,7 @@ PY
   local array_spec="0-$((count - 1))%${CONCURRENCY}"
   local job_id
   local job_name="repo-adv-${model}"
-  if [[ "${attack}" != "all" ]]; then
+  if [[ "${attack,,}" != "all" ]]; then
     job_name+="-$(echo "${attack}" | tr ' /' '--' | tr -cd '[:alnum:]._-')"
   fi
   local extra="ATTACK_LIST_FILE=${list_file},CHECKPOINT_EVERY=${checkpoint_every},LOG_EVERY=${log_every}"
@@ -330,7 +330,7 @@ PY
   fi
 
   local job_name="repo-new-data-adv-${variant}"
-  if [[ "${attack}" != "all" ]]; then
+  if [[ "${attack,,}" != "all" ]]; then
     job_name+="-$(echo "${attack}" | tr ' /' '--' | tr -cd '[:alnum:]._-')"
   fi
   local job_id
