@@ -50,7 +50,6 @@ __all__ = [
     "PHASE_VICTIM",
     "REPO_PLUS_GROUPS",
     "load_model",
-    "per_mask_mse",
     "reconstruction_errors",
     "repo_plus_scores",
     "repo_scores",
@@ -101,27 +100,6 @@ def _as_error_matrix(errors: np.ndarray) -> np.ndarray:
     return array
 
 
-def per_mask_mse(residuals: np.ndarray) -> np.ndarray:
-    """Mean squared reconstruction error of every ``(sample, mask)`` pair.
-
-    ``residuals`` has shape ``(n_samples, n_masks, N_FEATURES)`` -- the
-    difference between the reconstruction and the original sample for every
-    mask -- and the result has shape ``(n_samples, n_masks)``.
-
-    This reproduces ``tf.reduce_mean(tf.square(rec_x - x), axis=1)`` of the
-    reference notebooks without importing TensorFlow.
-    """
-    array = np.asarray(residuals, dtype=np.float64)
-    if array.ndim != 3:
-        raise ValueError(f"residuals must be 3-D, got shape {array.shape}")
-    if array.shape[2] != N_FEATURES:
-        raise ValueError(
-            f"residuals must have {N_FEATURES} features in the last axis, "
-            f"got shape {array.shape}"
-        )
-    return np.mean(np.square(array), axis=2)
-
-
 def repo_scores(errors: np.ndarray) -> np.ndarray:
     """Return the RePO score of every sample (the mean of its mask errors).
 
@@ -159,7 +137,7 @@ def score_from_errors(errors: np.ndarray, mode: str) -> np.ndarray:
     """
     if mode == "repo":
         return repo_scores(errors)
-    if mode in ("repo_plus", "plus"):
+    if mode == "repo_plus":
         return repo_plus_scores(errors)
     raise ValueError(f"unknown score mode: {mode!r}")
 
@@ -169,13 +147,12 @@ def threshold_at_fpr(
 ) -> float:
     """Return the decision threshold of the benign scores at ``fpr``.
 
-    The threshold is the ``ceil(n * fpr)``-th largest benign score (``method
-    "ceil"``), counted from the end of the sorted scores -- the same rule the
-    flow notebook and the Apuana runner use.  The ``"round"`` method (used by
-    the packet notebook) is supported as well.  The index is clamped to
-    ``[1, n]``, so the threshold always exists and is one of the benign
-    scores.  Non-finite benign scores are rejected: they would otherwise
-    silently poison the threshold.
+    The threshold is the ``ceil(n * fpr)``-th largest benign score, counted
+    from the end of the sorted scores -- the same rule the flow notebook and
+    the Apuana runner use.  Only ``method="ceil"`` is supported.  The index is
+    clamped to ``[1, n]``, so the threshold always exists and is one of the
+    benign scores.  Non-finite benign scores are rejected: they would
+    otherwise silently poison the threshold.
     """
     values = np.asarray(benign_scores, dtype=np.float64).ravel()
     if values.size == 0:
@@ -184,14 +161,10 @@ def threshold_at_fpr(
         raise ValueError(f"fpr must be in (0, 1), got {fpr!r}")
     if not np.isfinite(values).all():
         raise ValueError("benign scores must be finite")
-
-    if method == "ceil":
-        index = int(math.ceil(values.size * fpr))
-    elif method == "round":
-        index = int(np.round(values.size * fpr))
-    else:
+    if method != "ceil":
         raise ValueError(f"unknown threshold method: {method!r}")
 
+    index = int(math.ceil(values.size * fpr))
     index = max(1, min(index, values.size))
     return float(np.sort(values)[-index])
 
@@ -579,7 +552,7 @@ def score_samples(
     and the resulting scores are averaged -- the noise analysis of the
     methodology.
     """
-    if mode not in ("repo", "repo_plus", "plus"):
+    if mode not in ("repo", "repo_plus"):
         raise ValueError(f"unknown score mode: {mode!r}")
 
     x_norm, indices = _prepare_scoring(

@@ -10,12 +10,10 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from new_data_eval.data import N_FEATURES
 from new_data_eval.scoring import (
     PHASE_ATTACK,
     PHASE_ORIGINAL,
     PHASE_VICTIM,
-    per_mask_mse,
     repo_plus_scores,
     repo_scores,
     score_from_errors,
@@ -99,14 +97,3 @@ def test_threshold_at_fpr_clamps_the_index_to_the_available_scores():
     # ceil(3 * 0.9) == 3 -> the smallest score.
     assert threshold_at_fpr(scores, 0.9) == 1.0
 
-
-def test_per_mask_mse_matches_the_reference_formula():
-    rng = np.random.default_rng(3)
-    residuals = rng.normal(size=(3, 5, N_FEATURES))
-    expected = np.mean(np.square(residuals), axis=2)
-    np.testing.assert_allclose(per_mask_mse(residuals), expected)
-
-
-def test_per_mask_mse_rejects_wrong_feature_width():
-    with pytest.raises(ValueError, match="77"):
-        per_mask_mse(np.zeros((2, 3, N_FEATURES - 1)))
