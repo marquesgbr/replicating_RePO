@@ -168,7 +168,30 @@ dados/modelo, commit e versões do ambiente.
   recalcula e registra aviso);
 - otimiza a loss RePO (soma dos 100 erros médios), mas mede sucesso e TPR da
   vítima com o agregado RePO+;
-- grava checkpoint a cada 50 amostras e retoma sem duplicar amostras.
+- grava checkpoint a cada 50 amostras e retoma sem duplicar amostras;
+- usa o índice global da linha no CSV como `sample_index`, então as máscaras
+  de uma amostra não dependem do tamanho da amostra sorteada nem do chunk.
+
+Cada amostra atacada termina em um de quatro estados:
+
+| Estado | Significado | Contagem |
+| --- | --- | --- |
+| `evaded` | o ataque passou a ser benigno com a primeira perturbação | `fooled`, `evaded` |
+| `backup` | o ataque só passou a benigno com uma perturbação de reserva | `fooled`, `backup` |
+| `no_change` | nenhuma perturbação mudou a classificação | `cons_as_ben` |
+| `not_fooled` | a amostra já era benigna antes do ataque (falso negativo) | `cons_as_mal` |
+
+`fooled = evaded + backup` e `fooled + cons_as_mal + cons_as_ben = n`.
+`attack_success_rate` é `fooled / n` e inclui os falsos negativos
+pré-existentes no denominador; `conditional_drop = 1 - victim_tpr / normal_tpr`
+é a métrica de evasão condicionada às amostras que o modelo já detectava.
+
+O resultado canônico (`variant="primary"`, `sensitivity_*`) exige um resultado
+normal **completo** (`sampling.mode="full"`, `variant="primary"`) do mesmo
+modelo, dados, metadados, seed e configuração de escores; caso contrário o
+comando falha antes de escrever qualquer resultado. Para inspeção com dados
+truncados, use `--variant smoke`, que grava em `adversarial/smoke/` e aceita um
+normal parcial sem nunca sobrescrever `adversarial/primary/`.
 
 Resultados principais e sensibilidades ficam separados:
 
@@ -224,16 +247,19 @@ PYTHONPATH=code python -m new_data_eval normal \
   --modes repo,repo_plus --max-samples 20 --n-masks 5 --batch-size 2
 PYTHONPATH=code python -m new_data_eval adversarial \
   --results-dir results/new_data/notebook_smoke \
-  --attack ddos --max-samples 5 --n-masks 5 --variant primary
+  --attack ddos --max-samples 5 --n-masks 5 --variant smoke
 ```
 
 O adversarial lê o threshold de FPR 10% do resultado normal gravado no mesmo
-`--results-dir`; rode o normal de smoke antes. Os notebooks já usam
-`results/new_data/notebook_smoke/` por padrão.
+`--results-dir`; rode o normal de smoke antes. Como esse normal é truncado, use
+`--variant smoke` (e não `--variant primary`). Os notebooks já usam
+`results/new_data/notebook_smoke/` e o notebook adversarial usa
+`VARIANT = "smoke"` por padrão.
 
 ### Verificação local
 
-Em 2026-11-09, no commit `e57b579`, o fluxo foi executado em CPU com o ZIP
+Em 2026-11-09, no commit de código `ae06924` (o commit de documentação
+seguinte não altera a execução), o fluxo foi executado em CPU com o ZIP
 extraído localmente (CSVs fora do Git). Comandos e resultados exatos:
 
 ```bash
@@ -269,16 +295,21 @@ PYTHONPATH=code python -m new_data_eval adversarial \
   --model-dir models/new_data_model \
   --meta-dir data/new_data/x_train_meta \
   --results-dir results/new_data/verification \
-  --attack ddos --max-samples 5 --n-masks 5 --variant primary
+  --attack ddos --max-samples 5 --n-masks 5 --variant smoke
 ```
 
-Resultado: `results/new_data/verification/adversarial/primary/ddos.json`, com
-`model_type="new_data_flow"`, `variant="primary"`, 5 de 202 amostras de `ddos`,
-threshold de ataque 0,0337444 lido do `repo_plus.json` normal, `fooled=0`,
-`victim_tpr=0.2`. O campo `runtime_seconds` do JSON registra 18,96 s (varredura
-do CSV e ataque); o comando completo levou ~46 s de relógio de parede,
-incluindo importação, carregamento do modelo e leitura inicial. Nenhum
-resultado de fluxo/pacotes foi alterado.
+Resultado: `results/new_data/verification/adversarial/smoke/ddos.json`, com
+`model_type="new_data_flow"`, `variant="smoke"`, 5 de 202 amostras de `ddos`,
+threshold de ataque 0,0337444 lido do `repo_plus.json` normal, `fooled=0`
+(`cons_as_ben=5`), `victim_tpr=0`, FPR medido no threshold de ataque
+`0,111111`. O campo `runtime_seconds` do JSON registra 18,43 s (varredura do
+CSV e ataque); o comando completo leva ~46 s de relógio de parede, incluindo
+importação, carregamento do modelo e leitura inicial. Nenhum resultado de
+fluxo/pacotes foi alterado.
+
+Com `--variant primary` esse comando falharia de propósito: o normal de
+verificação é truncado (`sampling.mode="first_n"`), e o resultado canônico só
+aceita um normal completo. O erro ocorre antes de qualquer escrita.
 
 **A avaliação completa continua pendente.** O teste normal integral (~2,1 GB,
 3,59 milhões de linhas) e o adversarial dos 9 ataques com 5.000 amostras cada
@@ -311,9 +342,23 @@ de epochs, batch size, loss final e shape da matriz de treino.
   toda validação.
 - **Classes pequenas:** classes com `n < 100` recebem `low_n` e não devem
   sustentar conclusões fortes.
+- **FPR do `paper_0.8`:** quando o resultado normal não está disponível, o FPR
+  desse threshold é medido em no máximo 5.000 linhas benignas
+  (`BENIGN_FPR_ROWS`), não no conjunto completo. Com o normal completo
+  presente, o FPR de 10% vem do JSON e o de `paper_0.8` continua sendo uma
+  estimativa.
 - **Custo computacional:** a avaliação completa percorre ~2,1 GB de teste e
-  repete 100 máscaras por amostra; use GPU quando disponível e preserve os
-  checkpoints para retomar interrupções.
+  repete 100 máscaras por amostra; `--attack all` faz uma varredura completa do
+  CSV por ataque (mais uma para as features inteiras), então o custo cresce
+  com o número de ataques. Use GPU quando disponível e preserve os checkpoints
+  para retomar interrupções.
+- **Identidade do modelo:** o digest do diretório do modelo ignora
+  `training_manifest.json` (metadados mutáveis, incluindo `created_at`) e cobre
+  apenas os arquivos exportados do SavedModel. O manifesto registra a
+  proveniência do treino separadamente.
+- **Hash e commits:** `config_hash` inclui a versão do código e o commit Git;
+  duas execuções idênticas em commits diferentes têm hashes diferentes por
+  definição, mesmo que os números coincidam.
 - **Sem reconstrução do dataset bruto:** o ZIP processado é a fonte; o script
   `preprocess_new_data.py` é legado e não deve ser tratado como reprodutor do
   ZIP.
