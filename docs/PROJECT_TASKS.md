@@ -16,7 +16,7 @@ nas linhas correspondentes.
   - [x] Escolher entre Linux/WSL2 com GPU, CPU local ou Colab.
   - [x] Registrar Python, TensorFlow, Keras, CUDA/cuDNN, sistema operacional e
         kernel utilizados.
-  - [ ] Confirmar que todos os membros conseguem abrir os notebooks no
+  - [x] Confirmar que todos os membros conseguem abrir os notebooks no
         ambiente escolhido.
 - [x] Validar o ambiente.
   - [x] Confirmar as versões instaladas.
@@ -79,11 +79,11 @@ Execute os notebooks normais antes dos adversariais.
     FPR no threshold adversarial do artigo 0,0997 (RePO+).
 - [ ] Executar `code/Packet_based_RePO_Adversarial.ipynb` nos ataques do artigo usando RePO+.
     - [x] FTP-Patator
-  - [ ] SSH-Patator
-  - [ ] Slowloris
-  - [ ] Slowhttptest
-  - [ ] Hulk
-  - [ ] GoldenEye
+  - [x] SSH-Patator
+  - [x] DoS Slowloris
+  - [x] DoS Slowhttptest
+  - [ ] DoS Hulk
+  - [ ] DoS GoldenEye
   - [ ] Heartbleed
   - [ ] Infiltration
   - [ ] Botnet
@@ -112,11 +112,9 @@ Execute os notebooks normais antes dos adversariais.
 
 ### 3.3 Registro de reprodutibilidade
 
-- [ ] Registrar o notebook executado.
-- [ ] Registrar o kernel e o interpretador Python.
-- [ ] Registrar as versões das bibliotecas.
-- [ ] Registrar o sistema operacional e a GPU, quando aplicável.
-- [ ] Registrar a data e o commit do repositório.
+- [x] Registrar o notebook executado.
+- [x] Registrar o kernel e o interpretador Python.
+- [x] Registrar as versões das bibliotecas.
 - [ ] Preservar ou exportar as saídas necessárias para o relatório.
 
 ## 4. Análise dos resultados de referência
@@ -135,14 +133,30 @@ Execute os notebooks normais antes dos adversariais.
 Esta seção deve ser concluída caso o escopo do projeto inclua outro conjunto de
 dados além dos dados usados pelo artigo de referência.
 
-- [ ] Escolher o dataset adicional.
+- [x] Escolher o dataset adicional.
+  - Evidência: CIC-ToN-IoT processado em `data/new_data/` (citação oficial
+    ainda pendente de confirmação).
 - [ ] Justificar a escolha.
+  - Pendente: a justificativa formal depende da confirmação da fonte oficial
+    (seção “Fonte e citação” de `docs/NEW_DATASET.md`, marcada como pendente).
 - [ ] Documentar origem, características e classes.
-- [ ] Preparar os dados.
-- [ ] Definir treino, validação e teste.
-- [ ] Registrar quantidades por classe.
+  - Pendente: as características e classes estão descritas em
+    `docs/NEW_DATASET.md`, mas a origem/citação oficial ainda precisa ser
+    confirmada.
+- [x] Preparar os dados.
+  - Evidência: `extract_new_data.sh` e extração local do ZIP LFS com
+    `validate` aprovado.
+- [x] Definir treino, validação e teste.
+  - Evidência: 70% dos benignos para treino, 30% dos benignos mais todos os
+    maliciosos para teste; não há split de validação separado.
+- [x] Registrar quantidades por classe.
+  - Evidência: 3.590.733 linhas válidas no teste e contagens por classe em
+    `docs/NEW_DATASET.md` (obtidas de `validate`).
 - [ ] Executar a avaliação da solução de referência no dataset adicional.
+  - Pendente: somente smoke local em CPU foi executado; a avaliação normal
+    completa e os 9 ataques adversariais exigem GPU/Apuana.
 - [ ] Consolidar os resultados para comparação.
+  - Pendente: depende da conclusão da avaliação completa acima.
 
 ## 6. Melhoria proposta pela equipe
 
@@ -259,6 +273,12 @@ Os requisitos detalhados estão em
 
 | Data | Pessoa | Ambiente/kernel | Notebook ou tarefa | Commit | Observações |
 | --- | --- | --- | --- | --- | --- |
-| 27/10|  Gabriel Marques| Colab (Extension)  |  Packet-Based Normal | eeb96f3 |Reproduzir avaliação   |
-| 27/10|  Gabriel Marques| Colab (Extension)  |  Flow-Based Adversarial | d016f65|Reproduzir avaliação: DoS Slowhttptest - 186min   |
+| 27/10|  Gabriel Marques| Colab GPU: T4|  Packet-Based Normal | eeb96f3 |Reproduzir avaliação   |
+| 27/10|  Gabriel Marques| Colab GPU: T4  |  Flow-Based Adversarial | d016f65|Reproduzir avaliação: DoS Slowhttptest - 186min   |
 | 29/10|  Gabriel Marques|Local GPU|  Packet-Based Adversarial| 3e2019c|Reproduzir avaliação: FTP-Patator - 23h14min   |
+| 29/10|  Gabriel Marques|Local CPU|  Flow-Based Adversarial| 23a17ac|Reproduzir avaliação: FTP-Patator - 11min   |
+| 30/10|  Gabriel Marques|Local CPU|  Flow-Based Adversarial| 163195f|Reproduzir avaliação: SSH-Patator, Slowloris, Slowhttptest,Hulk, GoldenEye, Heartbleed, Infiltration   |
+| 31/10|  Gabriel Marques|Local CPU|  Flow-Based Adversarial| 163195f|Reproduzir avaliação:  Botnet, Portscan, DDoS  |
+| 01/11|  Gabriel Marques|Colab GPU: T4|  Packet-Based Adversarial| 547518f|Reproduzir avaliação:  SSH-Patator - 1h55min  |
+| 01/11|  Gabriel Marques|Colab GPU: T4|  Packet-Based Adversarial| 3edcbf7|Reproduzir avaliação:  FTP-Patator - 3h56min  |
+| 02/11|  Gabriel Marques|Colab GPU: T4|  Packet-Based Adversarial| 5d688a3|Reproduzir avaliação: Slowloris, Slowhttptest  |

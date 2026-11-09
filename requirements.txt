@@ -2,6 +2,9 @@ numpy
 pandas
 tensorflow
 
+# Test suite for the new dataset evaluation package (code/new_data_eval).
+pytest
+
 # Jupyter support for running the notebooks from VS Code or a browser.
 jupyterlab
 ipykernel

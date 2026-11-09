@@ -18,6 +18,9 @@ wednesday.zip
 ## Flow Based
 *.csv
 
+## New dataset evaluation artifacts
+results/new_data/**/*.npz
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
