@@ -731,7 +731,7 @@ git commit -m "feat: add adversarial CLI with checkpoints and variants"
 - Create: `docs/NEW_DATASET.md`
 - Create: `code/new_data_eval/tests/test_docs_and_notebooks.py`
 - Modify: `README.md`
-- Modify: `results/.gitignore` or root `.gitignore` for `results/new_data/scores/`
+- Modify: `results/.gitignore` or root `.gitignore` for `results/new_data/**/*.npz`
 - Modify: `docs/PROJECT_TASKS.md` section 5 after results exist
 
 **Interfaces:**
@@ -912,7 +912,7 @@ from pathlib import Path
 for path in Path("results/new_data").rglob("*.json"):
     data = json.loads(path.read_text())
     assert data["model_type"] == "new_data_flow", path
-    assert data["variant"] in {"primary", "sensitivity_first_n", "sensitivity_paper_0.8"}, path
+    assert data["variant"] in {"primary", "sensitivity_first_n", "sensitivity_paper_0.8", "smoke"}, path
 print("ok")
 PY
 ```
