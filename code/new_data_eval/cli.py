@@ -125,6 +125,7 @@ ADVERSARIAL_VARIANTS: tuple[str, ...] = (
     "primary",
     "sensitivity_first_n",
     "sensitivity_paper_0.8",
+    "smoke",
 )
 
 #: Threshold policies of the adversarial evaluation.
@@ -970,8 +971,7 @@ def _verify_normal_provenance(
     paired_scoring: bool,
     seed: int,
     meta_sha256: Mapping[str, str],
-    expected_variant: str,
-    expected_sampling_mode: str,
+    strict_full: bool,
 ) -> None:
     """Raise when the stored normal result does not describe the current run.
 
@@ -980,6 +980,11 @@ def _verify_normal_provenance(
     the normal result records is compared before the threshold is returned.
     This includes the normalization metadata hashes, the sampling mode, the
     result variant and the score mode.
+
+    ``strict_full`` selects the variant/sampling policy: canonical adversarial
+    variants require a full ``primary`` normal run, while the smoke variant
+    accepts a truncated ``smoke`` (or ``primary``) result with either
+    ``first_n`` or ``full`` sampling.  Every other field stays strict.
     """
     problems: list[str] = []
 
@@ -994,10 +999,12 @@ def _verify_normal_provenance(
             f"score_mode is {payload.get('score_mode')!r}, expected 'repo_plus'"
         )
 
-    if payload.get("variant") != expected_variant:
+    allowed_variants = {"primary"} if strict_full else {"primary", "smoke"}
+    stored_variant = payload.get("variant")
+    if stored_variant not in allowed_variants:
+        expected = " or ".join(repr(item) for item in sorted(allowed_variants))
         problems.append(
-            f"variant is {payload.get('variant')!r}, "
-            f"expected {expected_variant!r}"
+            f"variant is {stored_variant!r}, expected {expected}"
         )
 
     dataset = payload.get("dataset")
@@ -1045,11 +1052,12 @@ def _verify_normal_provenance(
     if not isinstance(sampling, Mapping):
         problems.append("missing config.sampling block")
     else:
+        allowed_modes = {"full"} if strict_full else {"full", "first_n"}
         stored_mode = sampling.get("mode")
-        if stored_mode != expected_sampling_mode:
+        if stored_mode not in allowed_modes:
+            expected = " or ".join(repr(item) for item in sorted(allowed_modes))
             problems.append(
-                f"config.sampling.mode is {stored_mode!r}, "
-                f"expected {expected_sampling_mode!r}"
+                f"config.sampling.mode is {stored_mode!r}, expected {expected}"
             )
 
     scoring = payload.get("scoring")
@@ -1092,18 +1100,19 @@ def _resolve_real_threshold(
     data_sha256: str,
     meta_sha256: Mapping[str, str],
     paired_scoring: bool,
-    expected_variant: str,
-    expected_sampling_mode: str,
+    strict_full: bool,
 ) -> tuple[float, dict[str, Any] | None, dict[str, Any]]:
     """Return the FPR 10% threshold, the normal payload and its provenance.
 
     A stored normal result is only reused after its dataset, model, model type,
     seed, normalization metadata, sampling mode, variant and scoring parameters
-    match the current run.  A provenance mismatch always raises: ``--force``
-    only discards result/checkpoint/score files, it never lets a threshold from
-    another experiment be reused.  When the result is missing (or unusable) the
-    threshold is recomputed from the benign rows and the provenance block marks
-    it as recomputed.
+    match the current run.  ``strict_full`` requires a full ``primary`` normal
+    run for canonical variants; the smoke variant accepts a truncated
+    ``smoke``/``primary`` result.  A provenance mismatch always raises:
+    ``--force`` only discards result/checkpoint/score files, it never lets a
+    threshold from another experiment be reused.  When the result is missing
+    (or unusable) the threshold is recomputed from the benign rows and the
+    provenance block marks it as recomputed.
     """
     path = _normal_result_path(results_dir)
     normal_payload = _read_normal_result(results_dir)
@@ -1133,8 +1142,7 @@ def _resolve_real_threshold(
                     paired_scoring=paired_scoring,
                     seed=seed,
                     meta_sha256=meta_sha256,
-                    expected_variant=expected_variant,
-                    expected_sampling_mode=expected_sampling_mode,
+                    strict_full=strict_full,
                 )
             except ValueError as exc:
                 raise ValueError(
@@ -1776,11 +1784,11 @@ def _run_adversarial(args: argparse.Namespace, *, flat: bool) -> int:
     )
 
     paired_seed = args.seed if args.paired_scoring else None
-    # The normal result reused by the canonical run comes from a full `normal`
-    # run (variant "primary", sampling "full"); the smoke run recomputes it
-    # with the smoke normal result (variant "smoke", sampling "first_n").
-    expected_variant = "smoke" if flat else "primary"
-    expected_sampling_mode = "first_n" if flat else "full"
+    # Canonical variants (primary/sensitivity_*) only reuse a full `normal`
+    # result, so a truncated `normal --max-samples N` cannot silently feed
+    # them.  The smoke variant (and the `smoke` subcommand) accepts either a
+    # truncated smoke result or a full primary one.
+    strict_full = not (flat or args.variant == "smoke")
     (
         real_threshold,
         normal_payload,
@@ -1801,8 +1809,7 @@ def _run_adversarial(args: argparse.Namespace, *, flat: bool) -> int:
         data_sha256=data_sha256,
         meta_sha256=meta_sha256,
         paired_scoring=bool(args.paired_scoring),
-        expected_variant=expected_variant,
-        expected_sampling_mode=expected_sampling_mode,
+        strict_full=strict_full,
     )
     attack_threshold = (
         real_threshold

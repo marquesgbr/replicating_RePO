@@ -416,6 +416,68 @@ def test_calibrated_fallback_measures_the_fpr_on_benign_rows(
     assert payload["fpr_at_attack_threshold"] != pytest.approx(0.10)
 
 
+def test_primary_rejects_a_truncated_normal_result(
+    synthetic_project, monkeypatch, capsys
+):
+    monkeypatch.setattr(cli.FlowAttack, "find_adv", _no_change)
+    _rewrite_normal(
+        synthetic_project,
+        lambda payload: payload["config"]["sampling"].update(
+            {"mode": "first_n"}
+        ),
+    )
+
+    assert main(_adversarial_args(synthetic_project)) != 0
+    assert "config.sampling.mode" in capsys.readouterr().err
+    assert not result_path(
+        synthetic_project.results_dir, "primary", "ddos"
+    ).exists()
+
+
+def test_smoke_variant_accepts_a_truncated_normal_result(
+    synthetic_project, monkeypatch
+):
+    monkeypatch.setattr(cli.FlowAttack, "find_adv", _no_change)
+    _rewrite_normal(
+        synthetic_project,
+        lambda payload: payload["config"]["sampling"].update(
+            {"mode": "first_n"}
+        ),
+    )
+
+    assert main(
+        _adversarial_args(synthetic_project, "--variant", "smoke")
+    ) == 0
+
+    smoke_result = result_path(
+        synthetic_project.results_dir, "smoke", "ddos"
+    )
+    assert smoke_result.exists()
+    assert not result_path(
+        synthetic_project.results_dir, "primary", "ddos"
+    ).exists()
+    assert json.loads(smoke_result.read_text())["variant"] == "smoke"
+
+
+def test_smoke_variant_cannot_overwrite_primary(
+    synthetic_project, monkeypatch
+):
+    monkeypatch.setattr(cli.FlowAttack, "find_adv", _no_change)
+
+    assert main(_adversarial_args(synthetic_project)) == 0
+    primary = result_path(synthetic_project.results_dir, "primary", "ddos")
+    original = primary.read_bytes()
+
+    assert main(
+        _adversarial_args(synthetic_project, "--variant", "smoke")
+    ) == 0
+
+    assert primary.read_bytes() == original
+    assert result_path(
+        synthetic_project.results_dir, "smoke", "ddos"
+    ).exists()
+
+
 @pytest.mark.parametrize(
     "variant, sample_mode, policy",
     [
