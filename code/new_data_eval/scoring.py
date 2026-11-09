@@ -346,6 +346,8 @@ def _resolve_sample_indices(
         )
     if (indices < 0).any():
         raise ValueError("sample_indices must not be negative")
+    if np.unique(indices).size != indices.shape[0]:
+        raise ValueError("sample_indices must not contain duplicates")
     return indices
 
 
@@ -505,6 +507,16 @@ def reconstruction_errors(
     ``paired_seed`` replaces the seed of the masks and drops the phase from
     their derivation, so the before/after phases of a paired sensitivity
     analysis share the same masks.
+
+    .. note::
+        When ``score_repeats > 1`` the returned matrix is the **elementwise
+        mean** of the per-repeat error matrices, so it can be aggregated with
+        :func:`repo_scores` but **not** with :func:`repo_plus_scores` (nor
+        :func:`score_from_errors`): the RePO+ group minimum does not commute
+        with the mean, and aggregating the averaged matrix yields a
+        "min of means" that differs from the correct repeat-averaged RePO+
+        score.  Use :func:`score_samples` (which averages the per-repeat
+        RePO+ scores) whenever ``score_repeats > 1``.
     """
     x_norm, indices = _prepare_scoring(
         x_raw,
@@ -554,6 +566,11 @@ def score_samples(
     """
     if mode not in ("repo", "repo_plus"):
         raise ValueError(f"unknown score mode: {mode!r}")
+    if mode == "repo_plus" and n_masks % REPO_PLUS_GROUPS != 0:
+        raise ValueError(
+            f"number of masks ({n_masks}) is not divisible by groups "
+            f"({REPO_PLUS_GROUPS})"
+        )
 
     x_norm, indices = _prepare_scoring(
         x_raw,

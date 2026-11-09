@@ -18,6 +18,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+import new_data_eval.scoring as scoring
 from new_data_eval.scoring import (
     MASK_PROBABILITY,
     PHASE_ORIGINAL,
@@ -77,7 +78,8 @@ def test_validate_model_rejects_wrong_input_width(tiny_model, meta):
 
 def test_masks_are_drawn_per_sample_and_mask_features_with_probability_075(meta):
     model = RecordingModel()
-    x = np.random.default_rng(1).random((2, 77)).astype(np.float32)
+    # Identical rows: any row difference can only come from the masks.
+    x = np.full((2, 77), 0.5, dtype=np.float32)
     reconstruction_errors(model, x, *meta, n_masks=20, batch_size=8, seed=2019)
 
     rows = model.rows
@@ -158,12 +160,48 @@ def test_score_repeats_average_independent_scores(tiny_model, meta):
     np.testing.assert_allclose(again, repeated, rtol=1e-12, atol=1e-12)
 
 
-def test_reconstruction_errors_average_the_repeats(tiny_model, meta):
-    x = np.random.default_rng(6).random((3, 77)).astype(np.float32)
-    errors = reconstruction_errors(tiny_model, x, *meta, n_masks=10,
-                                   seed=2019, score_repeats=4)
-    assert errors.shape == (3, 10)
-    assert np.isfinite(errors).all()
+def test_reconstruction_errors_average_the_repeats(monkeypatch, tiny_model, meta):
+    # Two distinct, hand-written per-repeat error matrices.  Their mean is
+    # different from either repeat, so a regression to errors[0] (or to any
+    # single repeat) is caught.
+    repeat_errors = np.array(
+        [
+            [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]],
+            [[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]],
+        ],
+        dtype=np.float64,
+    )
+
+    def fake_per_repeat_errors(*args, **kwargs):
+        assert kwargs["score_repeats"] == 2
+        return repeat_errors.copy()
+
+    monkeypatch.setattr(
+        scoring, "_reconstruction_errors_normalized", fake_per_repeat_errors
+    )
+
+    errors = reconstruction_errors(
+        tiny_model,
+        np.zeros((2, 77), dtype=np.float32),
+        *meta,
+        n_masks=3,
+        score_repeats=2,
+    )
+
+    np.testing.assert_allclose(errors, repeat_errors.mean(axis=0))
+    assert not np.allclose(errors, repeat_errors[0])
+    assert not np.allclose(errors, repeat_errors[1])
+
+
+def test_reconstruction_errors_rejects_duplicate_sample_indices(tiny_model, meta):
+    with pytest.raises(ValueError, match="duplicates"):
+        reconstruction_errors(
+            tiny_model,
+            np.zeros((2, 77), dtype=np.float32),
+            *meta,
+            n_masks=5,
+            sample_indices=[0, 0],
+        )
 
 
 def test_reconstruction_errors_rejects_wrong_feature_width(tiny_model, meta):
@@ -184,10 +222,14 @@ def test_reconstruction_errors_rejects_mismatched_sample_indices(tiny_model, met
                               *meta, sample_indices=[0])
 
 
-def test_score_samples_rejects_a_mask_count_not_divisible_by_five(tiny_model, meta):
+def test_score_samples_rejects_a_mask_count_not_divisible_by_five(meta):
+    class ExplodingModel:
+        def __call__(self, inputs, training=False):
+            raise AssertionError("the model must not be called")
+
     x = np.zeros((2, 77), dtype=np.float32)
     with pytest.raises(ValueError, match="not divisible"):
-        score_samples(tiny_model, x, *meta, mode="repo_plus", n_masks=7)
+        score_samples(ExplodingModel(), x, *meta, mode="repo_plus", n_masks=7)
 
 
 def test_score_samples_rejects_an_unknown_mode(tiny_model, meta):
