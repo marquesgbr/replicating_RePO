@@ -4,6 +4,10 @@
 
 **Goal:** Implement a reproducible local/Colab evaluation of the new dataset using the article's RePO/RePO+ protocol, with normal and adversarial results per attack class and no Apuana/SLURM work.
 
+> **Atualização posterior:** a integração com o Apuana está no plano
+> `2026-11-09-apuana-new-dataset-integration.md`. A restrição “não tocar em
+> `cluster/`” valia apenas para esta etapa local.
+
 **Architecture:** A small Python package `code/new_data_eval/` separates data validation, scoring, attack, metrics, and result persistence. A CLI exposes `validate`, `normal`, `adversarial`, and `smoke`. Notebooks become thin wrappers over the same functions. A shell script extracts the LFS ZIP into `data/new_data/`.
 
 **Tech Stack:** Python 3.10+, TensorFlow/Keras, NumPy, Pandas, pytest.

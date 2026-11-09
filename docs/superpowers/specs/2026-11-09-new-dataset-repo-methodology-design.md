@@ -4,6 +4,12 @@
 **Branch de implementação:** `feat/new-dataset-eval` (derivada de `origin/new-dataset`)  
 **Status:** design proposto; implementação bloqueada até aprovação
 
+> **Atualização posterior:** a integração com o cluster Apuana foi feita no
+> design `2026-11-09-apuana-new-dataset-integration-design.md`. O não objetivo
+> de “não tocar em `cluster/`” valia apenas para esta etapa local; ele foi
+> substituído pela integração, sem alterar o protocolo nem os resultados de
+> fluxo/pacotes.
+
 ## 1. Intenção
 
 Permitir que o novo dataset seja avaliado com a mesma metodologia do artigo de
