@@ -33,11 +33,16 @@ N_FEATURES = 77
 TINY_LABEL = "BENIGN"
 
 
-def _synthetic_frame(labels, seed=2019, invalid=()):
+def _synthetic_frame(
+    labels, seed=2019, invalid=(), *, feature_scale=100.0, dst_port_max=65535
+):
     """Build a DataFrame with the canonical 85 column layout.
 
     ``invalid`` is a sequence of ``(row_index, column, value)`` triples used
     to inject ``inf``/``nan`` values inside the feature range.
+    ``feature_scale``/``dst_port_max`` let the training fixture stay inside the
+    committed ``0..10`` normalization range, which is what ``validate_model``
+    needs to see a sane reconstruction error.
     """
     from new_data_eval.data import EXPECTED_COLUMNS
 
@@ -56,7 +61,7 @@ def _synthetic_frame(labels, seed=2019, invalid=()):
         elif name == "Dst IP":
             columns[name] = ["10.0.0.2"] * n_rows
         elif name == "Dst Port":
-            columns[name] = rng.integers(1, 65535, size=n_rows)
+            columns[name] = rng.integers(1, dst_port_max, size=n_rows)
         elif name == "Protocol":
             columns[name] = np.full(n_rows, 6, dtype=np.int64)
         elif name == "Timestamp":
@@ -64,7 +69,7 @@ def _synthetic_frame(labels, seed=2019, invalid=()):
         elif name == "Label":
             columns[name] = list(labels)
         else:
-            columns[name] = rng.random(n_rows) * 100.0
+            columns[name] = rng.random(n_rows) * feature_scale
 
     frame = pd.DataFrame(columns, columns=list(EXPECTED_COLUMNS))
     for row_index, column, value in invalid:
@@ -130,7 +135,9 @@ def synthetic_project(tmp_path):
     test_csv = data_dir / "new_test.csv"
     unknown_label_csv = data_dir / "unknown_label.csv"
 
-    train_frame = _synthetic_frame([TINY_LABEL] * 10, seed=11)
+    train_frame = _synthetic_frame(
+        [TINY_LABEL] * 10, seed=11, feature_scale=1.0, dst_port_max=3
+    )
     train_frame.to_csv(train_csv, index=False)
 
     labels = (
