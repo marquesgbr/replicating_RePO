@@ -20,24 +20,35 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
+import logging
+import os
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 
 import numpy as np
 
 from new_data_eval import __version__
+from new_data_eval.attack import FlowAttack
 from new_data_eval.data import (
+    ATTACK_LABELS,
     BENIGN_LABEL,
     DEFAULT_CHUNK_SIZE,
+    N_FEATURES,
+    canonical_label,
     iter_test_chunks_detailed,
     load_metadata,
+    select_attack_samples,
     sha256_file,
     validate_dataset,
 )
 from new_data_eval.results import (
+    build_adversarial_result,
     build_normal_result,
+    config_hash,
     environment_manifest,
     file_sha256,
     git_commit,
@@ -47,6 +58,7 @@ from new_data_eval.scoring import (
     DEFAULT_BATCH_SIZE,
     DEFAULT_N_MASKS,
     PHASE_ORIGINAL,
+    PHASE_VICTIM,
     REPO_PLUS_GROUPS,
     load_model,
     reconstruction_errors,
@@ -58,10 +70,17 @@ from new_data_eval.scoring import (
 
 __all__ = [
     "build_parser",
+    "checkpoint_path",
+    "load_normal_threshold",
     "main",
+    "result_path",
+    "run_adversarial",
     "run_normal",
+    "run_smoke",
     "run_validate",
 ]
+
+LOG = logging.getLogger(__name__)
 
 
 #: Repository root, used for the default data/model/results directories.
@@ -86,6 +105,35 @@ VALIDATION_CHUNK_SIZE = 1024
 
 #: Score modes supported by the normal evaluation.
 SCORE_MODES: tuple[str, ...] = ("repo", "repo_plus")
+
+#: Default number of samples of every attack (the paper uses the first 5000).
+ADVERSARIAL_MAX_SAMPLES = 5000
+
+#: Default checkpoint interval of the adversarial evaluation.
+ADVERSARIAL_CHECKPOINT_EVERY = 50
+
+#: Directory names of the adversarial variants.
+ADVERSARIAL_VARIANTS: tuple[str, ...] = (
+    "primary",
+    "sensitivity_first_n",
+    "sensitivity_paper_0.8",
+)
+
+#: Threshold policies of the adversarial evaluation.
+THRESHOLD_POLICIES: tuple[str, ...] = ("calibrated", "paper_0.8")
+
+#: Sample selection modes of the adversarial evaluation.
+SAMPLE_MODES: tuple[str, ...] = ("random", "first")
+
+#: Benign rows scored to measure the FPR of the ``paper_0.8`` threshold.
+BENIGN_FPR_ROWS = 5000
+
+#: Sample budgets of the smoke command (normal / adversarial).
+SMOKE_NORMAL_MAX_SAMPLES = 20
+SMOKE_ADVERSARIAL_MAX_SAMPLES = 5
+
+#: Mask count of the smoke command (RePO+ needs a multiple of five).
+SMOKE_N_MASKS = 5
 
 
 def _positive_int(value: str) -> int:
@@ -188,7 +236,102 @@ def build_parser() -> argparse.ArgumentParser:
         help="use the paired mask seed derivation",
     )
 
+    adversarial = subparsers.add_parser(
+        "adversarial", help="run the adversarial RePO+ evaluation"
+    )
+    _add_common_arguments(adversarial)
+    _add_adversarial_arguments(adversarial)
+
+    smoke = subparsers.add_parser(
+        "smoke",
+        help="run validate, normal and one adversarial attack under <results>/smoke",
+    )
+    _add_common_arguments(smoke)
+    smoke.add_argument(
+        "--attack",
+        default="ddos",
+        help="attack label of the smoke run (case-insensitive)",
+    )
+    smoke.add_argument(
+        "--batch-size",
+        type=_positive_int,
+        default=DEFAULT_BATCH_SIZE,
+        help="masked rows sent to the model per forward pass",
+    )
+
     return parser
+
+
+def _add_adversarial_arguments(parser: argparse.ArgumentParser) -> None:
+    """Add the adversarial-only options to ``parser``."""
+    parser.add_argument(
+        "--attack",
+        required=True,
+        help="attack label (case-insensitive) or 'all' for the nine classes",
+    )
+    parser.add_argument(
+        "--max-samples",
+        type=_positive_int,
+        default=ADVERSARIAL_MAX_SAMPLES,
+        help="maximum samples drawn from every attack class",
+    )
+    parser.add_argument(
+        "--sample-mode",
+        choices=SAMPLE_MODES,
+        default="random",
+        help="random reservoir sampling or the first rows of the class",
+    )
+    parser.add_argument(
+        "--n-masks",
+        type=_positive_int,
+        default=DEFAULT_N_MASKS,
+        help="number of masks per sample (tests/smoke only)",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=_positive_int,
+        default=DEFAULT_BATCH_SIZE,
+        help="masked rows sent to the model per forward pass",
+    )
+    parser.add_argument(
+        "--attack-threshold-policy",
+        choices=THRESHOLD_POLICIES,
+        default="calibrated",
+        help="use the calibrated FPR 10%% threshold or 0.8 times it",
+    )
+    parser.add_argument(
+        "--score-repeats",
+        type=_positive_int,
+        default=1,
+        help="independent mask repeats whose scores are averaged",
+    )
+    parser.add_argument(
+        "--paired-scoring",
+        action="store_true",
+        help="use the paired mask seed derivation",
+    )
+    parser.add_argument(
+        "--variant",
+        choices=ADVERSARIAL_VARIANTS,
+        default="primary",
+        help="result variant directory",
+    )
+    parser.add_argument(
+        "--checkpoint-every",
+        type=_positive_int,
+        default=ADVERSARIAL_CHECKPOINT_EVERY,
+        help="samples between two checkpoints",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="discard an existing result, checkpoint and score file",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="print the planned outputs without scoring anything",
+    )
 
 
 def _resolved_paths(args: argparse.Namespace) -> tuple[Path, Path, Path, Path]:
@@ -520,6 +663,834 @@ def run_normal(args: argparse.Namespace) -> int:
     return 0
 
 
+# ---------------------------------------------------------------------------
+# Adversarial evaluation
+# ---------------------------------------------------------------------------
+
+
+def _canonical_attack(attack: str) -> str:
+    """Return the lowercase attack label or raise a useful error."""
+    try:
+        canonical = canonical_label(attack)
+    except ValueError as exc:
+        raise ValueError(
+            f"{exc}; attacks must be one of {list(ATTACK_LABELS)} or 'all'"
+        ) from exc
+    if canonical not in ATTACK_LABELS:
+        raise ValueError(
+            f"Unknown attack label {canonical!r}; expected one of "
+            f"{list(ATTACK_LABELS)} or 'all'"
+        )
+    return canonical
+
+
+def _parse_attacks(value: str) -> list[str]:
+    """Return the canonical attack labels requested by ``value``."""
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError("--attack must be a label or 'all'")
+    if value.strip().lower() == "all":
+        return list(ATTACK_LABELS)
+    labels = [item.strip() for item in value.split(",") if item.strip()]
+    if not labels:
+        raise ValueError("--attack must be a label or 'all'")
+    return list(dict.fromkeys(_canonical_attack(item) for item in labels))
+
+
+def result_path(results_dir: Path, variant: str, attack: str) -> Path:
+    """Return ``<results>/adversarial/<variant>/<attack>.json``."""
+    canonical = _canonical_attack(attack)
+    return Path(results_dir) / "adversarial" / str(variant) / f"{canonical}.json"
+
+
+def checkpoint_path(results_dir: Path, variant: str, attack: str) -> Path:
+    """Return the checkpoint path of one adversarial attack."""
+    canonical = _canonical_attack(attack)
+    return (
+        Path(results_dir)
+        / "adversarial"
+        / str(variant)
+        / f"{canonical}.checkpoint.npz"
+    )
+
+
+def _scores_path(results_dir: Path, variant: str, attack: str) -> Path:
+    """Return the ``.npz`` score file of one adversarial attack."""
+    canonical = _canonical_attack(attack)
+    return Path(results_dir) / "scores" / f"{variant}_{canonical}.npz"
+
+
+def _flat_result_path(results_dir: Path, attack: str) -> Path:
+    """Return the smoke layout path (no variant directory)."""
+    return Path(results_dir) / "adversarial" / f"{_canonical_attack(attack)}.json"
+
+
+def _flat_checkpoint_path(results_dir: Path, attack: str) -> Path:
+    """Return the smoke layout checkpoint path (no variant directory)."""
+    return (
+        Path(results_dir)
+        / "adversarial"
+        / f"{_canonical_attack(attack)}.checkpoint.npz"
+    )
+
+
+def _flat_scores_path(results_dir: Path, attack: str) -> Path:
+    """Return the smoke layout score path (no variant prefix)."""
+    return Path(results_dir) / "scores" / f"{_canonical_attack(attack)}.npz"
+
+
+def load_normal_threshold(results_dir: Path) -> float:
+    """Return ``thresholds.fpr_0.10`` of the normal RePO+ result."""
+    path = Path(results_dir) / "normal" / "repo_plus.json"
+    if not path.is_file():
+        raise FileNotFoundError(f"Normal result not found: {path}")
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        return float(payload["thresholds"]["fpr_0.10"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError(
+            f"Normal result {path} does not contain thresholds.fpr_0.10"
+        ) from exc
+
+
+def _read_normal_result(results_dir: Path) -> dict[str, Any] | None:
+    """Return the normal RePO+ payload, or ``None`` when it is unreadable."""
+    path = Path(results_dir) / "normal" / "repo_plus.json"
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def _benign_scores(
+    test_csv: Path,
+    model: Any,
+    train_min: np.ndarray,
+    train_max: np.ndarray,
+    *,
+    n_masks: int,
+    batch_size: int,
+    seed: int,
+    score_repeats: int,
+    paired_seed: int | None,
+    chunk_size: int,
+    max_rows: int | None,
+) -> np.ndarray:
+    """Score up to ``max_rows`` deterministic BENIGN rows of ``test_csv``.
+
+    ``max_rows=None`` scores every valid BENIGN row.  The rows are taken in
+    file order and the global row index is forwarded to ``score_samples``, so
+    the scores do not depend on the chunk size.
+    """
+    parts: list[np.ndarray] = []
+    collected = 0
+    for chunk in iter_test_chunks_detailed(test_csv, chunk_size):
+        positions = np.flatnonzero(
+            chunk.valid & (chunk.labels == BENIGN_LABEL)
+        )
+        if positions.size == 0:
+            continue
+        if max_rows is not None:
+            remaining = max_rows - collected
+            if remaining <= 0:
+                break
+            positions = positions[:remaining]
+
+        scores = score_samples(
+            model,
+            chunk.features[positions],
+            train_min,
+            train_max,
+            mode="repo_plus",
+            n_masks=n_masks,
+            batch_size=batch_size,
+            seed=seed,
+            phase=PHASE_ORIGINAL,
+            sample_indices=chunk.indices[positions],
+            score_repeats=score_repeats,
+            paired_seed=paired_seed,
+        )
+        parts.append(np.asarray(scores, dtype=np.float64))
+        collected += len(positions)
+        if max_rows is not None and collected >= max_rows:
+            break
+
+    if not parts:
+        return np.empty(0, dtype=np.float64)
+    return np.concatenate(parts)
+
+
+def _resolve_real_threshold(
+    results_dir: Path,
+    test_csv: Path,
+    model: Any,
+    train_min: np.ndarray,
+    train_max: np.ndarray,
+    *,
+    n_masks: int,
+    batch_size: int,
+    seed: int,
+    score_repeats: int,
+    paired_seed: int | None,
+    chunk_size: int,
+) -> tuple[float, dict[str, Any] | None]:
+    """Return the FPR 10% threshold and the normal payload (when available)."""
+    normal_payload: dict[str, Any] | None = None
+    try:
+        normal_payload = _read_normal_result(results_dir)
+        if normal_payload is None:
+            raise FileNotFoundError("normal/repo_plus.json is missing or invalid")
+        threshold = float(normal_payload["thresholds"]["fpr_0.10"])
+        if not np.isfinite(threshold):
+            raise ValueError("the stored threshold is not finite")
+        return threshold, normal_payload
+    except (KeyError, TypeError, ValueError, FileNotFoundError) as exc:
+        LOG.warning(
+            "normal result unavailable (%s); recomputing the FPR 10%% "
+            "threshold from %s",
+            exc,
+            test_csv,
+        )
+
+    benign = _benign_scores(
+        test_csv,
+        model,
+        train_min,
+        train_max,
+        n_masks=n_masks,
+        batch_size=batch_size,
+        seed=seed,
+        score_repeats=score_repeats,
+        paired_seed=paired_seed,
+        chunk_size=chunk_size,
+        max_rows=None,
+    )
+    if benign.size == 0:
+        raise ValueError(f"No valid BENIGN rows found in {test_csv}")
+    return threshold_at_fpr(benign, 0.10), None
+
+
+def _fpr_at_attack_threshold(
+    policy: str,
+    real_threshold: float,
+    attack_threshold: float,
+    normal_payload: dict[str, Any] | None,
+    test_csv: Path,
+    model: Any,
+    train_min: np.ndarray,
+    train_max: np.ndarray,
+    *,
+    n_masks: int,
+    batch_size: int,
+    seed: int,
+    score_repeats: int,
+    paired_seed: int | None,
+    chunk_size: int,
+) -> float:
+    """Return the measured FPR at ``attack_threshold``.
+
+    The calibrated policy reuses the FPR that the normal evaluation measured
+    at its FPR 10% threshold (0.10 by construction).  The ``paper_0.8`` policy
+    must not reuse it: the threshold changed, so the benign rows are scored
+    again and their measured FPR at ``0.8 * real_threshold`` is returned.
+    """
+    if policy == "calibrated":
+        if normal_payload is not None:
+            try:
+                return float(
+                    normal_payload["fpr"]["at_fpr_0.10_threshold"]
+                )
+            except (KeyError, TypeError, ValueError):
+                pass
+        return 0.10
+
+    benign = _benign_scores(
+        test_csv,
+        model,
+        train_min,
+        train_max,
+        n_masks=n_masks,
+        batch_size=batch_size,
+        seed=seed,
+        score_repeats=score_repeats,
+        paired_seed=paired_seed,
+        chunk_size=chunk_size,
+        max_rows=BENIGN_FPR_ROWS,
+    )
+    if benign.size == 0:
+        raise ValueError(f"No valid BENIGN rows found in {test_csv}")
+    return float(np.mean(benign >= attack_threshold))
+
+
+def _decimal_features(samples: np.ndarray) -> list[int]:
+    """Return the features that are integer valued in ``samples``."""
+    values = np.asarray(samples, dtype=np.float32)
+    if values.ndim != 2 or values.shape[0] == 0:
+        return []
+    return [
+        index
+        for index in range(values.shape[1])
+        if np.all(values[:, index] == np.round(values[:, index]))
+    ]
+
+
+def _stable_run_config(
+    *,
+    attack: str,
+    variant: str,
+    seed: int,
+    sample_mode: str,
+    max_samples: int,
+    n_masks: int,
+    batch_size: int,
+    score_repeats: int,
+    paired_scoring: bool,
+    policy: str,
+    real_threshold: float,
+    attack_threshold: float,
+    model_sha256: str,
+    data_sha256: str,
+    meta_sha256: Mapping[str, str],
+) -> dict[str, Any]:
+    """Return the immutable parameters hashed into the checkpoint.
+
+    The adversarial ``config_hash`` of the result builder also covers the
+    mutable per-sample counts, so it cannot be used to decide whether a
+    checkpoint belongs to the current run.  This mapping deliberately holds
+    only parameters that must not change while a checkpoint is resumed.
+    """
+    return {
+        "attack": attack,
+        "variant": variant,
+        "seed": int(seed),
+        "sample_mode": sample_mode,
+        "max_samples": int(max_samples),
+        "n_masks": int(n_masks),
+        "batch_size": int(batch_size),
+        "score_repeats": int(score_repeats),
+        "paired_scoring": bool(paired_scoring),
+        "threshold_policy": policy,
+        "real_threshold": float(real_threshold),
+        "attack_threshold": float(attack_threshold),
+        "model_sha256": model_sha256,
+        "data_sha256": data_sha256,
+        "meta_sha256": dict(meta_sha256),
+        "code_version": __version__,
+    }
+
+
+def _empty_counts() -> dict[str, int]:
+    """Return the count block of a fresh adversarial run."""
+    return {
+        "n": 0,
+        "fooled": 0,
+        "evaded": 0,
+        "backup": 0,
+        "cons_as_mal": 0,
+        "cons_as_ben": 0,
+    }
+
+
+def _write_npz_atomic(path: Path, arrays: Mapping[str, np.ndarray]) -> None:
+    """Write a compressed ``.npz`` file atomically."""
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(
+        prefix=f".{target.name}.", suffix=".npz", dir=str(target.parent)
+    )
+    os.close(descriptor)
+    try:
+        np.savez_compressed(temporary, **arrays)
+        os.replace(temporary, target)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+def _checkpoint_arrays(
+    attack: FlowAttack,
+    stable_hash: str,
+    *,
+    next_index: int,
+    original_scores: np.ndarray,
+    victim_scores: np.ndarray,
+    x_adv: np.ndarray,
+    kinds: np.ndarray,
+    counts: Mapping[str, int],
+) -> dict[str, np.ndarray]:
+    """Return the arrays stored in a checkpoint."""
+    arrays: dict[str, np.ndarray] = {
+        "config_hash": np.asarray([stable_hash], dtype=np.str_),
+        "next_index": np.asarray(next_index, dtype=np.int64),
+        "n_samples": np.asarray(len(original_scores), dtype=np.int64),
+        "original_scores": np.asarray(original_scores, dtype=np.float64),
+        "victim_scores": np.asarray(victim_scores, dtype=np.float64),
+        "x_adv": np.asarray(x_adv, dtype=np.float32),
+        "kinds": np.asarray(kinds, dtype=np.str_),
+    }
+    for name, value in counts.items():
+        arrays[f"count_{name}"] = np.asarray(int(value), dtype=np.int64)
+    arrays.update(attack.optimizer_state())
+    return arrays
+
+
+def _load_checkpoint(
+    path: Path, stable_hash: str, n_samples: int
+) -> dict[str, Any] | None:
+    """Load a checkpoint whose immutable configuration matches."""
+    path = Path(path)
+    if not path.is_file():
+        return None
+
+    with np.load(path, allow_pickle=False) as data:
+        saved_hash = ""
+        if "config_hash" in data.files:
+            saved_hash = str(np.asarray(data["config_hash"]).ravel()[0])
+        if saved_hash != stable_hash:
+            raise RuntimeError(
+                "checkpoint found with a different configuration; use --force "
+                f"to discard it ({path})"
+            )
+        required = {
+            "next_index",
+            "original_scores",
+            "victim_scores",
+            "x_adv",
+            "kinds",
+        }
+        if not required.issubset(data.files):
+            raise RuntimeError(
+                "checkpoint is incomplete; use --force to discard it "
+                f"({path})"
+            )
+
+        original_scores = np.array(data["original_scores"], dtype=np.float64)
+        victim_scores = np.array(data["victim_scores"], dtype=np.float64)
+        x_adv = np.array(data["x_adv"], dtype=np.float32)
+        kinds = np.array(data["kinds"], dtype=np.str_)
+        next_index = int(np.asarray(data["next_index"]).ravel()[0])
+        if (
+            original_scores.shape != (n_samples,)
+            or victim_scores.shape != (n_samples,)
+            or x_adv.shape != (n_samples, N_FEATURES)
+            or kinds.shape != (n_samples,)
+            or not 0 <= next_index <= n_samples
+        ):
+            raise RuntimeError(
+                "checkpoint arrays do not match the current sampling; use "
+                f"--force to discard it ({path})"
+            )
+        counts = {
+            name: int(np.asarray(data[f"count_{name}"]).ravel()[0])
+            for name in _empty_counts()
+        }
+        optimizer_state = {
+            name: np.array(data[name], copy=True)
+            for name in data.files
+            if name.startswith("flow_opt_")
+        }
+
+    return {
+        "next_index": next_index,
+        "original_scores": original_scores,
+        "victim_scores": victim_scores,
+        "x_adv": x_adv,
+        "kinds": kinds,
+        "counts": counts,
+        "optimizer_state": optimizer_state,
+    }
+
+
+def _remove_if_exists(*paths: Path) -> None:
+    """Delete every existing path (``--force`` semantics)."""
+    for path in paths:
+        if Path(path).exists():
+            Path(path).unlink()
+
+
+def _run_attack(
+    attack: str,
+    *,
+    test_csv: Path,
+    model: Any,
+    train_min: np.ndarray,
+    train_max: np.ndarray,
+    model_sha256: str,
+    data_sha256: str,
+    meta_sha256: Mapping[str, str],
+    real_threshold: float,
+    attack_threshold: float,
+    fpr_at_attack: float,
+    environment: Mapping[str, Any],
+    commit: str | None,
+    args: argparse.Namespace,
+    flat: bool,
+) -> int:
+    """Run one attack class and write its checkpoint, scores and result."""
+    started_at = datetime.now(timezone.utc)
+    x_mal, n_available = select_attack_samples(
+        test_csv,
+        attack,
+        args.max_samples,
+        args.sample_mode,
+        args.seed,
+        chunksize=args.chunk_size,
+    )
+    n_samples = int(len(x_mal))
+    if n_samples == 0:
+        raise ValueError(f"No samples available for attack {attack!r}")
+
+    variant = str(getattr(args, "variant", "smoke"))
+    if flat:
+        output_result = _flat_result_path(Path(args.results_dir), attack)
+        output_checkpoint = _flat_checkpoint_path(Path(args.results_dir), attack)
+        output_scores = _flat_scores_path(Path(args.results_dir), attack)
+    else:
+        output_result = result_path(Path(args.results_dir), variant, attack)
+        output_checkpoint = checkpoint_path(
+            Path(args.results_dir), variant, attack
+        )
+        output_scores = _scores_path(Path(args.results_dir), variant, attack)
+
+    if args.force:
+        _remove_if_exists(output_result, output_checkpoint, output_scores)
+
+    paired_seed = args.seed if args.paired_scoring else None
+    stable_config = _stable_run_config(
+        attack=attack,
+        variant=variant,
+        seed=args.seed,
+        sample_mode=args.sample_mode,
+        max_samples=args.max_samples,
+        n_masks=args.n_masks,
+        batch_size=args.batch_size,
+        score_repeats=args.score_repeats,
+        paired_scoring=bool(args.paired_scoring),
+        policy=args.attack_threshold_policy,
+        real_threshold=real_threshold,
+        attack_threshold=attack_threshold,
+        model_sha256=model_sha256,
+        data_sha256=data_sha256,
+        meta_sha256=meta_sha256,
+    )
+    stable_hash = config_hash(stable_config)
+
+    attack_runner = FlowAttack(
+        model,
+        train_min,
+        train_max,
+        _decimal_features(x_mal),
+        N_FEATURES,
+        real_threshold,
+        attack_threshold,
+        seed=args.seed,
+        n_masks=args.n_masks,
+    )
+
+    checkpoint = _load_checkpoint(output_checkpoint, stable_hash, n_samples)
+    if checkpoint is None:
+        original_scores = score_samples(
+            model,
+            x_mal,
+            train_min,
+            train_max,
+            mode="repo_plus",
+            n_masks=args.n_masks,
+            batch_size=args.batch_size,
+            seed=args.seed,
+            phase=PHASE_ORIGINAL,
+            sample_indices=np.arange(n_samples, dtype=np.int64),
+            score_repeats=args.score_repeats,
+            paired_seed=paired_seed,
+        )
+        original_scores = np.asarray(original_scores, dtype=np.float64)
+        victim_scores = np.zeros(n_samples, dtype=np.float64)
+        x_adv = np.zeros((n_samples, N_FEATURES), dtype=np.float32)
+        kinds = np.full(n_samples, "pending", dtype="U12")
+        counts = _empty_counts()
+        next_index = 0
+    else:
+        original_scores = checkpoint["original_scores"]
+        victim_scores = checkpoint["victim_scores"]
+        x_adv = checkpoint["x_adv"]
+        kinds = checkpoint["kinds"]
+        counts = checkpoint["counts"]
+        next_index = checkpoint["next_index"]
+        attack_runner.load_optimizer_state(checkpoint["optimizer_state"])
+
+    def save_checkpoint(index: int) -> None:
+        _write_npz_atomic(
+            output_checkpoint,
+            _checkpoint_arrays(
+                attack_runner,
+                stable_hash,
+                next_index=index,
+                original_scores=original_scores,
+                victim_scores=victim_scores,
+                x_adv=x_adv,
+                kinds=kinds,
+                counts=counts,
+            ),
+        )
+
+    for index in range(next_index, n_samples):
+        outcome = attack_runner.find_adv(x_mal[index], sample_index=index)
+        kind = outcome.kind
+        if kind == "no_change":
+            counts["cons_as_ben"] += 1
+            victim_sample = x_mal[index]
+        elif kind == "not_fooled":
+            counts["cons_as_mal"] += 1
+            victim_sample = x_mal[index]
+        elif kind == "evaded":
+            counts["fooled"] += 1
+            counts["evaded"] += 1
+            victim_sample = outcome.x_adv
+        elif kind == "backup":
+            counts["fooled"] += 1
+            counts["backup"] += 1
+            victim_sample = outcome.x_adv
+        else:  # pragma: no cover - AttackOutcome validates its kind
+            raise ValueError(f"Unknown attack outcome: {kind!r}")
+
+        if victim_sample is None:  # pragma: no cover - defensive
+            victim_sample = x_mal[index]
+        x_adv[index] = np.asarray(victim_sample, dtype=np.float32)
+        kinds[index] = kind
+
+        if (index + 1) % args.checkpoint_every == 0:
+            save_checkpoint(index + 1)
+            LOG.info("checkpoint %s: %d/%d", attack, index + 1, n_samples)
+
+    counts["n"] = n_samples
+    # The victim scores are computed once, with the local sample positions as
+    # the stateless mask indices, so --score-repeats is averaged by
+    # score_samples exactly like the original scores above.
+    victim_scores = np.asarray(
+        score_samples(
+            model,
+            x_adv,
+            train_min,
+            train_max,
+            mode="repo_plus",
+            n_masks=args.n_masks,
+            batch_size=args.batch_size,
+            seed=args.seed,
+            phase=PHASE_VICTIM,
+            sample_indices=np.arange(n_samples, dtype=np.int64),
+            score_repeats=args.score_repeats,
+            paired_seed=paired_seed,
+        ),
+        dtype=np.float64,
+    )
+    save_checkpoint(n_samples)
+
+    normal_tpr = (
+        float(np.mean(original_scores >= attack_threshold))
+        if n_samples
+        else 0.0
+    )
+    victim_tpr = (
+        float(np.mean(victim_scores >= attack_threshold))
+        if n_samples
+        else 0.0
+    )
+    _write_npz_atomic(
+        output_scores,
+        {
+            "sample_indices": np.arange(n_samples, dtype=np.int64),
+            "original_scores": original_scores,
+            "victim_scores": victim_scores,
+            "kinds": kinds,
+            "real_threshold": np.asarray([real_threshold], dtype=np.float64),
+            "attack_threshold": np.asarray([attack_threshold], dtype=np.float64),
+        },
+    )
+
+    finished_at = datetime.now(timezone.utc)
+    payload = build_adversarial_result(
+        attack_type=attack,
+        variant=variant,
+        score_mode="repo_plus",
+        dataset={
+            "n_available": int(n_available),
+            "n_samples": n_samples,
+            "sample_mode": args.sample_mode,
+            "seed": args.seed,
+        },
+        thresholds={
+            "fpr_0.10": real_threshold,
+            "attack": attack_threshold,
+            "policy": args.attack_threshold_policy,
+        },
+        scoring={
+            "n_masks": args.n_masks,
+            "score_repeats": args.score_repeats,
+            "paired_scoring": bool(args.paired_scoring),
+        },
+        counts=counts,
+        fpr_at_attack_threshold=fpr_at_attack,
+        normal_tpr_at_attack_threshold=normal_tpr,
+        victim_tpr=victim_tpr,
+        config=stable_config,
+        runtime_seconds=(finished_at - started_at).total_seconds(),
+        started_at=started_at,
+        finished_at=finished_at,
+        environment=environment,
+        git_commit=commit,
+    )
+    write_json_atomic(output_result, payload)
+    print(
+        f"adversarial {attack}: {n_samples}/{n_available} samples, "
+        f"fooled={counts['fooled']} (evaded={counts['evaded']}, "
+        f"backup={counts['backup']}), victim_tpr={victim_tpr:.6g} "
+        f"-> {output_result}"
+    )
+    return 0
+
+
+def _run_adversarial(args: argparse.Namespace, *, flat: bool) -> int:
+    """Shared implementation of ``adversarial`` and the smoke attack."""
+    data_dir, model_dir, meta_dir, results_dir = _resolved_paths(args)
+    test_csv = data_dir / "new_test.csv"
+    if not test_csv.is_file():
+        raise FileNotFoundError(f"CSV file not found: {test_csv}")
+
+    attacks = _parse_attacks(args.attack)
+    if args.n_masks % REPO_PLUS_GROUPS != 0:
+        raise ValueError(
+            f"--n-masks must be divisible by {REPO_PLUS_GROUPS} for repo_plus; "
+            f"got {args.n_masks}"
+        )
+    if args.sample_mode not in SAMPLE_MODES:
+        raise ValueError(
+            f"Unknown sample mode {args.sample_mode!r}; expected one of "
+            f"{list(SAMPLE_MODES)}"
+        )
+    if not flat and args.variant not in ADVERSARIAL_VARIANTS:
+        raise ValueError(
+            f"Unknown variant {args.variant!r}; expected one of "
+            f"{list(ADVERSARIAL_VARIANTS)}"
+        )
+    if args.attack_threshold_policy not in THRESHOLD_POLICIES:
+        raise ValueError(
+            f"Unknown threshold policy {args.attack_threshold_policy!r}; "
+            f"expected one of {list(THRESHOLD_POLICIES)}"
+        )
+
+    if getattr(args, "dry_run", False):
+        for attack in attacks:
+            if flat:
+                destination = _flat_result_path(results_dir, attack)
+            else:
+                destination = result_path(results_dir, args.variant, attack)
+            print(f"dry run: {attack} -> {destination}")
+        return 0
+
+    train_min, train_max = load_metadata(meta_dir)
+    model = load_model(model_dir)
+    model_sha256 = _sha256_path(model_dir)
+    data_sha256 = sha256_file(test_csv)
+    meta_sha256 = {
+        "train_min": file_sha256(meta_dir / "train_min.npy"),
+        "train_max": file_sha256(meta_dir / "train_max.npy"),
+    }
+
+    paired_seed = args.seed if args.paired_scoring else None
+    real_threshold, normal_payload = _resolve_real_threshold(
+        results_dir,
+        test_csv,
+        model,
+        train_min,
+        train_max,
+        n_masks=args.n_masks,
+        batch_size=args.batch_size,
+        seed=args.seed,
+        score_repeats=args.score_repeats,
+        paired_seed=paired_seed,
+        chunk_size=args.chunk_size,
+    )
+    attack_threshold = (
+        real_threshold
+        if args.attack_threshold_policy == "calibrated"
+        else 0.8 * real_threshold
+    )
+    fpr_at_attack = _fpr_at_attack_threshold(
+        args.attack_threshold_policy,
+        real_threshold,
+        attack_threshold,
+        normal_payload,
+        test_csv,
+        model,
+        train_min,
+        train_max,
+        n_masks=args.n_masks,
+        batch_size=args.batch_size,
+        seed=args.seed,
+        score_repeats=args.score_repeats,
+        paired_seed=paired_seed,
+        chunk_size=args.chunk_size,
+    )
+    environment = environment_manifest()
+    commit = git_commit()
+
+    for attack in attacks:
+        _run_attack(
+            attack,
+            test_csv=test_csv,
+            model=model,
+            train_min=train_min,
+            train_max=train_max,
+            model_sha256=model_sha256,
+            data_sha256=data_sha256,
+            meta_sha256=meta_sha256,
+            real_threshold=real_threshold,
+            attack_threshold=attack_threshold,
+            fpr_at_attack=fpr_at_attack,
+            environment=environment,
+            commit=commit,
+            args=args,
+            flat=flat,
+        )
+    return 0
+
+
+def run_adversarial(args: argparse.Namespace) -> int:
+    """Run the adversarial evaluation; return the process exit code."""
+    return _run_adversarial(args, flat=False)
+
+
+def run_smoke(args: argparse.Namespace) -> int:
+    """Run the isolated smoke pipeline under ``<results-dir>/smoke``."""
+    _data_dir, _model_dir, _meta_dir, results_dir = _resolved_paths(args)
+    smoke_dir = results_dir / "smoke"
+
+    run_validate(args)
+
+    normal_args = argparse.Namespace(**vars(args))
+    normal_args.results_dir = str(smoke_dir)
+    normal_args.modes = "repo,repo_plus"
+    normal_args.max_samples = SMOKE_NORMAL_MAX_SAMPLES
+    normal_args.n_masks = SMOKE_N_MASKS
+    normal_args.score_repeats = 1
+    normal_args.paired_scoring = False
+    run_normal(normal_args)
+
+    adversarial_args = argparse.Namespace(**vars(args))
+    adversarial_args.results_dir = str(smoke_dir)
+    adversarial_args.attack = args.attack
+    adversarial_args.max_samples = SMOKE_ADVERSARIAL_MAX_SAMPLES
+    adversarial_args.n_masks = SMOKE_N_MASKS
+    adversarial_args.sample_mode = "random"
+    adversarial_args.attack_threshold_policy = "calibrated"
+    adversarial_args.score_repeats = 1
+    adversarial_args.paired_scoring = False
+    adversarial_args.variant = "smoke"
+    adversarial_args.checkpoint_every = ADVERSARIAL_CHECKPOINT_EVERY
+    adversarial_args.force = False
+    adversarial_args.dry_run = False
+    return _run_adversarial(adversarial_args, flat=True)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Parse ``argv`` and run the requested command."""
     parser = build_parser()
@@ -532,6 +1503,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     handlers = {
         "validate": run_validate,
         "normal": run_normal,
+        "adversarial": run_adversarial,
+        "smoke": run_smoke,
     }
     try:
         return int(handlers[args.command](args))
