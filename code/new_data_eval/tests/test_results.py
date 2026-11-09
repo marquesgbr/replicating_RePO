@@ -79,7 +79,7 @@ def _adversarial_inputs():
             "evaded": 1,
             "backup": 1,
             "cons_as_mal": 1,
-            "cons_as_ben": 3,
+            "cons_as_ben": 1,
         },
         "config": {
             "seed": 2019,
@@ -199,7 +199,9 @@ def test_build_normal_result_matches_the_schema():
     }
     assert payload["runtime_seconds"] == 1.25
     assert payload["config"] == _normal_inputs()["config"]
-    assert payload["config_hash"] == config_hash(_normal_inputs()["config"])
+    assert payload["config_hash"] == build_normal_result(
+        **_normal_inputs()
+    )["config_hash"]
     assert payload["environment"] == {"python": "3.13.12", "numpy": "2.2.6"}
     assert payload["git_commit"] == "c" * 40
     assert payload["started_at"] == "2026-11-09T10:00:00+00:00"
@@ -230,7 +232,7 @@ def test_build_normal_result_defaults_variant_and_status():
     assert payload["variant"] == "primary"
     assert payload["status"] == "completed"
     assert payload["git_commit"] is None or isinstance(payload["git_commit"], str)
-    assert payload["config_hash"] == config_hash(inputs["config"])
+    assert payload["config_hash"] == build_normal_result(**inputs)["config_hash"]
 
 
 def test_build_normal_result_rejects_a_missing_required_key():
@@ -238,6 +240,28 @@ def test_build_normal_result_rejects_a_missing_required_key():
     inputs.pop("scores")
     with pytest.raises(TypeError, match="scores"):
         build_normal_result(**inputs)
+
+
+def test_build_normal_result_config_hash_covers_run_parameters():
+    base = build_normal_result(**_normal_inputs())["config_hash"]
+
+    # The config mapping is unchanged: only the separately passed run
+    # parameters change, and each must still alter the hash.
+    changed = _normal_inputs()
+    changed["thresholds"] = {"fpr_0.01": 0.81, "fpr_0.10": 0.5}
+    assert build_normal_result(**changed)["config_hash"] != base
+
+    changed = _normal_inputs()
+    changed["scoring"] = {
+        "n_masks": 50,
+        "score_repeats": 2,
+        "paired_scoring": True,
+    }
+    assert build_normal_result(**changed)["config_hash"] != base
+
+    changed = _normal_inputs()
+    changed["dataset"]["test_csv_sha256"] = "f" * 64
+    assert build_normal_result(**changed)["config_hash"] != base
 
 
 def test_build_adversarial_result_matches_the_schema():
@@ -278,7 +302,9 @@ def test_build_adversarial_result_matches_the_schema():
     assert payload["backup_rate"] == pytest.approx(0.25)
     assert payload["counts"] == _adversarial_inputs()["counts"]
     assert payload["runtime_seconds"] == 0.5
-    assert payload["config_hash"] == config_hash(_adversarial_inputs()["config"])
+    assert payload["config_hash"] == build_adversarial_result(
+        **_adversarial_inputs()
+    )["config_hash"]
     assert payload["git_commit"] == "c" * 40
 
 
@@ -303,6 +329,101 @@ def test_build_adversarial_result_rejects_inconsistent_score_counts():
     inputs = _adversarial_inputs()
     inputs["victim_scores"] = np.array([0.1])
     with pytest.raises(ValueError, match="n"):
+        build_adversarial_result(**inputs)
+
+
+def test_build_adversarial_result_config_hash_covers_run_parameters():
+    base = build_adversarial_result(**_adversarial_inputs())["config_hash"]
+
+    # The config mapping is unchanged in every case below.
+    changed = _adversarial_inputs()
+    changed["thresholds"] = {
+        "fpr_0.10": 0.5,
+        "attack": 0.6,
+        "policy": "calibrated",
+    }
+    assert build_adversarial_result(**changed)["config_hash"] != base
+
+    changed = _adversarial_inputs()
+    changed["scoring"] = {
+        "score_mode": "repo_plus",
+        "n_masks": 50,
+        "score_repeats": 2,
+        "paired_scoring": True,
+    }
+    assert build_adversarial_result(**changed)["config_hash"] != base
+
+    changed = _adversarial_inputs()
+    changed["dataset"]["seed"] = 2020
+    assert build_adversarial_result(**changed)["config_hash"] != base
+
+    changed = _adversarial_inputs()
+    changed["counts"] = {
+        "n": 6,
+        "fooled": 2,
+        "evaded": 1,
+        "backup": 1,
+        "cons_as_mal": 1,
+        "cons_as_ben": 3,
+    }
+    changed["normal_scores"] = np.array([0.9, 0.9, 0.1, 0.1, 0.1, 0.1])
+    changed["victim_scores"] = np.array([0.1, 0.9, 0.1, 0.1, 0.1, 0.1])
+    assert build_adversarial_result(**changed)["config_hash"] != base
+
+
+@pytest.mark.parametrize(
+    "counts, match",
+    [
+        (
+            {
+                "n": 4,
+                "fooled": 3,
+                "evaded": 1,
+                "backup": 1,
+                "cons_as_mal": 1,
+                "cons_as_ben": 0,
+            },
+            "fooled",
+        ),
+        (
+            {
+                "n": 1,
+                "fooled": 2,
+                "evaded": 1,
+                "backup": 1,
+                "cons_as_mal": 0,
+                "cons_as_ben": 0,
+            },
+            "fooled",
+        ),
+        (
+            {
+                "n": 4,
+                "fooled": 2,
+                "evaded": 1,
+                "backup": 1,
+                "cons_as_mal": 0,
+                "cons_as_ben": 1,
+            },
+            "cons_as_mal",
+        ),
+        (
+            {
+                "n": -1,
+                "fooled": 0,
+                "evaded": 0,
+                "backup": 0,
+                "cons_as_mal": 0,
+                "cons_as_ben": 0,
+            },
+            "negative",
+        ),
+    ],
+)
+def test_build_adversarial_result_rejects_invalid_counts(counts, match):
+    inputs = _adversarial_inputs()
+    inputs["counts"] = counts
+    with pytest.raises(ValueError, match=match):
         build_adversarial_result(**inputs)
 
 

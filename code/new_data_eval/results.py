@@ -311,14 +311,66 @@ def _adversarial_scoring(
 
 
 def _counts(counts: Mapping[str, Any]) -> dict[str, int]:
-    """Return the adversarial count block with native ints."""
+    """Return the adversarial count block with native ints.
+
+    The counts must describe one classification per sample: every sample is
+    either ``no change`` (``cons_as_ben``), ``not fooled`` (``cons_as_mal``) or
+    modified (``fooled``), and a modified sample is either below the attack
+    threshold (``evaded``) or only below the real threshold (``backup``).
+    Enforcing the identities here keeps ``fooled_rate`` consistent with the
+    broken-out rates.
+    """
     payload = {
         key: int(_field(counts, key, "counts"))
         for key in ("n", "fooled", "evaded", "backup", "cons_as_mal", "cons_as_ben")
     }
-    if payload["n"] < 0:
-        raise ValueError(f"counts['n'] must not be negative, got {payload['n']}")
+    for key, value in payload.items():
+        if value < 0:
+            raise ValueError(f"counts[{key!r}] must not be negative, got {value}")
+
+    n = payload["n"]
+    fooled = payload["fooled"]
+    evaded = payload["evaded"]
+    backup = payload["backup"]
+
+    if fooled != evaded + backup:
+        raise ValueError(
+            "counts['fooled'] must equal counts['evaded'] + counts['backup'], "
+            f"got {fooled} != {evaded} + {backup}"
+        )
+    if fooled > n:
+        raise ValueError(
+            f"counts['fooled'] must not exceed counts['n'], got {fooled} > {n}"
+        )
+    if not 0 <= evaded <= fooled:
+        raise ValueError(
+            f"counts['evaded'] must satisfy 0 <= evaded <= fooled, got {evaded} "
+            f"with fooled={fooled}"
+        )
+    if not 0 <= backup <= fooled:
+        raise ValueError(
+            f"counts['backup'] must satisfy 0 <= backup <= fooled, got {backup} "
+            f"with fooled={fooled}"
+        )
+    classified = fooled + payload["cons_as_mal"] + payload["cons_as_ben"]
+    if classified != n:
+        raise ValueError(
+            "counts['fooled'] + counts['cons_as_mal'] + counts['cons_as_ben'] "
+            f"must equal counts['n'], got {classified} != {n}"
+        )
     return payload
+
+
+def _config_hash_sections(**sections: Any) -> dict[str, Any]:
+    """Return the canonical run-parameter mapping hashed into ``config_hash``.
+
+    The builders hash the actual parameters of the run instead of trusting the
+    caller-supplied ``config`` to repeat them, so two results that differ only
+    in thresholds, scoring, dataset hashes or adversarial counts cannot share a
+    hash.  The keyword names are the deterministic top-level keys of the
+    serialized mapping.
+    """
+    return dict(sections)
 
 
 def _rate_or_compute(
@@ -371,7 +423,8 @@ def build_normal_result(**kwargs: Any) -> dict[str, Any]:
     ``scoring``
         Mapping with ``n_masks``, ``score_repeats`` and ``paired_scoring``.
     ``config``
-        The run configuration; it is hashed into ``config_hash``.
+        The run configuration. It is hashed together with the actual
+        thresholds, scoring, dataset and ``score_mode`` of the run.
     ``runtime_seconds``
         Wall clock runtime of the run.
 
@@ -411,6 +464,8 @@ def build_normal_result(**kwargs: Any) -> dict[str, Any]:
         raise ValueError("scores must be finite")
 
     threshold_payload = _normal_thresholds(thresholds)
+    dataset_payload = _normal_dataset(dataset)
+    scoring_payload = _normal_scoring(scoring)
     rates = {
         f"at_{name}": class_rates(
             score_array, label_array, threshold, EXPECTED_LABELS
@@ -425,6 +480,13 @@ def build_normal_result(**kwargs: Any) -> dict[str, Any]:
         f"at_{name}": average_attack_tpr(rates[f"at_{name}"])
         for name in threshold_payload
     }
+    run_parameters = _config_hash_sections(
+        config=config,
+        dataset=dataset_payload,
+        score_mode=score_mode,
+        scoring=scoring_payload,
+        thresholds=threshold_payload,
+    )
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -432,17 +494,17 @@ def build_normal_result(**kwargs: Any) -> dict[str, Any]:
         "experiment": "normal",
         "model_type": MODEL_TYPE,
         "score_mode": score_mode,
-        "dataset": _normal_dataset(dataset),
+        "dataset": dataset_payload,
         "thresholds": threshold_payload,
         "fpr": fpr_payload,
         "class_rates": rates,
         "average_tpr": averages,
-        "scoring": _normal_scoring(scoring),
+        "scoring": scoring_payload,
         "variant": variant,
         "runtime_seconds": _runtime(runtime_seconds),
         "config": config,
         "environment": _environment(environment),
-        "config_hash": config_hash(config),
+        "config_hash": config_hash(run_parameters),
         "git_commit": _commit(commit),
         "started_at": _timestamp(started_at),
         "finished_at": _timestamp(finished_at),
@@ -468,7 +530,9 @@ def build_adversarial_result(**kwargs: Any) -> dict[str, Any]:
         Mapping with ``n``, ``fooled``, ``evaded``, ``backup``,
         ``cons_as_mal`` and ``cons_as_ben``.
     ``config`` / ``runtime_seconds``
-        Run configuration (hashed) and wall clock runtime.
+        Run configuration and wall clock runtime. The configuration is hashed
+        together with the attack, variant, score mode, dataset sampling,
+        thresholds, scoring and counts of the run.
 
     The victim and normal TPRs, the FPR at the attack threshold and the
     rates are computed from the supplied score arrays.  For convenience the
@@ -501,6 +565,8 @@ def build_adversarial_result(**kwargs: Any) -> dict[str, Any]:
 
     threshold_payload = _adversarial_thresholds(thresholds)
     attack_threshold = threshold_payload["attack"]
+    dataset_payload = _adversarial_dataset(dataset)
+    scoring_payload = _adversarial_scoring(score_mode, scoring)
     count_payload = _counts(counts)
     n_samples = count_payload["n"]
 
@@ -525,6 +591,16 @@ def build_adversarial_result(**kwargs: Any) -> dict[str, Any]:
         backup_rate = count_payload["backup"] / n_samples
     else:
         fooled_rate = evaded_rate = backup_rate = 0.0
+    run_parameters = _config_hash_sections(
+        attack_type=attack_type,
+        config=config,
+        counts=count_payload,
+        dataset=dataset_payload,
+        score_mode=score_mode,
+        scoring=scoring_payload,
+        thresholds=threshold_payload,
+        variant=variant,
+    )
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -534,9 +610,9 @@ def build_adversarial_result(**kwargs: Any) -> dict[str, Any]:
         "score_mode": score_mode,
         "attack_type": attack_type,
         "variant": variant,
-        "dataset": _adversarial_dataset(dataset),
+        "dataset": dataset_payload,
         "thresholds": threshold_payload,
-        "scoring": _adversarial_scoring(score_mode, scoring),
+        "scoring": scoring_payload,
         "fpr_at_attack_threshold": float(fpr_at_attack),
         "normal_tpr_at_attack_threshold": float(normal_tpr),
         "victim_tpr": float(victim_tpr),
@@ -549,7 +625,7 @@ def build_adversarial_result(**kwargs: Any) -> dict[str, Any]:
         "runtime_seconds": _runtime(runtime_seconds),
         "config": config,
         "environment": _environment(environment),
-        "config_hash": config_hash(config),
+        "config_hash": config_hash(run_parameters),
         "git_commit": _commit(commit),
         "started_at": _timestamp(started_at),
         "finished_at": _timestamp(finished_at),
