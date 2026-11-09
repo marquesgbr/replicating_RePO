@@ -48,6 +48,7 @@ __all__ = [
     "constant_feature_indices",
     "count_classes",
     "feature_frame",
+    "integer_feature_indices",
     "iter_test_chunks",
     "iter_test_chunks_detailed",
     "load_metadata",
@@ -459,6 +460,27 @@ def count_classes(
             key = str(value)
             counts[key] = counts.get(key, 0) + int(number)
     return dict(sorted(counts.items()))
+
+
+def integer_feature_indices(
+    csv_path: Path, chunksize: int = DEFAULT_CHUNK_SIZE
+) -> list[int]:
+    """Return the model features that are integer valued in every valid row.
+
+    The reference protocol derives this list once from the concatenated,
+    valid test matrix, independently of the attacked class.  The CSV is
+    scanned in chunks and only the per-feature ``sum(abs(x - round(x)))`` is
+    accumulated; a feature is returned when that sum is exactly zero.  This
+    mirrors the reference ``sum(abs(x - round(x))) == 0`` test without
+    materializing the whole file.
+    """
+    deviation = np.zeros(N_FEATURES, dtype=np.float64)
+    for chunk in iter_test_chunks_detailed(csv_path, chunksize):
+        if not chunk.valid.any():
+            continue
+        values = chunk.valid_features.astype(np.float64, copy=False)
+        deviation += np.abs(values - np.round(values)).sum(axis=0)
+    return [index for index in range(N_FEATURES) if deviation[index] == 0.0]
 
 
 def _scan_csv(

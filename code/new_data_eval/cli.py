@@ -23,11 +23,13 @@ import hashlib
 import json
 import logging
 import os
+import signal
 import sys
 import tempfile
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any, Iterator, Mapping, Sequence
 
 import numpy as np
 
@@ -39,6 +41,7 @@ from new_data_eval.data import (
     DEFAULT_CHUNK_SIZE,
     N_FEATURES,
     canonical_label,
+    integer_feature_indices,
     iter_test_chunks_detailed,
     load_metadata,
     select_attack_samples,
@@ -134,6 +137,48 @@ SMOKE_ADVERSARIAL_MAX_SAMPLES = 5
 
 #: Mask count of the smoke command (RePO+ needs a multiple of five).
 SMOKE_N_MASKS = 5
+
+#: Exit code returned when an interruption asks the CLI to stop gracefully.
+INTERRUPTED_EXIT_CODE = 143
+
+#: Set to True by the SIGINT/SIGTERM handler; checked once per attack sample.
+_STOP_REQUESTED = False
+
+
+def _request_stop(_signum: int, _frame: object) -> None:
+    """Mark the current run as interrupted without raising."""
+    global _STOP_REQUESTED
+    _STOP_REQUESTED = True
+
+
+def stop_requested() -> bool:
+    """Return True once an interruption signal has been received."""
+    return _STOP_REQUESTED
+
+
+@contextmanager
+def _stop_signals() -> Iterator[None]:
+    """Handle SIGINT/SIGTERM as a graceful stop and restore old handlers."""
+    global _STOP_REQUESTED
+    _STOP_REQUESTED = False
+    previous: dict[int, Any] = {}
+    for name in ("SIGINT", "SIGTERM"):
+        number = getattr(signal, name, None)
+        if number is None:
+            continue
+        try:
+            previous[number] = signal.getsignal(number)
+            signal.signal(number, _request_stop)
+        except (OSError, ValueError):
+            continue
+    try:
+        yield
+    finally:
+        for number, handler in previous.items():
+            try:
+                signal.signal(number, handler)
+            except (OSError, ValueError):
+                pass
 
 
 def _positive_int(value: str) -> int:
@@ -921,18 +966,6 @@ def _fpr_at_attack_threshold(
     return float(np.mean(benign >= attack_threshold))
 
 
-def _decimal_features(samples: np.ndarray) -> list[int]:
-    """Return the features that are integer valued in ``samples``."""
-    values = np.asarray(samples, dtype=np.float32)
-    if values.ndim != 2 or values.shape[0] == 0:
-        return []
-    return [
-        index
-        for index in range(values.shape[1])
-        if np.all(values[:, index] == np.round(values[:, index]))
-    ]
-
-
 def _stable_run_config(
     *,
     attack: str,
@@ -1120,6 +1153,7 @@ def _run_attack(
     real_threshold: float,
     attack_threshold: float,
     fpr_at_attack: float,
+    decimal_features: Sequence[int],
     environment: Mapping[str, Any],
     commit: str | None,
     args: argparse.Namespace,
@@ -1178,7 +1212,7 @@ def _run_attack(
         model,
         train_min,
         train_max,
-        _decimal_features(x_mal),
+        decimal_features,
         N_FEATURES,
         real_threshold,
         attack_threshold,
@@ -1257,9 +1291,19 @@ def _run_attack(
         x_adv[index] = np.asarray(victim_sample, dtype=np.float32)
         kinds[index] = kind
 
-        if (index + 1) % args.checkpoint_every == 0:
+        checkpoint_due = (index + 1) % args.checkpoint_every == 0
+        interrupted = stop_requested()
+        if checkpoint_due or interrupted:
             save_checkpoint(index + 1)
             LOG.info("checkpoint %s: %d/%d", attack, index + 1, n_samples)
+        if interrupted:
+            LOG.warning(
+                "interrupted %s after %d/%d samples; checkpoint saved",
+                attack,
+                index + 1,
+                n_samples,
+            )
+            return INTERRUPTED_EXIT_CODE
 
     counts["n"] = n_samples
     # The victim scores are computed once, with the local sample positions as
@@ -1395,6 +1439,12 @@ def _run_adversarial(args: argparse.Namespace, *, flat: bool) -> int:
         "train_max": file_sha256(meta_dir / "train_max.npy"),
     }
 
+    # The reference derives this list once from the concatenated valid test
+    # matrix, not from the selected attack samples, so every attack shares it.
+    decimal_features = integer_feature_indices(
+        test_csv, chunksize=args.chunk_size
+    )
+
     paired_seed = args.seed if args.paired_scoring else None
     real_threshold, normal_payload = _resolve_real_threshold(
         results_dir,
@@ -1434,7 +1484,7 @@ def _run_adversarial(args: argparse.Namespace, *, flat: bool) -> int:
     commit = git_commit()
 
     for attack in attacks:
-        _run_attack(
+        exit_code = _run_attack(
             attack,
             test_csv=test_csv,
             model=model,
@@ -1446,17 +1496,21 @@ def _run_adversarial(args: argparse.Namespace, *, flat: bool) -> int:
             real_threshold=real_threshold,
             attack_threshold=attack_threshold,
             fpr_at_attack=fpr_at_attack,
+            decimal_features=decimal_features,
             environment=environment,
             commit=commit,
             args=args,
             flat=flat,
         )
+        if exit_code != 0:
+            return exit_code
     return 0
 
 
 def run_adversarial(args: argparse.Namespace) -> int:
     """Run the adversarial evaluation; return the process exit code."""
-    return _run_adversarial(args, flat=False)
+    with _stop_signals():
+        return _run_adversarial(args, flat=False)
 
 
 def run_smoke(args: argparse.Namespace) -> int:
@@ -1488,7 +1542,8 @@ def run_smoke(args: argparse.Namespace) -> int:
     adversarial_args.checkpoint_every = ADVERSARIAL_CHECKPOINT_EVERY
     adversarial_args.force = False
     adversarial_args.dry_run = False
-    return _run_adversarial(adversarial_args, flat=True)
+    with _stop_signals():
+        return _run_adversarial(adversarial_args, flat=True)
 
 
 def main(argv: Sequence[str] | None = None) -> int:

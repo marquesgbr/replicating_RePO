@@ -12,6 +12,8 @@ import json
 import logging
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 import pytest
 
 import new_data_eval.cli as cli
@@ -22,7 +24,11 @@ from new_data_eval.cli import (
     main,
     result_path,
 )
-from new_data_eval.data import ATTACK_LABELS
+from new_data_eval.data import (
+    ATTACK_LABELS,
+    FEATURE_NAMES,
+    integer_feature_indices,
+)
 from new_data_eval.scoring import PHASE_ORIGINAL, PHASE_VICTIM
 
 
@@ -248,3 +254,110 @@ def test_paper_policy_does_not_reuse_the_calibrated_fpr(
     # The benign sample of the fixture has one valid row, so its measured FPR
     # is 0 or 1 -- never the calibrated 0.10 copied from the normal result.
     assert payload["fpr_at_attack_threshold"] in {0.0, 1.0}
+
+
+def test_decimal_features_are_derived_from_the_full_test_set(
+    synthetic_project, monkeypatch
+):
+    """A feature integer only inside the attack subset must stay fractional.
+
+    The reference derives ``decimal_features`` from the concatenated valid
+    test matrix.  If the CLI instead derived it from the selected attack rows,
+    this feature would be rounded by the attack and would change the
+    adversarial projection.
+    """
+    column = "Tot Fwd Pkts"
+    feature_index = FEATURE_NAMES.index(column)
+    frame = pd.read_csv(synthetic_project.test_csv)
+    is_ddos = frame["Label"].str.lower() == "ddos"
+    assert is_ddos.any()
+    frame.loc[is_ddos, column] = 7.0
+    frame.loc[~is_ddos, column] = 7.5
+    frame.to_csv(synthetic_project.test_csv, index=False)
+
+    expected = integer_feature_indices(synthetic_project.test_csv)
+    assert feature_index not in expected
+
+    seen: list[list[int]] = []
+    original_init = cli.FlowAttack.__init__
+
+    def spy_init(self, *args, **kwargs):
+        seen.append(list(args[3]))
+        return original_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(cli.FlowAttack, "__init__", spy_init)
+    monkeypatch.setattr(cli.FlowAttack, "find_adv", _no_change)
+
+    assert main(_adversarial_args(synthetic_project)) == 0
+    assert seen
+    assert all(features == expected for features in seen)
+    assert all(feature_index not in features for features in seen)
+
+
+def test_interrupted_checkpoint_resumes_and_matches_a_clean_run(
+    synthetic_project, monkeypatch
+):
+    """Stop after one sample, resume, and lock every reported value."""
+    results_dir = synthetic_project.results_dir
+    base_args = [
+        "adversarial",
+        "--data-dir", str(synthetic_project.data_dir),
+        "--model-dir", str(synthetic_project.model_dir),
+        "--meta-dir", str(synthetic_project.meta_dir),
+        "--results-dir", str(results_dir),
+        "--attack", "ddos",
+        "--max-samples", "2",
+        "--n-masks", "5",
+        "--checkpoint-every", "1",
+    ]
+    state = {"calls": 0, "stop": True}
+
+    def stop_after_one_sample():
+        if not state["stop"]:
+            return False
+        state["calls"] += 1
+        return state["calls"] >= 1
+
+    monkeypatch.setattr(cli, "stop_requested", stop_after_one_sample)
+
+    assert main(base_args) == cli.INTERRUPTED_EXIT_CODE
+    intermediate = checkpoint_path(results_dir, "primary", "ddos")
+    assert intermediate.is_file()
+    assert not result_path(results_dir, "primary", "ddos").exists()
+    with np.load(intermediate) as data:
+        assert int(np.asarray(data["next_index"]).ravel()[0]) == 1
+        # The interrupted run has not scored the victims yet; resuming must
+        # recompute them instead of reusing these zeros.
+        assert np.all(np.asarray(data["victim_scores"]) == 0.0)
+
+    state["stop"] = False
+    assert main(base_args) == 0
+
+    # A clean run of the same sampling under another variant is the reference
+    # for every count, rate, score and kind.
+    clean_args = [*base_args, "--variant", "sensitivity_first_n"]
+    assert main(clean_args) == 0
+
+    resumed = json.loads(
+        result_path(results_dir, "primary", "ddos").read_text()
+    )
+    clean = json.loads(
+        result_path(results_dir, "sensitivity_first_n", "ddos").read_text()
+    )
+    for field in (
+        "counts",
+        "victim_tpr",
+        "normal_tpr_at_attack_threshold",
+    ):
+        assert resumed[field] == clean[field]
+
+    with (
+        np.load(cli._scores_path(results_dir, "primary", "ddos")) as resumed_scores,
+        np.load(
+            cli._scores_path(results_dir, "sensitivity_first_n", "ddos")
+        ) as clean_scores,
+    ):
+        for field in ("original_scores", "victim_scores", "kinds"):
+            np.testing.assert_array_equal(
+                resumed_scores[field], clean_scores[field], err_msg=field
+            )
