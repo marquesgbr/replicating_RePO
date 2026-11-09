@@ -495,6 +495,7 @@ git commit -m "feat: add validate and normal evaluation CLI"
 
 **Interfaces:**
 - Consumes: `load_model`, `score_samples`, `reconstruction_errors`, `PHASE_*` from `scoring.py`; `repo_plus_scores` from Task 2.
+- Uses `score_samples` for all success/victim scores, because it averages per-repeat RePO+ scores. `reconstruction_errors` is only for single-repeat diagnostics; do not combine its repeat-averaged matrix with `repo_plus_scores` when `score_repeats > 1`.
 - Produces:
   - `AttackOutcome` dataclass with `kind: Literal["evaded", "backup", "no_change", "not_fooled"]`, `x_adv: np.ndarray | None`, `score: float | None`
   - `FlowAttack` with:

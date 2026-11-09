@@ -171,7 +171,10 @@ Para evitar que o resultado dependa do tamanho do lote:
 O comportamento principal usa uma pontuação por fase (como o artigo), mas a
 CLI terá `--score-repeats` (padrão 1) para uma análise de ruído com múltiplas
 pontuações independentes. `--paired-scoring` (padrão desligado) reutiliza a
-mesma semente nas fases antes/depois, como sensibilidade.
+mesma semente nas fases antes/depois, como sensibilidade. Quando
+`score_repeats > 1`, a pontuação final usa `score_samples`, que tira a média
+dos escores RePO+ por repetição; `reconstruction_errors` retorna a média dos
+erros por máscara e não deve ser agregado com RePO+ nesse caso.
 
 ### D10 — Calibração dos thresholds
 
