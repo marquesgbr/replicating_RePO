@@ -169,6 +169,65 @@ criadas e que contêm os arquivos esperados. Os arquivos `.npy` em
 `data/*/x_train_meta/` são metadados já versionados e são usados na
 normalização durante a avaliação.
 
+## Novo dataset (`data/new_data/`)
+
+O dataset adicional (CIC-ToN-IoT, citação pendente de confirmação oficial) tem
+um fluxo próprio, documentado em
+[docs/NEW_DATASET.md](./docs/NEW_DATASET.md). O ZIP
+`data/new_data/New-dataset-split-clean.zip` é versionado via Git LFS e contém
+`new_train.csv` e `new_test.csv` já processados. O script
+`data/new_data/preprocess_new_data.py` é legado e não é necessário para a
+avaliação.
+
+Execute os comandos a partir da raiz, com o ambiente virtual ativo:
+
+```bash
+# Baixar o ZIP LFS, extrair e conferir os CSVs
+bash extract_new_data.sh
+
+# Validar cabeçalho, rótulos, metadados e modelo
+PYTHONPATH=code python -m new_data_eval validate
+
+# Avaliação normal completa (RePO e RePO+)
+PYTHONPATH=code python -m new_data_eval normal --modes repo,repo_plus
+
+# Avaliação adversarial (uma classe ou todas)
+PYTHONPATH=code python -m new_data_eval adversarial --attack ddos --variant primary
+PYTHONPATH=code python -m new_data_eval adversarial --attack all --variant primary
+
+# Smoke rápido: validação + normal + um ataque em results/new_data/smoke/
+PYTHONPATH=code python -m new_data_eval smoke
+```
+
+Para inspeção rápida, `--max-samples` e `--n-masks` reduzem o custo; use
+`--n-masks` múltiplo de 5 por causa do RePO+:
+
+```bash
+PYTHONPATH=code python -m new_data_eval normal \
+  --modes repo,repo_plus --max-samples 20 --n-masks 5 --batch-size 2
+PYTHONPATH=code python -m new_data_eval adversarial \
+  --attack ddos --max-samples 5 --n-masks 5 --variant primary
+```
+
+Os notebooks `code/new_data_RePO_Normal_Test.ipynb` e
+`code/new_data_RePO_Adversarial.ipynb` são wrappers finos dessa CLI: não
+reimplementam escores, thresholds nem o ataque. Rode o normal antes do
+adversarial para que o threshold de FPR 10% seja lido do resultado normal.
+
+Para retreinar o autoencoder de forma reproduzível:
+
+```bash
+python code/train_new_data_model.py \
+  --train-csv data/new_data/new_train.csv \
+  --output-dir models/new_data_model \
+  --seed 2019 --epochs 5 --batch-size 256
+```
+
+O treino aceita apenas rótulos `BENIGN` e grava `training_manifest.json` com o
+hash do CSV, seed, versões, epochs, loss final e shape. Os resultados JSON ficam
+em `results/new_data/normal/` e `results/new_data/adversarial/<variant>/`; os
+arquivos `.npz` de scores/checkpoints são locais e ignorados pelo Git.
+
 ## Reprodução com os modelos já treinados
 
 O procedimento abaixo avalia os modelos presentes em `models/`; não é
