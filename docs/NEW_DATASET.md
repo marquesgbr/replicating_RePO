@@ -51,22 +51,28 @@ Rótulos canônicos: `BENIGN`, `xss`, `password`, `injection`, `scanning`,
 espaços nas extremidades; qualquer rótulo desconhecido aborta a validação.
 
 As contagens reais por classe são **impressas pelo comando `validate`** e
-registradas nos JSONs de resultado da avaliação normal. A tabela abaixo é
-apenas o esqueleto que a Task 9 preenche com os números do dataset extraído;
-não há contagens hardcoded neste documento.
+registradas nos JSONs de resultado da avaliação normal. A tabela abaixo foi
+preenchida com a extração local do ZIP no commit `e57b579` (ambiente CPU); os
+números são as linhas válidas de `new_test.csv` após o descarte das linhas com
+`inf`/`nan`.
 
-| Classe | Contagem |
-| --- | --- |
-| `BENIGN` | impressa por `validate` |
-| `xss` | impressa por `validate` |
-| `password` | impressa por `validate` |
-| `injection` | impressa por `validate` |
-| `scanning` | impressa por `validate` |
-| `backdoor` | impressa por `validate` |
-| `ransomware` | impressa por `validate` |
-| `mitm` | impressa por `validate` |
-| `ddos` | impressa por `validate` |
-| `dos` | impressa por `validate` |
+| Classe | Contagem em `new_test.csv` |
+| --- | ---: |
+| `BENIGN` | 754.209 |
+| `xss` | 2.149.308 |
+| `password` | 340.208 |
+| `injection` | 277.696 |
+| `scanning` | 36.205 |
+| `backdoor` | 27.145 |
+| `ransomware` | 5.098 |
+| `mitm` | 517 |
+| `ddos` | 202 |
+| `dos` | 145 |
+| **Total válido** | **3.590.733** |
+
+O `validate` também reportou 3.591.095 linhas no teste, das quais 362 foram
+descartadas por `inf`/`nan`, e 1.759.850 linhas em `new_train.csv` (somente
+`BENIGN`).
 
 Classes com menos de 100 amostras aparecem nos resultados com a marca
 `low_n: true` e também numa média macro de sensibilidade, para evitar
@@ -206,14 +212,76 @@ python code/train_new_data_model.py \
 ```
 
 Para inspeção rápida sem percorrer o dataset inteiro, use `--max-samples` e
-`--n-masks` (o número de máscaras deve ser múltiplo de 5 para RePO+):
+`--n-masks` (o número de máscaras deve ser múltiplo de 5 para RePO+). Use
+sempre um `--results-dir` de smoke, como
+`results/new_data/notebook_smoke`, para não sobrescrever os resultados
+canônicos de `results/new_data/normal/` e
+`results/new_data/adversarial/primary/`:
 
 ```bash
 PYTHONPATH=code python -m new_data_eval normal \
+  --results-dir results/new_data/notebook_smoke \
   --modes repo,repo_plus --max-samples 20 --n-masks 5 --batch-size 2
 PYTHONPATH=code python -m new_data_eval adversarial \
+  --results-dir results/new_data/notebook_smoke \
   --attack ddos --max-samples 5 --n-masks 5 --variant primary
 ```
+
+O adversarial lê o threshold de FPR 10% do resultado normal gravado no mesmo
+`--results-dir`; rode o normal de smoke antes. Os notebooks já usam
+`results/new_data/notebook_smoke/` por padrão.
+
+### Verificação local
+
+Em 2026-11-09, no commit `e57b579`, o fluxo foi executado em CPU com o ZIP
+extraído localmente (CSVs fora do Git). Comandos e resultados exatos:
+
+```bash
+PYTHONPATH=code python -m new_data_eval validate \
+  --data-dir data/new_data \
+  --model-dir models/new_data_model \
+  --meta-dir data/new_data/x_train_meta
+```
+
+Saída resumida: 85 colunas, 77 features, todas as 9 classes presentes, modelo
+com entrada de largura 77, metadados com shape `(77,)`, oito features
+constantes (`31, 32, 33, 48, 55, 56, 57, 63`), erro benigno `0.00475878`
+menor que o erro de ruído `0.290367`, `validation ok`.
+
+```bash
+PYTHONPATH=code python -m new_data_eval normal \
+  --data-dir data/new_data \
+  --model-dir models/new_data_model \
+  --meta-dir data/new_data/x_train_meta \
+  --results-dir results/new_data/verification \
+  --modes repo,repo_plus --max-samples 200 --n-masks 5 --batch-size 2
+```
+
+Resultado: `repo.json` e `repo_plus.json` gravados em
+`results/new_data/verification/normal/`; 200 amostras (primeiras linhas do
+teste, portanto desbalanceadas) e runtime de ~6 s. Thresholds de FPR 1%/10%:
+`repo` = 0,0108406/0,00674889; `repo_plus` = 0,054203/0,0337444. Como o smoke
+usa apenas as primeiras 200 linhas, as métricas não têm valor científico.
+
+```bash
+PYTHONPATH=code python -m new_data_eval adversarial \
+  --data-dir data/new_data \
+  --model-dir models/new_data_model \
+  --meta-dir data/new_data/x_train_meta \
+  --results-dir results/new_data/verification \
+  --attack ddos --max-samples 5 --n-masks 5 --variant primary
+```
+
+Resultado: `results/new_data/verification/adversarial/primary/ddos.json`, com
+`model_type="new_data_flow"`, `variant="primary"`, 5 de 202 amostras de `ddos`,
+threshold de ataque 0,0337444 lido do `repo_plus.json` normal, `fooled=0`,
+`victim_tpr=0.2` e runtime de ~46 s. Nenhum resultado de fluxo/pacotes foi
+alterado.
+
+**A avaliação completa continua pendente.** O teste normal integral (~2,1 GB,
+3,59 milhões de linhas) e o adversarial dos 9 ataques com 5.000 amostras cada
+exigem GPU e devem ser executados no Apuana ou equivalente. Os números acima
+são apenas smoke, não resultados finais.
 
 Os notebooks `code/new_data_RePO_Normal_Test.ipynb` e
 `code/new_data_RePO_Adversarial.ipynb` são wrappers finos dessa CLI: eles não

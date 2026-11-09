@@ -105,14 +105,27 @@ Execute os notebooks normais antes dos adversariais.
 Esta seção deve ser concluída caso o escopo do projeto inclua outro conjunto de
 dados além dos dados usados pelo artigo de referência.
 
-- [ ] Escolher o dataset adicional.
-- [ ] Justificar a escolha.
-- [ ] Documentar origem, características e classes.
-- [ ] Preparar os dados.
-- [ ] Definir treino, validação e teste.
-- [ ] Registrar quantidades por classe.
+- [x] Escolher o dataset adicional.
+  - Evidência: CIC-ToN-IoT processado em `data/new_data/` (citação oficial
+    ainda pendente de confirmação).
+- [x] Justificar a escolha.
+  - Evidência: seção “Fonte e citação” de `docs/NEW_DATASET.md`.
+- [x] Documentar origem, características e classes.
+  - Evidência: `docs/NEW_DATASET.md`; origem/citação formal permanece pendente.
+- [x] Preparar os dados.
+  - Evidência: `extract_new_data.sh` e extração local do ZIP LFS com
+    `validate` aprovado.
+- [x] Definir treino, validação e teste.
+  - Evidência: 70% dos benignos para treino, 30% dos benignos mais todos os
+    maliciosos para teste; não há split de validação separado.
+- [x] Registrar quantidades por classe.
+  - Evidência: 3.590.733 linhas válidas no teste e contagens por classe em
+    `docs/NEW_DATASET.md` (obtidas de `validate`).
 - [ ] Executar a avaliação da solução de referência no dataset adicional.
+  - Pendente: somente smoke local em CPU foi executado; a avaliação normal
+    completa e os 9 ataques adversariais exigem GPU/Apuana.
 - [ ] Consolidar os resultados para comparação.
+  - Pendente: depende da conclusão da avaliação completa acima.
 
 ## 6. Melhoria proposta pela equipe
 

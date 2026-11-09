@@ -200,14 +200,24 @@ PYTHONPATH=code python -m new_data_eval smoke
 ```
 
 Para inspeção rápida, `--max-samples` e `--n-masks` reduzem o custo; use
-`--n-masks` múltiplo de 5 por causa do RePO+:
+`--n-masks` múltiplo de 5 por causa do RePO+ e um `--results-dir` de smoke
+(`results/new_data/notebook_smoke`) para não sobrescrever os resultados
+canônicos:
 
 ```bash
 PYTHONPATH=code python -m new_data_eval normal \
+  --results-dir results/new_data/notebook_smoke \
   --modes repo,repo_plus --max-samples 20 --n-masks 5 --batch-size 2
 PYTHONPATH=code python -m new_data_eval adversarial \
+  --results-dir results/new_data/notebook_smoke \
   --attack ddos --max-samples 5 --n-masks 5 --variant primary
 ```
+
+Rode o normal de smoke antes do adversarial: ele lê o threshold de FPR 10% do
+`repo_plus.json` gravado no mesmo `--results-dir`. A avaliação completa do novo
+dataset (normal com ~3,59 milhões de linhas e adversarial nos 9 ataques) ainda
+está pendente e deve rodar em GPU/Apuana; os smoke tests não produzem
+resultados finais.
 
 Os notebooks `code/new_data_RePO_Normal_Test.ipynb` e
 `code/new_data_RePO_Adversarial.ipynb` são wrappers finos dessa CLI: não
