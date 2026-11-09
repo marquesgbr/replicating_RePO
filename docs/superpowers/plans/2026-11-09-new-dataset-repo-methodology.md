@@ -460,6 +460,7 @@ Expected: FAIL because `main` does not exist.
 `validate` must run header/label/metadata/model checks and print a concise summary. `normal` must:
 
 - stream `new_test.csv` in chunks and never convert the whole CSV to float64;
+- pass the global sample offset as `sample_indices` to `score_samples` so masks do not restart at zero in every chunk;
 - score `repo` and `repo_plus`;
 - compute thresholds 0.01 and 0.10 on `BENIGN`;
 - write `results/new_data/normal/repo.json` and `repo_plus.json` (the default
@@ -467,7 +468,8 @@ Expected: FAIL because `main` does not exist.
 - add `scoring`, `variant="primary"`, hashes, environment, and git commit.
 
 Use `--n-masks` only for tests/smoke; the default remains 100. Accept
-`--max-samples` for smoke runs; when omitted, evaluate the full test set.
+`--max-samples` for smoke runs and stop reading once that many valid samples
+have been collected; when omitted, evaluate the full test set.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
