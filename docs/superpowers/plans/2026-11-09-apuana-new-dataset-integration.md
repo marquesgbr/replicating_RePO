@@ -408,7 +408,7 @@ NEW_DATA_RESULTS="${NEW_DATA_RESULTS:-$(new_data_results_root)}"
 
 ```bash
 new_data_normal)
-  NEW_DATA_MODEL_DIR="${MODEL_DIR:-$(new_data_model_dir_for new_data "${MODEL_SOURCE}")}"
+  NEW_DATA_MODEL_DIR="${MODEL_DIR:-$(new_data_model_dir_for "${MODEL_SOURCE}")}"
   ND_ARGS=(
     --data-dir "${NEW_DATA_DIR}"
     --model-dir "${NEW_DATA_MODEL_DIR}"
@@ -446,7 +446,7 @@ new_data_adversarial)
     exit 2
   fi
 
-  NEW_DATA_MODEL_DIR="${MODEL_DIR:-$(new_data_model_dir_for new_data "${MODEL_SOURCE}")}"
+  NEW_DATA_MODEL_DIR="${MODEL_DIR:-$(new_data_model_dir_for "${MODEL_SOURCE}")}"
   ND_ADV=(
     --data-dir "${NEW_DATA_DIR}"
     --model-dir "${NEW_DATA_MODEL_DIR}"
@@ -473,7 +473,7 @@ new_data_adversarial)
 
 ```bash
 new_data_smoke)
-  NEW_DATA_MODEL_DIR="${MODEL_DIR:-$(new_data_model_dir_for new_data "${MODEL_SOURCE}")}"
+  NEW_DATA_MODEL_DIR="${MODEL_DIR:-$(new_data_model_dir_for "${MODEL_SOURCE}")}"
   ND_SMOKE=(
     --data-dir "${NEW_DATA_DIR}"
     --model-dir "${NEW_DATA_MODEL_DIR}"

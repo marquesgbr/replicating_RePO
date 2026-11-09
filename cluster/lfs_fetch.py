@@ -29,6 +29,8 @@ LFS_MEDIA_TYPE = "application/vnd.git-lfs+json"
 LFS_VERSION_PREFIX = "version https://git-lfs.github.com/spec/"
 _OID_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _CHUNK = 1 << 20
+_BATCH_TIMEOUT = 60
+_DOWNLOAD_TIMEOUT = 600
 
 _urlopen = urllib.request.urlopen
 
@@ -138,6 +140,10 @@ def download_object(
     token: str | None = None,
 ) -> Path:
     """Download ``pointer`` from ``repository`` into ``output`` atomically."""
+    repository = normalize_repository(repository)
+    if token and repository.startswith("http://"):
+        raise ValueError("refusing to send a token to a non-HTTPS repository URL")
+
     payload = json.dumps(batch_payload(pointer.oid, pointer.size)).encode("utf-8")
     request = urllib.request.Request(
         batch_url(repository),
@@ -145,7 +151,7 @@ def download_object(
         headers=_headers(token),
         method="POST",
     )
-    with _urlopen(request) as response:
+    with _urlopen(request, timeout=_BATCH_TIMEOUT) as response:
         batch = json.loads(response.read().decode("utf-8"))
 
     objects = batch.get("objects")
@@ -181,7 +187,7 @@ def download_object(
     digest = hashlib.sha256()
     written = 0
     try:
-        with _urlopen(request) as response, open(temporary, "wb") as handle:
+        with _urlopen(request, timeout=_DOWNLOAD_TIMEOUT) as response, open(temporary, "wb") as handle:
             while True:
                 block = response.read(_CHUNK)
                 if not block:

@@ -12,6 +12,7 @@
 #   bash cluster/setup_env.sh
 #   bash cluster/setup_env.sh --skip-data
 #   bash cluster/setup_env.sh --skip-new-data
+#   bash cluster/setup_env.sh --force-new-data
 #   bash cluster/setup_env.sh --force
 
 set -euo pipefail
@@ -37,7 +38,7 @@ while (($#)); do
     --force-venv) FORCE_VENV=1 ;;
     --force-new-data) FORCE_NEW_DATA=1 ;;
     -h|--help)
-      sed -n '2,18p' "$0"
+      sed -n '2,19p' "$0"
       exit 0
       ;;
     *)
@@ -170,11 +171,16 @@ if (( ! SKIP_NEW_DATA )); then
   mkdir -p "${NEW_DATA_DIR}"
 
   if (( FORCE || FORCE_DATA || FORCE_NEW_DATA )) \
-     || [[ ! -s "${NEW_DATA_DIR}/new_train.csv" ]]; then
+     || [[ ! -s "${NEW_DATA_DIR}/new_train.csv" ]] \
+     || [[ ! -s "${NEW_DATA_DIR}/new_test.csv" ]]; then
     echo "[setup] extraindo novo dataset para ${NEW_DATA_DIR}"
-    OUTPUT_DIR="${NEW_DATA_DIR}" \
-    ZIP_PATH="${REPO_ROOT}/data/new_data/New-dataset-split-clean.zip" \
-      bash "${REPO_ROOT}/extract_new_data.sh"
+    if ! OUTPUT_DIR="${NEW_DATA_DIR}" \
+         ZIP_PATH="${REPO_ROOT}/data/new_data/New-dataset-split-clean.zip" \
+           bash "${REPO_ROOT}/extract_new_data.sh"; then
+      echo "[error] falha ao extrair o novo dataset" >&2
+      echo "[hint] copie o ZIP real para ${NEW_DATA_DIR} ou use --skip-new-data se só precisa de fluxo/pacotes" >&2
+      exit 1
+    fi
   else
     echo "[setup] novo dataset já extraído: ${NEW_DATA_DIR}"
   fi
@@ -224,7 +230,9 @@ echo "  2) piloto e execução completa:"
 echo "     bash cluster/submit.sh normal flow"
 echo "     bash cluster/submit.sh adversarial flow \"DoS Slowhttptest\""
 echo "     bash cluster/submit.sh adversarial packet all"
-echo "  3) novo dataset:"
-echo "     SMOKE=1 bash cluster/submit.sh new-data smoke ddos"
-echo "     bash cluster/submit.sh new-data normal"
-echo "     bash cluster/submit.sh new-data adversarial all primary"
+if (( ! SKIP_NEW_DATA )); then
+  echo "  3) novo dataset:"
+  echo "     SMOKE=1 bash cluster/submit.sh new-data smoke ddos"
+  echo "     bash cluster/submit.sh new-data normal"
+  echo "     bash cluster/submit.sh new-data adversarial all primary"
+fi

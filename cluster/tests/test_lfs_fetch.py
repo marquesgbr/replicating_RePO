@@ -77,7 +77,7 @@ def test_download_object_writes_the_verified_object(monkeypatch, tmp_path):
     pointer = lfs_fetch.parse_pointer(pointer_text(payload))
     requested: list[str] = []
 
-    def fake_urlopen(request):
+    def fake_urlopen(request, timeout=None):
         requested.append(request.full_url)
         if request.full_url.endswith("/info/lfs/objects/batch"):
             body = {
@@ -110,7 +110,7 @@ def test_download_object_rejects_a_digest_mismatch(monkeypatch, tmp_path):
     payload = b"the real dataset"
     pointer = lfs_fetch.parse_pointer(pointer_text(payload))
 
-    def fake_urlopen(request):
+    def fake_urlopen(request, timeout=None):
         if request.full_url.endswith("/info/lfs/objects/batch"):
             body = {
                 "objects": [
@@ -135,10 +135,22 @@ def test_download_object_rejects_a_digest_mismatch(monkeypatch, tmp_path):
     assert not output.exists()
 
 
+def test_download_object_refuses_a_token_over_http(tmp_path):
+    pointer = lfs_fetch.LfsPointer(oid="a" * 64, size=10)
+
+    with pytest.raises(ValueError, match="HTTPS"):
+        lfs_fetch.download_object(
+            "http://github.com/o/r.git",
+            pointer,
+            tmp_path / "object.zip",
+            token="secret",
+        )
+
+
 def test_download_object_reports_a_missing_action(monkeypatch, tmp_path):
     pointer = lfs_fetch.LfsPointer(oid="a" * 64, size=10)
 
-    def fake_urlopen(request):
+    def fake_urlopen(request, timeout=None):
         return io.BytesIO(json.dumps({"objects": [{"oid": pointer.oid}]}).encode())
 
     monkeypatch.setattr(lfs_fetch, "_urlopen", fake_urlopen)

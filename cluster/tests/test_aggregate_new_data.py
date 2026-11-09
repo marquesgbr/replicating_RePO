@@ -47,7 +47,7 @@ def adversarial_payload(variant: str, attack: str = "ddos") -> dict:
         "model_type": "new_data_flow",
         "experiment": "adversarial",
         "variant": variant,
-        "attack": attack,
+        "attack_type": attack,
         "score_mode": "repo_plus",
         "thresholds": {"policy": "calibrated", "attack": 0.2, "fpr_0.10": 0.2},
         "fpr_at_attack_threshold": 0.10,
@@ -101,6 +101,21 @@ def test_summary_rows_reads_normal_and_adversarial(tmp_path):
     assert all("smoke" not in row["path"] for row in rows)
     assert "adversarial/primary/xss.json" in missing
     assert "adversarial/primary/ddos.json" not in missing
+
+
+def test_summary_reads_attack_type_not_the_filename(tmp_path):
+    build_tree(tmp_path)
+    write_json(
+        tmp_path,
+        "adversarial/primary/renamed.json",
+        adversarial_payload("primary", attack="custom-attack"),
+    )
+
+    rows, _missing = aggregate_new_data.summary_rows(tmp_path)
+
+    custom = [row for row in rows if row["path"].endswith("renamed.json")]
+    assert len(custom) == 1
+    assert custom[0]["attack"] == "custom-attack"
 
 
 def test_write_summary_creates_csv_markdown_and_json(tmp_path):

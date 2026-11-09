@@ -159,7 +159,7 @@ task_adversarial() {
 
   local list_file
   list_file="$(mktemp "${RESULTS_ROOT}/attack-lists/${model}-XXXXXXXX.txt")"
-  if [[ "${attack}" == "all" ]]; then
+  if [[ "${attack,,}" == "all" ]]; then
     "${VENV}/bin/python" - "${model}" "${list_file}" "${CLUSTER_DIR}" <<'PY'
 import sys
 from pathlib import Path
@@ -251,20 +251,36 @@ new_data_variant_settings() {
 }
 
 task_new_data_normal() {
-  local modes="${1:-repo repo_plus}"
-  modes="${modes// /,}"
+  local raw_modes="${1:-${NEW_DATA_MODES:-repo repo_plus}}"
+  raw_modes="${raw_modes//,/ }"
+  raw_modes="${raw_modes//+/ }"
+  local -a mode_list=()
+  read -r -a mode_list <<< "${raw_modes}"
   local mode
-  IFS=',' read -r -a mode_list <<< "${modes}"
   for mode in "${mode_list[@]}"; do
     case "${mode}" in
       repo|repo_plus) ;;
       *) echo "[error] modo inválido: ${mode}" >&2; exit 2 ;;
     esac
   done
-  local joined="${modes//,/\+}"
+  local joined=""
+  for mode in "${mode_list[@]}"; do
+    joined+="${joined:+,}${mode}"
+  done
+  joined="${joined//,/\+}"
+  local extra="DATASET=new_data,NEW_DATA_RESULTS=${RESULTS_ROOT}/new_data,NEW_DATA_MODES=${joined},BATCH_SIZE=${BATCH_SIZE:-1024}"
+  if [[ -n "${N_MASKS:-}" ]]; then
+    extra+=",N_MASKS=${N_MASKS}"
+  fi
+  if [[ -n "${SCORE_REPEATS:-}" ]]; then
+    extra+=",SCORE_REPEATS=${SCORE_REPEATS}"
+  fi
+  if [[ "${PAIRED_SCORING:-0}" == "1" ]]; then
+    extra+=",PAIRED_SCORING=1"
+  fi
   local job_id
   job_id="$(submit_gpu_job "repo-new-data-normal" "${WALLTIME_NEW_DATA_NORMAL}" \
-    "$(export_args new_data_normal new_data "DATASET=new_data,NEW_DATA_RESULTS=${RESULTS_ROOT}/new_data,NEW_DATA_MODES=${joined},BATCH_SIZE=${BATCH_SIZE:-1024}")")"
+    "$(export_args new_data_normal new_data "${extra}")")"
   echo "[submit] new-data normal (${joined}): ${job_id}"
 }
 
@@ -280,7 +296,7 @@ task_new_data_adversarial() {
   mkdir -p "${list_dir}"
   local list_file
   list_file="$(mktemp "${list_dir}/attacks-XXXXXXXX.txt")"
-  if [[ "${attack}" == "all" ]]; then
+  if [[ "${attack,,}" == "all" ]]; then
     PYTHONPATH="${REPO_ROOT}/code" "${VENV}/bin/python" - "${list_file}" <<'PY'
 import sys
 from pathlib import Path
@@ -328,7 +344,7 @@ PY
 task_new_data_smoke() {
   local attack="${1:-ddos}"
   local model_dir
-  model_dir="$(new_data_model_dir_for new_data "${MODEL_SOURCE:-pretrained}")"
+  model_dir="$(new_data_model_dir_for "${MODEL_SOURCE:-pretrained}")"
   echo "O smoke do novo dataset deve ser interativo (partição debug, máx. 30 min):"
   echo
   echo "  srun --partition=debug --gres=${GRES} -c ${CPUS_PER_TASK} --mem=${MEM} --time=00:30:00 --pty bash"
@@ -352,7 +368,7 @@ task_new_data_smoke() {
 
 task_new_data_train() {
   local model_dir="${MODEL_DIR:-${REPO_ROOT}/models/retrained/new_data_model}"
-  if [[ "${model_dir}" == "${REPO_ROOT}/models/new_data_model" ]]; then
+  if new_data_model_is_protected "${model_dir}"; then
     echo "[error] treino recusa sobrescrever o modelo dos autores: ${model_dir}" >&2
     echo "[hint] use MODEL_DIR=.../models/retrained/new_data_model" >&2
     exit 2
@@ -425,7 +441,7 @@ case "${command}" in
     subcommand="${1:-}"
     shift || true
     case "${subcommand}" in
-      normal) task_new_data_normal "${1:-repo repo_plus}" ;;
+      normal) task_new_data_normal "${1:-}" ;;
       adversarial)
         [[ $# -ge 1 ]] || { usage; exit 2; }
         task_new_data_adversarial "$1" "${2:-primary}"

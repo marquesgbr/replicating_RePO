@@ -233,9 +233,13 @@ PYTHONPATH=code python -m new_data_eval smoke
 # 6. Treino reproduzível do autoencoder
 python code/train_new_data_model.py \
   --train-csv data/new_data/new_train.csv \
-  --output-dir models/new_data_model \
+  --output-dir models/retrained/new_data_model \
   --seed 2019 --epochs 5 --batch-size 256
 ```
+
+O default do script é `models/new_data_model`, que é o modelo dos autores.
+Sempre passe `--output-dir models/retrained/...` para não sobrescrever o
+baseline versionado.
 
 Para inspeção rápida sem percorrer o dataset inteiro, use `--max-samples` e
 `--n-masks` (o número de máscaras deve ser múltiplo de 5 para RePO+). Use

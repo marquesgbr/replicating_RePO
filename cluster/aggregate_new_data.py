@@ -104,11 +104,16 @@ def load_normal(results_dir: Path) -> list[dict[str, Any]]:
         payload = _read_json(path)
         if payload is None:
             continue
-        thresholds = payload.get("thresholds") or {}
-        fpr_payload = payload.get("fpr") or {}
-        averages = payload.get("average_tpr") or {}
-        at_ten = averages.get("at_fpr_0.10") or {}
-        at_one = averages.get("at_fpr_0.01") or {}
+        thresholds = payload.get("thresholds")
+        thresholds = thresholds if isinstance(thresholds, dict) else {}
+        fpr_payload = payload.get("fpr")
+        fpr_payload = fpr_payload if isinstance(fpr_payload, dict) else {}
+        averages = payload.get("average_tpr")
+        averages = averages if isinstance(averages, dict) else {}
+        at_ten = averages.get("at_fpr_0.10")
+        at_ten = at_ten if isinstance(at_ten, dict) else {}
+        at_one = averages.get("at_fpr_0.01")
+        at_one = at_one if isinstance(at_one, dict) else {}
         rows.append(
             {
                 "experiment": "normal",
@@ -148,14 +153,18 @@ def load_adversarial(results_dir: Path) -> list[dict[str, Any]]:
             payload = _read_json(path)
             if payload is None:
                 continue
-            thresholds = payload.get("thresholds") or {}
-            counts = payload.get("counts") or {}
+            thresholds = payload.get("thresholds")
+            thresholds = thresholds if isinstance(thresholds, dict) else {}
+            counts = payload.get("counts")
+            counts = counts if isinstance(counts, dict) else {}
             rows.append(
                 {
                     "experiment": "adversarial",
                     "variant": variant,
                     "score_mode": payload.get("score_mode"),
-                    "attack": payload.get("attack") or path.stem,
+                    "attack": payload.get("attack_type")
+                    or payload.get("attack")
+                    or path.stem,
                     "n": _integer(counts.get("n")),
                     "threshold_fpr_0.10": _number(thresholds.get("fpr_0.10")),
                     "threshold_policy": thresholds.get("policy"),
@@ -222,7 +231,7 @@ def _markdown(rows: list[dict[str, Any]], missing: list[str], results_dir: Path)
         "",
         "## Normal",
         "",
-        "| modo | n | FPR 1% | FPR 10% | FPR@10% | macro@1% | weighted@1% | macro@10% | weighted@10% |",
+        "| modo | n | threshold@1% | threshold@10% | FPR@10% | macro@1% | weighted@1% | macro@10% | weighted@10% |",
         "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for row in rows:
@@ -291,6 +300,7 @@ def _write_atomic(path: Path, text: str) -> None:
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temporary, path)
+        os.chmod(path, 0o644)
     finally:
         if os.path.exists(temporary):
             os.unlink(temporary)
@@ -316,6 +326,7 @@ def write_summary(results_dir: Path, out_dir: Path) -> None:
             for row in rows:
                 writer.writerow(row)
         os.replace(temporary, out_dir / "summary.csv")
+        os.chmod(out_dir / "summary.csv", 0o644)
     finally:
         if os.path.exists(temporary):
             os.unlink(temporary)

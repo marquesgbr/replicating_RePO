@@ -27,7 +27,7 @@ load_python_module
 activate_venv
 cd "${REPO_ROOT}"
 
-: "${TASK:?defina TASK=train|normal|adversarial}"
+: "${TASK:?defina TASK=train|normal|adversarial|new_data_*}"
 
 print_runtime_env
 
@@ -136,7 +136,7 @@ case "${TASK}" in
     exec "${PY}" "${REPO_ROOT}/cluster/repo_runner.py" smoke "${COMMON_ARGS[@]}"
     ;;
   new_data_normal)
-    NEW_DATA_MODEL_DIR="${MODEL_DIR:-$(new_data_model_dir_for new_data "${MODEL_SOURCE}")}"
+    NEW_DATA_MODEL_DIR="${MODEL_DIR:-$(new_data_model_dir_for "${MODEL_SOURCE}")}"
     NEW_DATA_MODES_RESOLVED="${NEW_DATA_MODES:-repo,repo_plus}"
     NEW_DATA_MODES_RESOLVED="${NEW_DATA_MODES_RESOLVED//+/,}"
     ND_ARGS=(
@@ -181,7 +181,7 @@ case "${TASK}" in
       exit 2
     fi
 
-    NEW_DATA_MODEL_DIR="${MODEL_DIR:-$(new_data_model_dir_for new_data "${MODEL_SOURCE}")}"
+    NEW_DATA_MODEL_DIR="${MODEL_DIR:-$(new_data_model_dir_for "${MODEL_SOURCE}")}"
     ND_ADV=(
       --data-dir "${NEW_DATA_DIR}"
       --model-dir "${NEW_DATA_MODEL_DIR}"
@@ -214,7 +214,7 @@ case "${TASK}" in
     exec "${PY}" -m new_data_eval adversarial "${ND_ADV[@]}"
     ;;
   new_data_smoke)
-    NEW_DATA_MODEL_DIR="${MODEL_DIR:-$(new_data_model_dir_for new_data "${MODEL_SOURCE}")}"
+    NEW_DATA_MODEL_DIR="${MODEL_DIR:-$(new_data_model_dir_for "${MODEL_SOURCE}")}"
     ND_SMOKE=(
       --data-dir "${NEW_DATA_DIR}"
       --model-dir "${NEW_DATA_MODEL_DIR}"
@@ -231,13 +231,11 @@ case "${TASK}" in
     ;;
   new_data_train)
     NEW_DATA_MODEL_DIR="${MODEL_DIR:-${REPO_ROOT}/models/retrained/new_data_model}"
-    case "${NEW_DATA_MODEL_DIR}" in
-      "${REPO_ROOT}/models/new_data_model")
-        echo "[error] recusando sobrescrever o modelo dos autores: ${NEW_DATA_MODEL_DIR}" >&2
-        echo "[hint] use MODEL_DIR=.../models/retrained/new_data_model" >&2
-        exit 2
-        ;;
-    esac
+    if new_data_model_is_protected "${NEW_DATA_MODEL_DIR}"; then
+      echo "[error] recusando sobrescrever o modelo dos autores: ${NEW_DATA_MODEL_DIR}" >&2
+      echo "[hint] use MODEL_DIR=.../models/retrained/new_data_model" >&2
+      exit 2
+    fi
     exec "${PY}" "${REPO_ROOT}/code/train_new_data_model.py" \
       --train-csv "${REPO_ROOT}/data/new_data/new_train.csv" \
       --output-dir "${NEW_DATA_MODEL_DIR}" \

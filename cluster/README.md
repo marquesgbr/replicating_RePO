@@ -443,8 +443,10 @@ data/new_data/new_test.csv   -> symlink
 
 Metadados de normalização (`data/new_data/x_train_meta/`) e o SavedModel
 (`models/new_data_model/`) são versionados no repositório. Se `git-lfs` não
-existir no login, `extract_new_data.sh` baixa o objeto pela API do GitHub e
-verifica tamanho/SHA-256; se a rede bloquear, copie o ZIP manualmente.
+existir no login, `extract_new_data.sh` baixa o objeto pela API do GitHub,
+verifica tamanho/SHA-256 e grava o ZIP real em `$DATA_ROOT/new_data/` — o
+ponteiro LFS versionado não é sobrescrito. Se a rede bloquear, copie o ZIP
+manualmente para `$DATA_ROOT/new_data/` ou use `--skip-new-data`.
 
 Flags úteis:
 
@@ -501,12 +503,15 @@ Antes do normal, valide o ambiente com `new-data smoke`. Depois que o normal
 terminar, meça a vazão adversarial com um piloto:
 
 ```bash
-MAX_SAMPLES=200 N_MASKS=5 BATCH_SIZE=256 \
+MAX_SAMPLES=200 BATCH_SIZE=256 \
   bash cluster/submit.sh new-data adversarial ddos smoke
 ```
 
 Use `smoke` no piloto: `primary` guarda o resultado canônico e um piloto com
-`MAX_SAMPLES` menor bloquearia a rodada completa por causa do checkpoint.
+`MAX_SAMPLES` menor bloquearia a rodada completa por causa do checkpoint. Não
+troque `N_MASKS`, `SCORE_REPEATS` ou `PAIRED_SCORING` no adversarial canônico:
+a proveniência exige os mesmos valores usados no normal. Para inspecionar com
+5 máscaras, use `new-data smoke`.
 
 O normal percorre ~3,59 M linhas com 100 máscaras; no A100 usado antes, o normal
 de fluxo (2,3 M) levou ~10 min, então 2 h dão margem. O adversarial usa até

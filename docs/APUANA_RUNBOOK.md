@@ -131,7 +131,10 @@ O setup faz, em ordem:
    `$SCRATCH/replicating-repo-results/env-lock.txt`.
 
 O novo dataset usa `git-lfs` quando disponível; se o login não tiver `git-lfs`,
-o extrator baixa o ZIP pela API do GitHub e verifica tamanho/SHA-256.
+o extrator baixa o ZIP pela API do GitHub, verifica tamanho/SHA-256 e grava o
+arquivo real em `$SCRATCH/replicating-repo-data/new_data`, sem sobrescrever o
+ponteiro versionado. Se a rede bloquear, copie o ZIP para lá ou use
+`--skip-new-data`.
 
 Isso pode demorar dependendo da rede e do disco. Para repetir apenas a extração dos dados:
 
@@ -332,12 +335,15 @@ Se `normal/repo_plus.json` não existir, o job adversarial falha antes de
 carregar o modelo. Para um piloto rápido **depois** que o normal terminar:
 
 ```bash
-MAX_SAMPLES=200 N_MASKS=5 BATCH_SIZE=256 \
+MAX_SAMPLES=200 BATCH_SIZE=256 \
   bash cluster/submit.sh new-data adversarial ddos smoke
 ```
 
 `smoke` grava em `adversarial/smoke/` e não bloqueia o checkpoint de
-`primary`; use `primary` apenas para a rodada canônica completa.
+`primary`; use `primary` apenas para a rodada canônica completa. Não altere
+`N_MASKS`, `SCORE_REPEATS` ou `PAIRED_SCORING` no adversarial canônico: o
+normal e o adversarial precisam usar os mesmos valores de scoring. Para
+inspecionar com 5 máscaras, use `new-data smoke`.
 
 Acompanhe com `squeue -u "$USER"` e
 `tail -f "$SCRATCH/replicating-repo-results/logs/"*.out`.
@@ -550,7 +556,11 @@ bash cluster/submit.sh new-data train
 ```
 
 O modelo vai para `models/retrained/new_data_model`. A task recusa gravar em
-`models/new_data_model` (modelo dos autores). Para avaliar o modelo retreinado:
+`models/new_data_model` (modelo dos autores), inclusive com caminhos relativos
+ou subdiretórios. Rodar `code/train_new_data_model.py` localmente sem
+`--output-dir` grava no default `models/new_data_model` e sobrescreve o
+baseline versionado; use `--output-dir models/retrained/new_data_model`.
+Para avaliar o modelo retreinado:
 
 ```bash
 MODEL_SOURCE=retrained bash cluster/submit.sh new-data normal

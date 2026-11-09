@@ -61,6 +61,8 @@ case "$ZIP_PATH" in
     *) ZIP_REL="$ZIP_PATH" ;;
 esac
 
+ARCHIVE_PATH="$ZIP_PATH"
+
 if [[ -f "$ZIP_PATH" ]] && ! is_lfs_pointer "$ZIP_PATH"; then
     log "Archive already materialized: ${ZIP_PATH}"
 else
@@ -75,21 +77,32 @@ else
 
     if is_lfs_pointer "$ZIP_PATH"; then
         log "git-lfs unavailable or pointer remains; using the API fallback..."
-        LFS_ARGS=(--pointer "$ZIP_PATH" --output "$ZIP_PATH")
+        # Never overwrite the tracked pointer: download beside the extracted
+        # CSVs so `git status` cannot stage the 813 MB binary by accident.
+        FALLBACK_ZIP="${OUTPUT_DIR}/$(basename "$ZIP_PATH")"
+        if command -v realpath >/dev/null 2>&1 \
+           && [[ "$(realpath -m -- "$FALLBACK_ZIP")" == "$(realpath -m -- "$ZIP_PATH")" ]]; then
+            FALLBACK_ZIP="${OUTPUT_DIR}/New-dataset-split-clean.lfs.zip"
+        fi
+        LFS_ARGS=(--pointer "$ZIP_PATH" --output "$FALLBACK_ZIP")
         if [[ -n "${LFS_REPOSITORY:-}" ]]; then
             LFS_ARGS+=(--repository "$LFS_REPOSITORY")
         fi
         "${PYTHON_BIN}" "${REPO_ROOT}/cluster/lfs_fetch.py" "${LFS_ARGS[@]}" \
-            || die "could not download ${ZIP_PATH}; check network access or copy the real ZIP manually"
+            || die "could not download the LFS object; check network access, copy the real ZIP into ${OUTPUT_DIR}, or run setup with --skip-new-data"
+        ARCHIVE_PATH="$FALLBACK_ZIP"
     fi
 fi
 
-if is_lfs_pointer "$ZIP_PATH"; then
-    die "${ZIP_PATH} is still a Git LFS pointer."
+if [[ ! -f "$ARCHIVE_PATH" ]]; then
+    die "Expected archive not found: ${ARCHIVE_PATH}"
+fi
+if is_lfs_pointer "$ARCHIVE_PATH"; then
+    die "${ARCHIVE_PATH} is still a Git LFS pointer."
 fi
 
-log "Extracting ${ZIP_PATH} into ${OUTPUT_DIR}/..."
-unzip -o "$ZIP_PATH" -d "${OUTPUT_DIR}/"
+log "Extracting ${ARCHIVE_PATH} into ${OUTPUT_DIR}/..."
+unzip -o "$ARCHIVE_PATH" -d "${OUTPUT_DIR}/"
 
 for csv in "$TRAIN_CSV" "$TEST_CSV"; do
     [ -f "$csv" ] || die "Expected CSV not found after extraction: ${csv}"
