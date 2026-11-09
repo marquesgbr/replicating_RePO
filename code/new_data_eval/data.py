@@ -377,11 +377,11 @@ def feature_frame(frame: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.ndarr
     """
     columns = [str(column) for column in frame.columns]
 
-    if columns == list(EXPECTED_COLUMNS):
+    if len(columns) == len(EXPECTED_COLUMNS):
         validate_header(columns)
         feature_block = frame.iloc[:, list(FEATURE_INDICES)]
         label_block = frame.iloc[:, LABEL_INDEX]
-    else:
+    elif len(columns) < len(EXPECTED_COLUMNS):
         missing = [name for name in FEATURE_NAMES if name not in columns]
         if missing:
             raise ValueError(f"Missing feature columns: {missing}")
@@ -389,6 +389,11 @@ def feature_frame(frame: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.ndarr
             raise ValueError("Missing label column 'Label'")
         feature_block = frame.loc[:, list(FEATURE_NAMES)]
         label_block = frame["Label"]
+    else:
+        raise ValueError(
+            f"Expected at most {len(EXPECTED_COLUMNS)} columns, found "
+            f"{len(columns)}"
+        )
 
     if any(
         not pd.api.types.is_numeric_dtype(dtype) for dtype in feature_block.dtypes

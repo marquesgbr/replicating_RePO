@@ -9,6 +9,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+import new_data_eval.results as results_module
 from new_data_eval.results import (
     MODEL_TYPE,
     SCHEMA_VERSION,
@@ -109,6 +110,16 @@ def test_write_json_atomic_creates_parent_and_leaves_no_temp_file(tmp_path):
     write_json_atomic(path, {"a": 1})
     assert json.loads(path.read_text()) == {"a": 1}
     assert [item.name for item in path.parent.iterdir()] == ["result.json"]
+
+
+def test_write_json_atomic_fsyncs_the_parent_directory(tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        results_module, "_fsync_directory", lambda path: calls.append(Path(path))
+    )
+    path = tmp_path / "nested" / "result.json"
+    write_json_atomic(path, {"a": 1})
+    assert calls == [path.parent]
 
 
 def test_file_sha256_matches_the_known_digest(tmp_path):
@@ -242,6 +253,13 @@ def test_build_normal_result_rejects_a_missing_required_key():
         build_normal_result(**inputs)
 
 
+def test_build_normal_result_rejects_dataset_score_count_mismatch():
+    inputs = _normal_inputs()
+    inputs["dataset"]["n_samples"] = 4
+    with pytest.raises(ValueError, match="n_samples"):
+        build_normal_result(**inputs)
+
+
 def test_build_normal_result_config_hash_covers_run_parameters():
     base = build_normal_result(**_normal_inputs())["config_hash"]
 
@@ -332,6 +350,13 @@ def test_build_adversarial_result_rejects_inconsistent_score_counts():
         build_adversarial_result(**inputs)
 
 
+def test_build_adversarial_result_rejects_dataset_count_mismatch():
+    inputs = _adversarial_inputs()
+    inputs["dataset"]["n_samples"] = 5
+    with pytest.raises(ValueError, match="n_samples"):
+        build_adversarial_result(**inputs)
+
+
 def test_build_adversarial_result_config_hash_covers_run_parameters():
     base = build_adversarial_result(**_adversarial_inputs())["config_hash"]
 
@@ -366,6 +391,7 @@ def test_build_adversarial_result_config_hash_covers_run_parameters():
         "cons_as_mal": 1,
         "cons_as_ben": 3,
     }
+    changed["dataset"]["n_samples"] = 6
     changed["normal_scores"] = np.array([0.9, 0.9, 0.1, 0.1, 0.1, 0.1])
     changed["victim_scores"] = np.array([0.1, 0.9, 0.1, 0.1, 0.1, 0.1])
     assert build_adversarial_result(**changed)["config_hash"] != base

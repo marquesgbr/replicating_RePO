@@ -162,9 +162,44 @@ def synthetic_project(tmp_path):
 
     _tiny_keras_model().export(str(model_dir))
 
+    from new_data_eval.cli import _sha256_path
+    from new_data_eval.data import sha256_file
+
+    normal_payload = {
+        "schema_version": "new_data_v1",
+        "status": "completed",
+        "model_type": "new_data_flow",
+        "score_mode": "repo_plus",
+        "dataset": {
+            "name": "new_data",
+            "test_csv": str(test_csv),
+            "test_csv_sha256": sha256_file(test_csv),
+            "n_samples": len(labels),
+            "n_dropped_invalid": 2,
+        },
+        "scoring": {
+            "n_masks": 5,
+            "score_repeats": 1,
+            "paired_scoring": False,
+        },
+        "thresholds": {"fpr_0.01": 0.05, "fpr_0.10": 0.123},
+        "fpr": {
+            "at_fpr_0.01_threshold": 0.05,
+            "at_fpr_0.10_threshold": 0.10,
+        },
+        "config": {
+            "model_sha256": _sha256_path(model_dir),
+            "meta_sha256": {
+                "train_min": sha256_file(meta_dir / "train_min.npy"),
+                "train_max": sha256_file(meta_dir / "train_max.npy"),
+            },
+        },
+        "config_hash": "a" * 64,
+        "variant": "primary",
+    }
     normal_repo_plus_json = results_dir / "normal" / "repo_plus.json"
     normal_repo_plus_json.write_text(
-        json.dumps({"thresholds": {"fpr_0.10": 0.123}}, indent=2), encoding="utf-8"
+        json.dumps(normal_payload, indent=2), encoding="utf-8"
     )
 
     return SimpleNamespace(

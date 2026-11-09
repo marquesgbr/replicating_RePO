@@ -28,6 +28,7 @@ from new_data_eval.data import (
     ATTACK_LABELS,
     FEATURE_NAMES,
     integer_feature_indices,
+    sha256_file,
 )
 from new_data_eval.scoring import PHASE_ORIGINAL, PHASE_VICTIM
 
@@ -77,6 +78,7 @@ def test_adversarial_writes_variant_directory(synthetic_project):
         "--attack", "ddos",
         "--max-samples", "2",
         "--n-masks", "5",
+        "--sample-mode", "first",
         "--variant", "sensitivity_first_n",
     ])
     assert exit_code == 0
@@ -122,6 +124,19 @@ def test_smoke_is_isolated_from_primary(synthetic_project):
     assert (synthetic_project.results_dir / "smoke" / "adversarial" / "ddos.json").exists()
     assert not (synthetic_project.results_dir / "adversarial" / "primary").exists()
 
+    normal_payload = json.loads(
+        (
+            synthetic_project.results_dir / "smoke" / "normal" / "repo_plus.json"
+        ).read_text()
+    )
+    assert normal_payload["variant"] == "smoke"
+    adversarial_payload = json.loads(
+        (
+            synthetic_project.results_dir / "smoke" / "adversarial" / "ddos.json"
+        ).read_text()
+    )
+    assert adversarial_payload["variant"] == "smoke"
+
 
 def test_result_and_checkpoint_paths_use_the_canonical_attack_name(tmp_path):
     results_dir = tmp_path / "results"
@@ -147,6 +162,13 @@ def _adversarial_args(project, *extra: str) -> list[str]:
         "--checkpoint-every", "1",
         *extra,
     ]
+
+
+def _rewrite_normal(project, mutate) -> None:
+    """Apply ``mutate`` to the fixture's normal result and write it back."""
+    payload = json.loads(project.normal_repo_plus_json.read_text())
+    mutate(payload)
+    project.normal_repo_plus_json.write_text(json.dumps(payload, indent=2))
 
 
 def _no_change(self, sample, sample_index):
@@ -188,6 +210,10 @@ def test_score_repeats_is_forwarded_to_original_and_victim_scoring(
     synthetic_project, monkeypatch
 ):
     monkeypatch.setattr(cli.FlowAttack, "find_adv", _no_change)
+    _rewrite_normal(
+        synthetic_project,
+        lambda payload: payload["scoring"].update({"score_repeats": 2}),
+    )
     real_score_samples = cli.score_samples
     calls: list[dict[str, object]] = []
 
@@ -222,6 +248,137 @@ def test_missing_normal_result_recomputes_and_warns(
     )
     assert payload["thresholds"]["fpr_0.10"] >= 0.0
     assert "recomputing" in caplog.text
+
+
+def test_calibrated_fallback_measures_the_fpr_on_benign_rows(
+    synthetic_project, monkeypatch
+):
+    monkeypatch.setattr(cli.FlowAttack, "find_adv", _no_change)
+    synthetic_project.normal_repo_plus_json.unlink()
+
+    assert main(_adversarial_args(synthetic_project)) == 0
+
+    payload = json.loads(
+        (
+            synthetic_project.results_dir / "adversarial" / "primary" / "ddos.json"
+        ).read_text()
+    )
+    assert payload["thresholds"]["policy"] == "calibrated"
+    # The fixture has one valid benign row, so the measured FPR is 0 or 1 --
+    # never the nominal 0.10 that the old fallback fabricated.
+    assert payload["fpr_at_attack_threshold"] in {0.0, 1.0}
+    assert payload["fpr_at_attack_threshold"] != pytest.approx(0.10)
+
+
+@pytest.mark.parametrize(
+    "variant, sample_mode, policy",
+    [
+        ("primary", "first", "calibrated"),
+        ("primary", "random", "paper_0.8"),
+        ("sensitivity_first_n", "random", "calibrated"),
+        ("sensitivity_first_n", "first", "paper_0.8"),
+        ("sensitivity_paper_0.8", "random", "calibrated"),
+        ("sensitivity_paper_0.8", "first", "paper_0.8"),
+    ],
+)
+def test_variant_rejects_an_inconsistent_policy_or_sample_mode(
+    synthetic_project, monkeypatch, variant, sample_mode, policy
+):
+    monkeypatch.setattr(cli.FlowAttack, "find_adv", _no_change)
+
+    exit_code = main(
+        _adversarial_args(
+            synthetic_project,
+            "--variant",
+            variant,
+            "--sample-mode",
+            sample_mode,
+            "--attack-threshold-policy",
+            policy,
+        )
+    )
+    assert exit_code != 0
+    assert not result_path(
+        synthetic_project.results_dir, variant, "ddos"
+    ).exists()
+
+
+def test_invalid_variant_cannot_overwrite_primary(synthetic_project, monkeypatch):
+    monkeypatch.setattr(cli.FlowAttack, "find_adv", _no_change)
+    assert main(_adversarial_args(synthetic_project)) == 0
+    primary = result_path(synthetic_project.results_dir, "primary", "ddos")
+    original = primary.read_bytes()
+
+    exit_code = main(
+        _adversarial_args(synthetic_project, "--sample-mode", "first")
+    )
+    assert exit_code != 0
+    assert primary.read_bytes() == original
+
+
+@pytest.mark.parametrize(
+    "mutate, match",
+    [
+        (
+            lambda payload: payload["config"].update({"model_sha256": "0" * 64}),
+            "model_sha256",
+        ),
+        (
+            lambda payload: payload["dataset"].update(
+                {"test_csv_sha256": "0" * 64}
+            ),
+            "test_csv_sha256",
+        ),
+        (
+            lambda payload: payload.update({"model_type": "flow"}),
+            "model_type",
+        ),
+    ],
+)
+def test_adversarial_rejects_a_normal_result_from_another_run(
+    synthetic_project, monkeypatch, capsys, mutate, match
+):
+    monkeypatch.setattr(cli.FlowAttack, "find_adv", _no_change)
+    _rewrite_normal(synthetic_project, mutate)
+
+    exit_code = main(_adversarial_args(synthetic_project))
+    assert exit_code != 0
+    assert match in capsys.readouterr().err
+    assert not result_path(
+        synthetic_project.results_dir, "primary", "ddos"
+    ).exists()
+    assert not cli._scores_path(
+        synthetic_project.results_dir, "primary", "ddos"
+    ).exists()
+
+
+def test_adversarial_rejects_mismatched_n_masks(
+    synthetic_project, monkeypatch, capsys
+):
+    monkeypatch.setattr(cli.FlowAttack, "find_adv", _no_change)
+
+    exit_code = main(_adversarial_args(synthetic_project, "--n-masks", "10"))
+    assert exit_code != 0
+    assert "n_masks" in capsys.readouterr().err
+    assert not result_path(
+        synthetic_project.results_dir, "primary", "ddos"
+    ).exists()
+
+
+def test_adversarial_records_the_normal_result_provenance(
+    synthetic_project, monkeypatch
+):
+    monkeypatch.setattr(cli.FlowAttack, "find_adv", _no_change)
+
+    assert main(_adversarial_args(synthetic_project)) == 0
+
+    payload = json.loads(
+        result_path(synthetic_project.results_dir, "primary", "ddos").read_text()
+    )
+    normal = payload["config"]["normal_result"]
+    assert Path(normal["path"]).name == "repo_plus.json"
+    assert normal["config_hash"] == "a" * 64
+    assert normal["used"] is True
 
 
 def test_paper_policy_does_not_reuse_the_calibrated_fpr(
@@ -274,6 +431,12 @@ def test_decimal_features_are_derived_from_the_full_test_set(
     frame.loc[is_ddos, column] = 7.0
     frame.loc[~is_ddos, column] = 7.5
     frame.to_csv(synthetic_project.test_csv, index=False)
+    _rewrite_normal(
+        synthetic_project,
+        lambda payload: payload["dataset"].update(
+            {"test_csv_sha256": sha256_file(synthetic_project.test_csv)}
+        ),
+    )
 
     expected = integer_feature_indices(synthetic_project.test_csv)
     assert feature_index not in expected
@@ -333,17 +496,19 @@ def test_interrupted_checkpoint_resumes_and_matches_a_clean_run(
     state["stop"] = False
     assert main(base_args) == 0
 
-    # A clean run of the same sampling under another variant is the reference
-    # for every count, rate, score and kind.
-    clean_args = [*base_args, "--variant", "sensitivity_first_n"]
-    assert main(clean_args) == 0
-
     resumed = json.loads(
         result_path(results_dir, "primary", "ddos").read_text()
     )
-    clean = json.loads(
-        result_path(results_dir, "sensitivity_first_n", "ddos").read_text()
-    )
+    with np.load(cli._scores_path(results_dir, "primary", "ddos")) as data:
+        resumed_scores = {
+            field: np.array(data[field], copy=True)
+            for field in ("original_scores", "victim_scores", "kinds")
+        }
+
+    # A clean run with the same sampling is the reference for every count,
+    # rate, score and kind; --force discards the checkpoint and the result.
+    assert main([*base_args, "--force"]) == 0
+    clean = json.loads(result_path(results_dir, "primary", "ddos").read_text())
     for field in (
         "counts",
         "victim_tpr",
@@ -351,13 +516,8 @@ def test_interrupted_checkpoint_resumes_and_matches_a_clean_run(
     ):
         assert resumed[field] == clean[field]
 
-    with (
-        np.load(cli._scores_path(results_dir, "primary", "ddos")) as resumed_scores,
-        np.load(
-            cli._scores_path(results_dir, "sensitivity_first_n", "ddos")
-        ) as clean_scores,
-    ):
-        for field in ("original_scores", "victim_scores", "kinds"):
+    with np.load(cli._scores_path(results_dir, "primary", "ddos")) as clean_scores:
+        for field, resumed_values in resumed_scores.items():
             np.testing.assert_array_equal(
-                resumed_scores[field], clean_scores[field], err_msg=field
+                resumed_values, clean_scores[field], err_msg=field
             )

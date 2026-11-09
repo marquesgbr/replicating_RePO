@@ -58,6 +58,26 @@ def test_feature_selection_returns_77_columns(synthetic_project):
     assert valid[0]
 
 
+def test_feature_frame_rejects_a_full_width_frame_with_wrong_order(synthetic_project):
+    frame = pd.read_csv(synthetic_project.test_csv, nrows=2)
+    columns = list(EXPECTED_COLUMNS)
+    columns[5], columns[6] = columns[6], columns[5]
+
+    with pytest.raises(ValueError, match="column"):
+        feature_frame(frame.loc[:, columns])
+
+
+def test_feature_frame_selects_a_narrow_chunk_frame_by_name(synthetic_project):
+    frame = pd.read_csv(synthetic_project.test_csv, nrows=2)
+    from new_data_eval.data import FEATURE_NAMES
+
+    narrow = frame.loc[:, [*FEATURE_NAMES, "Label"]]
+    x, labels, valid = feature_frame(narrow)
+    assert x.shape == (2, N_FEATURES)
+    assert list(labels) == ["BENIGN", "xss"]
+    assert valid.all()
+
+
 def test_invalid_rows_are_dropped_and_counted(synthetic_project):
     info = validate_dataset(
         synthetic_project.train_csv,

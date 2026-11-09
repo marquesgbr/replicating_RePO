@@ -14,7 +14,7 @@ from typing import Any, Mapping, Sequence
 
 import numpy as np
 
-from new_data_eval.data import BENIGN_LABEL
+from new_data_eval.data import ATTACK_LABELS, BENIGN_LABEL
 
 __all__ = [
     "average_attack_tpr",
@@ -130,7 +130,7 @@ def average_attack_tpr(
     attacks = [
         (str(name), item)
         for name, item in rates.items()
-        if str(name) != BENIGN_LABEL and "tpr" in item
+        if str(name) in ATTACK_LABELS and "tpr" in item
     ]
     if not attacks:
         return {"macro": 0.0, "weighted": 0.0, "macro_excluding_low_n": 0.0}

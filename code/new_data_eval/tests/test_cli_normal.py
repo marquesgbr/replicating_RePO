@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 import numpy as np
@@ -136,6 +137,86 @@ def test_normal_max_samples_stops_after_the_requested_rows(synthetic_project):
     assert sum(item["n"] for item in payload["class_rates"]["at_fpr_0.10"].values()) == 2
     # The first two rows of the fixture are valid, so nothing was dropped.
     assert payload["dataset"]["n_dropped_invalid"] == 0
+
+
+def test_normal_writes_per_sample_scores_and_thresholds(synthetic_project):
+    assert main(_normal_args(synthetic_project, "--max-samples", "4")) == 0
+
+    for mode in ("repo", "repo_plus"):
+        payload = json.loads(
+            (synthetic_project.results_dir / "normal" / f"{mode}.json").read_text()
+        )
+        score_path = (
+            synthetic_project.results_dir / "scores" / f"normal_{mode}.npz"
+        )
+        with np.load(score_path, allow_pickle=False) as data:
+            assert {
+                "scores",
+                "labels",
+                "sample_indices",
+                "threshold_fpr_0.01",
+                "threshold_fpr_0.10",
+            }.issubset(data.files)
+            assert data["scores"].shape == (4,)
+            assert data["labels"].shape == (4,)
+            np.testing.assert_array_equal(
+                data["sample_indices"], np.arange(4, dtype=np.int64)
+            )
+            assert float(data["threshold_fpr_0.01"][0]) == (
+                payload["thresholds"]["fpr_0.01"]
+            )
+            assert float(data["threshold_fpr_0.10"][0]) == (
+                payload["thresholds"]["fpr_0.10"]
+            )
+
+
+def test_normal_score_files_are_gitignored():
+    result = subprocess.run(
+        [
+            "git",
+            "check-ignore",
+            "results/new_data/scores/normal_repo_plus.npz",
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_normal_results_record_the_normalization_metadata_hashes(synthetic_project):
+    assert main(_normal_args(synthetic_project)) == 0
+
+    payload = json.loads(
+        (synthetic_project.results_dir / "normal" / "repo_plus.json").read_text()
+    )
+    assert payload["config"]["meta_sha256"] == {
+        "train_min": file_sha256(synthetic_project.meta_dir / "train_min.npy"),
+        "train_max": file_sha256(synthetic_project.meta_dir / "train_max.npy"),
+    }
+
+
+def test_normal_result_hash_changes_with_the_normalization_metadata(
+    synthetic_project,
+):
+    assert main(_normal_args(synthetic_project)) == 0
+    first = json.loads(
+        (synthetic_project.results_dir / "normal" / "repo_plus.json").read_text()
+    )
+
+    train_max = np.load(synthetic_project.meta_dir / "train_max.npy")
+    np.save(synthetic_project.meta_dir / "train_max.npy", train_max * 1.5)
+
+    assert main(_normal_args(synthetic_project)) == 0
+    second = json.loads(
+        (synthetic_project.results_dir / "normal" / "repo_plus.json").read_text()
+    )
+
+    assert second["config"]["meta_sha256"]["train_max"] != (
+        first["config"]["meta_sha256"]["train_max"]
+    )
+    assert second["config_hash"] != first["config_hash"]
 
 
 def test_normal_thresholds_are_computed_on_benign_scores(synthetic_project):

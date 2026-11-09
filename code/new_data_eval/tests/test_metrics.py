@@ -125,6 +125,18 @@ def test_average_tpr_of_no_attack_is_zero():
     assert averages == {"macro": 0.0, "weighted": 0.0, "macro_excluding_low_n": 0.0}
 
 
+def test_average_tpr_ignores_keys_outside_attack_labels():
+    rates = {
+        "BENIGN": {"n": 10, "fpr": 0.1},
+        "ddos": {"n": 2, "tpr": 1.0, "low_n": True},
+        "unexpected": {"n": 100, "tpr": 0.0, "low_n": False},
+    }
+    averages = average_attack_tpr(rates, low_n_threshold=100)
+    assert averages["macro"] == pytest.approx(1.0)
+    assert averages["weighted"] == pytest.approx(1.0)
+    assert averages["macro_excluding_low_n"] == 0.0
+
+
 def test_conditional_drop_is_relative_tpr_loss():
     assert conditional_drop(0.25, 0.5) == pytest.approx(0.5)
     assert conditional_drop(0.5, 0.5) == pytest.approx(0.0)

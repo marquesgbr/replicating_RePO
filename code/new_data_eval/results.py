@@ -98,9 +98,34 @@ def write_json_atomic(path: Path, payload: Mapping[str, Any]) -> None:
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temporary, target)
+        _fsync_directory(target.parent)
     finally:
         if os.path.exists(temporary):
             os.unlink(temporary)
+
+
+def _fsync_directory(path: Path) -> None:
+    """Flush a directory entry to disk after an atomic rename.
+
+    ``os.replace`` is atomic, but without an ``fsync`` of the parent directory
+    the new name may still be lost on a crash.  ``O_DIRECTORY`` is POSIX only;
+    on platforms without it (or where the directory cannot be opened) the call
+    is a best-effort no-op so the writer never fails because of the durability
+    step.
+    """
+    if not hasattr(os, "O_DIRECTORY"):
+        return
+    try:
+        descriptor = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
+    except OSError:
+        return
+    try:
+        try:
+            os.fsync(descriptor)
+        except OSError:
+            pass
+    finally:
+        os.close(descriptor)
 
 
 def file_sha256(path: Path, chunk_size: int = 1 << 20) -> str:
@@ -465,6 +490,11 @@ def build_normal_result(**kwargs: Any) -> dict[str, Any]:
 
     threshold_payload = _normal_thresholds(thresholds)
     dataset_payload = _normal_dataset(dataset)
+    if dataset_payload["n_samples"] != score_array.shape[0]:
+        raise ValueError(
+            "dataset['n_samples'] must match the number of scores, got "
+            f"{dataset_payload['n_samples']} != {score_array.shape[0]}"
+        )
     scoring_payload = _normal_scoring(scoring)
     rates = {
         f"at_{name}": class_rates(
@@ -569,6 +599,11 @@ def build_adversarial_result(**kwargs: Any) -> dict[str, Any]:
     scoring_payload = _adversarial_scoring(score_mode, scoring)
     count_payload = _counts(counts)
     n_samples = count_payload["n"]
+    if dataset_payload["n_samples"] != n_samples:
+        raise ValueError(
+            "dataset['n_samples'] must match counts['n'], got "
+            f"{dataset_payload['n_samples']} != {n_samples}"
+        )
 
     fpr_at_attack = _rate_or_compute(
         kwargs, "fpr_at_attack_threshold", "benign_scores", attack_threshold, None

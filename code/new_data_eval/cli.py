@@ -128,6 +128,13 @@ THRESHOLD_POLICIES: tuple[str, ...] = ("calibrated", "paper_0.8")
 #: Sample selection modes of the adversarial evaluation.
 SAMPLE_MODES: tuple[str, ...] = ("random", "first")
 
+#: Threshold policy and sample mode required by every non-smoke variant.
+VARIANT_REQUIREMENTS: dict[str, tuple[str, str]] = {
+    "primary": ("calibrated", "random"),
+    "sensitivity_first_n": ("calibrated", "first"),
+    "sensitivity_paper_0.8": ("paper_0.8", "random"),
+}
+
 #: Benign rows scored to measure the FPR of the ``paper_0.8`` threshold.
 BENIGN_FPR_ROWS = 5000
 
@@ -471,16 +478,20 @@ def _collect_scores(
     paired_seed: int | None,
     chunk_size: int,
     max_samples: int | None,
-) -> tuple[dict[str, np.ndarray], np.ndarray, int, int]:
+) -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray, int, int]:
     """Stream ``test_csv`` and return the scores, labels and row counts.
 
     The global row offset of every valid row is passed as ``sample_indices``,
     so the masks of a sample are the same whatever the chunk size is.  When
     ``max_samples`` is set, the reader stops after that many valid rows and the
     invalid rows after the last consumed row are not counted.
+
+    Returns ``(scores_by_mode, labels, sample_indices, n_collected,
+    n_dropped_invalid)``.
     """
     score_parts: dict[str, list[np.ndarray]] = {mode: [] for mode in modes}
     label_parts: list[np.ndarray] = []
+    index_parts: list[np.ndarray] = []
     collected = 0
     dropped = 0
 
@@ -543,6 +554,7 @@ def _collect_scores(
                 )
 
         label_parts.append(chunk_labels)
+        index_parts.append(sample_indices)
         collected += len(positions)
         if max_samples is not None and collected >= max_samples:
             break
@@ -560,7 +572,12 @@ def _collect_scores(
         if label_parts
         else np.empty(0, dtype=np.str_)
     )
-    return scores, labels, collected, dropped
+    sample_indices = (
+        np.concatenate(index_parts)
+        if index_parts
+        else np.empty(0, dtype=np.int64)
+    )
+    return scores, labels, sample_indices, collected, dropped
 
 
 def _thresholds(scores: np.ndarray, labels: np.ndarray) -> dict[str, float]:
@@ -628,8 +645,18 @@ def run_normal(args: argparse.Namespace) -> int:
     model = load_model(model_dir)
     model_sha256 = _sha256_path(model_dir)
     test_sha256 = sha256_file(test_csv)
+    meta_sha256 = {
+        "train_min": file_sha256(Path(meta_dir) / "train_min.npy"),
+        "train_max": file_sha256(Path(meta_dir) / "train_max.npy"),
+    }
 
-    scores_by_mode, labels, n_samples, n_dropped_invalid = _collect_scores(
+    (
+        scores_by_mode,
+        labels,
+        sample_indices,
+        n_samples,
+        n_dropped_invalid,
+    ) = _collect_scores(
         test_csv,
         model,
         train_min,
@@ -671,6 +698,8 @@ def run_normal(args: argparse.Namespace) -> int:
     }
 
     output_dir = results_dir / "normal"
+    scores_dir = results_dir / "scores"
+    variant = str(getattr(args, "variant", "primary"))
     for mode in modes:
         thresholds = _thresholds(scores_by_mode[mode], labels)
         config = {
@@ -681,6 +710,7 @@ def run_normal(args: argparse.Namespace) -> int:
             "scoring": dict(scoring_block),
             "model_sha256": model_sha256,
             "data_sha256": test_sha256,
+            "meta_sha256": dict(meta_sha256),
             "code_version": __version__,
         }
         payload = build_normal_result(
@@ -692,7 +722,7 @@ def run_normal(args: argparse.Namespace) -> int:
             scoring=scoring_block,
             config=config,
             runtime_seconds=runtime_seconds,
-            variant="primary",
+            variant=variant,
             started_at=started_at,
             finished_at=finished_at,
             environment=environment,
@@ -700,6 +730,20 @@ def run_normal(args: argparse.Namespace) -> int:
         )
         path = output_dir / f"{mode}.json"
         write_json_atomic(path, payload)
+        _write_npz_atomic(
+            scores_dir / f"normal_{mode}.npz",
+            {
+                "scores": scores_by_mode[mode],
+                "labels": labels,
+                "sample_indices": sample_indices,
+                "threshold_fpr_0.01": np.asarray(
+                    [thresholds["fpr_0.01"]], dtype=np.float64
+                ),
+                "threshold_fpr_0.10": np.asarray(
+                    [thresholds["fpr_0.10"]], dtype=np.float64
+                ),
+            },
+        )
         print(
             f"normal {mode}: {n_samples} samples, "
             f"thresholds {thresholds['fpr_0.01']:.6g}/{thresholds['fpr_0.10']:.6g}"
@@ -864,6 +908,82 @@ def _benign_scores(
     return np.concatenate(parts)
 
 
+def _normal_result_path(results_dir: Path) -> Path:
+    """Return the path of the normal RePO+ result read by the adversarial run."""
+    return Path(results_dir) / "normal" / "repo_plus.json"
+
+
+def _verify_normal_provenance(
+    payload: Mapping[str, Any],
+    *,
+    path: Path,
+    data_sha256: str,
+    model_sha256: str,
+    n_masks: int,
+    score_repeats: int,
+    paired_scoring: bool,
+) -> None:
+    """Raise when the stored normal result does not describe the current run.
+
+    Reusing a threshold computed by another model, dataset or scoring setup
+    would silently mix two experiments, so every provenance field that the
+    normal result records is compared before the threshold is returned.
+    """
+    problems: list[str] = []
+
+    if payload.get("model_type") != "new_data_flow":
+        problems.append(
+            "model_type is "
+            f"{payload.get('model_type')!r}, expected 'new_data_flow'"
+        )
+
+    dataset = payload.get("dataset")
+    if not isinstance(dataset, Mapping):
+        problems.append("missing dataset block")
+        stored_data = None
+    else:
+        stored_data = dataset.get("test_csv_sha256")
+    if stored_data != data_sha256:
+        problems.append(
+            "dataset.test_csv_sha256 is "
+            f"{stored_data!r}, current test CSV is {data_sha256}"
+        )
+
+    config = payload.get("config")
+    if not isinstance(config, Mapping):
+        problems.append("missing config block")
+        stored_model = None
+    else:
+        stored_model = config.get("model_sha256")
+    if stored_model != model_sha256:
+        problems.append(
+            f"config.model_sha256 is {stored_model!r}, current model is "
+            f"{model_sha256}"
+        )
+
+    scoring = payload.get("scoring")
+    if not isinstance(scoring, Mapping):
+        problems.append("missing scoring block")
+        scoring = {}
+    expected_scoring = {
+        "n_masks": int(n_masks),
+        "score_repeats": int(score_repeats),
+        "paired_scoring": bool(paired_scoring),
+    }
+    for key, expected in expected_scoring.items():
+        found = scoring.get(key)
+        if found != expected:
+            problems.append(
+                f"scoring.{key} is {found!r}, current run uses {expected!r}"
+            )
+
+    if problems:
+        raise ValueError(
+            f"Normal result {path} does not match the current run: "
+            + "; ".join(problems)
+        )
+
+
 def _resolve_real_threshold(
     results_dir: Path,
     test_csv: Path,
@@ -877,22 +997,67 @@ def _resolve_real_threshold(
     score_repeats: int,
     paired_seed: int | None,
     chunk_size: int,
-) -> tuple[float, dict[str, Any] | None]:
-    """Return the FPR 10% threshold and the normal payload (when available)."""
-    normal_payload: dict[str, Any] | None = None
-    try:
-        normal_payload = _read_normal_result(results_dir)
-        if normal_payload is None:
-            raise FileNotFoundError("normal/repo_plus.json is missing or invalid")
-        threshold = float(normal_payload["thresholds"]["fpr_0.10"])
-        if not np.isfinite(threshold):
-            raise ValueError("the stored threshold is not finite")
-        return threshold, normal_payload
-    except (KeyError, TypeError, ValueError, FileNotFoundError) as exc:
+    model_sha256: str,
+    data_sha256: str,
+    paired_scoring: bool,
+    force: bool,
+) -> tuple[float, dict[str, Any] | None, dict[str, Any]]:
+    """Return the FPR 10% threshold, the normal payload and its provenance.
+
+    A stored normal result is only reused after its dataset, model, model type
+    and scoring parameters match the current run.  ``--force`` bypasses the
+    check explicitly and logs the mismatch.  When the result is missing (or
+    unusable) the threshold is recomputed from the benign rows and the
+    provenance block marks it as recomputed.
+    """
+    path = _normal_result_path(results_dir)
+    normal_payload = _read_normal_result(results_dir)
+
+    if normal_payload is not None:
+        try:
+            threshold = float(normal_payload["thresholds"]["fpr_0.10"])
+            if not np.isfinite(threshold):
+                raise ValueError("the stored threshold is not finite")
+        except (KeyError, TypeError, ValueError) as exc:
+            LOG.warning(
+                "normal result %s is unusable (%s); recomputing the FPR 10%% "
+                "threshold from %s",
+                path,
+                exc,
+                test_csv,
+            )
+        else:
+            try:
+                _verify_normal_provenance(
+                    normal_payload,
+                    path=path,
+                    data_sha256=data_sha256,
+                    model_sha256=model_sha256,
+                    n_masks=n_masks,
+                    score_repeats=score_repeats,
+                    paired_scoring=paired_scoring,
+                )
+            except ValueError as exc:
+                if not force:
+                    raise ValueError(
+                        f"{exc}; rerun `normal` with the current model/data or "
+                        "use --force to reuse the stored threshold"
+                    ) from exc
+                LOG.warning("%s; --force reuses the stored threshold", exc)
+            return (
+                threshold,
+                normal_payload,
+                {
+                    "path": _display_path(path),
+                    "config_hash": normal_payload.get("config_hash"),
+                    "used": True,
+                },
+            )
+    else:
         LOG.warning(
-            "normal result unavailable (%s); recomputing the FPR 10%% "
+            "normal result %s is missing or invalid; recomputing the FPR 10%% "
             "threshold from %s",
-            exc,
+            path,
             test_csv,
         )
 
@@ -911,7 +1076,15 @@ def _resolve_real_threshold(
     )
     if benign.size == 0:
         raise ValueError(f"No valid BENIGN rows found in {test_csv}")
-    return threshold_at_fpr(benign, 0.10), None
+    return (
+        threshold_at_fpr(benign, 0.10),
+        None,
+        {
+            "path": _display_path(path),
+            "config_hash": None,
+            "used": False,
+        },
+    )
 
 
 def _fpr_at_attack_threshold(
@@ -931,22 +1104,22 @@ def _fpr_at_attack_threshold(
     paired_seed: int | None,
     chunk_size: int,
 ) -> float:
-    """Return the measured FPR at ``attack_threshold``.
+    """Return the FPR measured on benign rows at ``attack_threshold``.
 
     The calibrated policy reuses the FPR that the normal evaluation measured
-    at its FPR 10% threshold (0.10 by construction).  The ``paper_0.8`` policy
-    must not reuse it: the threshold changed, so the benign rows are scored
-    again and their measured FPR at ``0.8 * real_threshold`` is returned.
+    at its FPR 10% threshold.  When that result is unavailable, or the policy
+    moves the threshold (``paper_0.8``), the benign rows are scored again and
+    their measured FPR at ``attack_threshold`` is returned -- the value is
+    never fabricated from the nominal calibration target.
     """
-    if policy == "calibrated":
-        if normal_payload is not None:
-            try:
-                return float(
-                    normal_payload["fpr"]["at_fpr_0.10_threshold"]
-                )
-            except (KeyError, TypeError, ValueError):
-                pass
-        return 0.10
+    if policy == "calibrated" and normal_payload is not None:
+        try:
+            return float(normal_payload["fpr"]["at_fpr_0.10_threshold"])
+        except (KeyError, TypeError, ValueError):
+            LOG.warning(
+                "normal result has no measured FPR; measuring it from %s",
+                test_csv,
+            )
 
     benign = _benign_scores(
         test_csv,
@@ -983,6 +1156,7 @@ def _stable_run_config(
     model_sha256: str,
     data_sha256: str,
     meta_sha256: Mapping[str, str],
+    normal_result: Mapping[str, Any],
 ) -> dict[str, Any]:
     """Return the immutable parameters hashed into the checkpoint.
 
@@ -1007,6 +1181,7 @@ def _stable_run_config(
         "model_sha256": model_sha256,
         "data_sha256": data_sha256,
         "meta_sha256": dict(meta_sha256),
+        "normal_result": dict(normal_result),
         "code_version": __version__,
     }
 
@@ -1150,6 +1325,7 @@ def _run_attack(
     model_sha256: str,
     data_sha256: str,
     meta_sha256: Mapping[str, str],
+    normal_result: Mapping[str, Any],
     real_threshold: float,
     attack_threshold: float,
     fpr_at_attack: float,
@@ -1205,6 +1381,7 @@ def _run_attack(
         model_sha256=model_sha256,
         data_sha256=data_sha256,
         meta_sha256=meta_sha256,
+        normal_result=normal_result,
     )
     stable_hash = config_hash(stable_config)
 
@@ -1392,6 +1569,29 @@ def _run_attack(
     return 0
 
 
+def _validate_variant_combination(
+    variant: str, policy: str, sample_mode: str
+) -> None:
+    """Reject a variant whose policy or sampling mode does not belong to it.
+
+    Each non-smoke variant represents one analysis: the main result uses a
+    random sample and the calibrated threshold, ``first_n`` keeps the prefix
+    and the calibrated threshold, and ``paper_0.8`` uses a random sample with
+    the sensitivity threshold.  Mixing them would overwrite or mislabel a
+    result, so the combination is validated before anything is written.
+    """
+    required = VARIANT_REQUIREMENTS.get(variant)
+    if required is None:
+        return
+    expected_policy, expected_mode = required
+    if policy != expected_policy or sample_mode != expected_mode:
+        raise ValueError(
+            f"variant {variant!r} requires threshold policy "
+            f"{expected_policy!r} and sample mode {expected_mode!r}; got "
+            f"{policy!r} and {sample_mode!r}"
+        )
+
+
 def _run_adversarial(args: argparse.Namespace, *, flat: bool) -> int:
     """Shared implementation of ``adversarial`` and the smoke attack."""
     data_dir, model_dir, meta_dir, results_dir = _resolved_paths(args)
@@ -1420,6 +1620,10 @@ def _run_adversarial(args: argparse.Namespace, *, flat: bool) -> int:
             f"Unknown threshold policy {args.attack_threshold_policy!r}; "
             f"expected one of {list(THRESHOLD_POLICIES)}"
         )
+    if not flat:
+        _validate_variant_combination(
+            args.variant, args.attack_threshold_policy, args.sample_mode
+        )
 
     if getattr(args, "dry_run", False):
         for attack in attacks:
@@ -1446,7 +1650,11 @@ def _run_adversarial(args: argparse.Namespace, *, flat: bool) -> int:
     )
 
     paired_seed = args.seed if args.paired_scoring else None
-    real_threshold, normal_payload = _resolve_real_threshold(
+    (
+        real_threshold,
+        normal_payload,
+        normal_result,
+    ) = _resolve_real_threshold(
         results_dir,
         test_csv,
         model,
@@ -1458,6 +1666,10 @@ def _run_adversarial(args: argparse.Namespace, *, flat: bool) -> int:
         score_repeats=args.score_repeats,
         paired_seed=paired_seed,
         chunk_size=args.chunk_size,
+        model_sha256=model_sha256,
+        data_sha256=data_sha256,
+        paired_scoring=bool(args.paired_scoring),
+        force=bool(args.force),
     )
     attack_threshold = (
         real_threshold
@@ -1493,6 +1705,7 @@ def _run_adversarial(args: argparse.Namespace, *, flat: bool) -> int:
             model_sha256=model_sha256,
             data_sha256=data_sha256,
             meta_sha256=meta_sha256,
+            normal_result=normal_result,
             real_threshold=real_threshold,
             attack_threshold=attack_threshold,
             fpr_at_attack=fpr_at_attack,
@@ -1527,6 +1740,7 @@ def run_smoke(args: argparse.Namespace) -> int:
     normal_args.n_masks = SMOKE_N_MASKS
     normal_args.score_repeats = 1
     normal_args.paired_scoring = False
+    normal_args.variant = "smoke"
     run_normal(normal_args)
 
     adversarial_args = argparse.Namespace(**vars(args))
