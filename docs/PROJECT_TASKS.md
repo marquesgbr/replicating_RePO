@@ -108,10 +108,13 @@ dados além dos dados usados pelo artigo de referência.
 - [x] Escolher o dataset adicional.
   - Evidência: CIC-ToN-IoT processado em `data/new_data/` (citação oficial
     ainda pendente de confirmação).
-- [x] Justificar a escolha.
-  - Evidência: seção “Fonte e citação” de `docs/NEW_DATASET.md`.
-- [x] Documentar origem, características e classes.
-  - Evidência: `docs/NEW_DATASET.md`; origem/citação formal permanece pendente.
+- [ ] Justificar a escolha.
+  - Pendente: a justificativa formal depende da confirmação da fonte oficial
+    (seção “Fonte e citação” de `docs/NEW_DATASET.md`, marcada como pendente).
+- [ ] Documentar origem, características e classes.
+  - Pendente: as características e classes estão descritas em
+    `docs/NEW_DATASET.md`, mas a origem/citação oficial ainda precisa ser
+    confirmada.
 - [x] Preparar os dados.
   - Evidência: `extract_new_data.sh` e extração local do ZIP LFS com
     `validate` aprovado.

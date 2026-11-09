@@ -56,7 +56,7 @@ preenchida com a extração local do ZIP no commit `e57b579` (ambiente CPU); os
 números são as linhas válidas de `new_test.csv` após o descarte das linhas com
 `inf`/`nan`.
 
-| Classe | Contagem em `new_test.csv` |
+| Classe | Linhas válidas de `new_test.csv` |
 | --- | ---: |
 | `BENIGN` | 754.209 |
 | `xss` | 2.149.308 |
@@ -243,10 +243,10 @@ PYTHONPATH=code python -m new_data_eval validate \
   --meta-dir data/new_data/x_train_meta
 ```
 
-Saída resumida: 85 colunas, 77 features, todas as 9 classes presentes, modelo
-com entrada de largura 77, metadados com shape `(77,)`, oito features
+A validação confirmou 85 colunas e 77 features, todas as 9 classes presentes,
+modelo com entrada de largura 77, metadados com shape `(77,)`, oito features
 constantes (`31, 32, 33, 48, 55, 56, 57, 63`), erro benigno `0.00475878`
-menor que o erro de ruído `0.290367`, `validation ok`.
+menor que o erro de ruído `0.290367`, e terminou com `validation ok`.
 
 ```bash
 PYTHONPATH=code python -m new_data_eval normal \
@@ -275,8 +275,10 @@ PYTHONPATH=code python -m new_data_eval adversarial \
 Resultado: `results/new_data/verification/adversarial/primary/ddos.json`, com
 `model_type="new_data_flow"`, `variant="primary"`, 5 de 202 amostras de `ddos`,
 threshold de ataque 0,0337444 lido do `repo_plus.json` normal, `fooled=0`,
-`victim_tpr=0.2` e runtime de ~46 s. Nenhum resultado de fluxo/pacotes foi
-alterado.
+`victim_tpr=0.2`. O campo `runtime_seconds` do JSON registra 18,96 s (varredura
+do CSV e ataque); o comando completo levou ~46 s de relógio de parede,
+incluindo importação, carregamento do modelo e leitura inicial. Nenhum
+resultado de fluxo/pacotes foi alterado.
 
 **A avaliação completa continua pendente.** O teste normal integral (~2,1 GB,
 3,59 milhões de linhas) e o adversarial dos 9 ataques com 5.000 amostras cada
