@@ -277,16 +277,36 @@ resultado final roda os 11.
 - Consumes: pipeline atual (`score_samples`, `reconstruction_errors`).
 - Produces: JSON de baseline com custo; garantia de equivalência bit-a-bit.
 
-- [ ] **Step 1:** rodar o baseline de fluxo (100 máscaras, seed 2019, mesmos
+- [x] **Step 1:** rodar o baseline de fluxo (100 máscaras, seed 2019, mesmos
   dados) e arquivar como `results/mask_efficiency/baseline_flow.json`.
-- [ ] **Step 2:** adicionar contadores de linhas mascaradas, chamadas ao modelo
+  *(feito como smoke CPU: 10 k benignos + 500 por ataque, arquivado em
+  `results/mask_efficiency/baseline_flow_smoke.json`; a rodada completa de
+  100 k/5 k fica para o cluster)*
+- [x] **Step 2:** adicionar contadores de linhas mascaradas, chamadas ao modelo
   e tempo de parede ao JSON.
-- [ ] **Step 3:** escrever teste que compara os escores do baseline antigo e do
-  novo com tolerância zero (ou `1e-6` documentado).
-- [ ] **Step 4:** rodar `pytest code/new_data_eval/tests cluster/tests`.
+- [x] **Step 3:** escrever teste que compara os escores do baseline antigo e do
+  novo com tolerância zero (ou `1e-6` documentado). *(golden de máscaras,
+  golden numérico dos escores e comparação bit-a-bit contra o `scoring.py`
+  anterior)*
+- [x] **Step 4:** rodar `pytest code/new_data_eval/tests cluster/tests`.
+  *(227 testes de `new_data_eval` + 42 do cluster + 8 de `mask_experiments`
+  passando na venv com TensorFlow 2.21 CPU)*
 
 **Verificação:** baseline reproduz os TPRs de `REPLICATION_ANALYSIS.md` dentro
 do ruído; teste de equivalência verde.
+
+**Resultado (CPU, 2026-11-10):** com 10 k benignos + 500 amostras por ataque
+(15.047 amostras), o smoke reproduziu os thresholds de referência e o TPR macro:
+
+| Modo | Threshold (FPR 1%) | Ref. | TPR macro | Ref. |
+|---|---|---|---|---|
+| RePO | 0,04109 | 0,04130 | 0,2407 | 0,2443 |
+| RePO+ | 0,10578 | 0,10608 | 0,2580 | 0,2525 |
+
+Custo medido: 3,01 M linhas mascaradas, 30.094 chamadas ao modelo, 35,3 s de
+modelo (1,17 ms por chamada de 100 linhas). O baseline completo (100 k benignos
++ 5 k por ataque) roda no Apuana com o mesmo comando e grava
+`results/mask_efficiency/baseline_flow.json`.
 
 **Gate G1:** se o baseline não reproduzir, parar e corrigir antes de qualquer
 variante.
