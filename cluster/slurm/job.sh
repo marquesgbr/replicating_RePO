@@ -243,6 +243,11 @@ case "${TASK}" in
       --epochs "${EPOCHS:-5}" \
       --batch-size "${TRAIN_BATCH_SIZE:-256}"
     ;;
+  new_data_export)
+    exec "${PY}" "${REPO_ROOT}/cluster/aggregate_new_data.py" \
+      --results-dir "${NEW_DATA_RESULTS}" \
+      --out "${NEW_DATA_EXPORT_DIR:-${RESULTS_ROOT}/new_data/export}"
+    ;;
   *)
     echo "[error] TASK inválido: ${TASK}" >&2
     exit 2

@@ -348,6 +348,25 @@ inspecionar com 5 máscaras, use `new-data smoke`.
 Acompanhe com `squeue -u "$USER"` e
 `tail -f "$SCRATCH/replicating-repo-results/logs/"*.out`.
 
+### 7.1.1 Rodada autônoma com dependências
+
+Para deixar a cadeia rodando sem depender da sua máquina:
+
+```bash
+NORMAL_JOB=$(bash cluster/submit.sh new-data normal | awk 'NR==1{print $NF}')
+
+ARRAY_JOB=$(DEPENDENCY="afterok:${NORMAL_JOB}" \
+  bash cluster/submit.sh new-data adversarial all primary | awk 'NR==1{print $NF}')
+
+DEPENDENCY="afterok:${ARRAY_JOB}" \
+  bash cluster/submit.sh new-data export-job
+```
+
+O export roda em job CPU, sem GPU, e grava em
+`$SCRATCH/replicating-repo-results/new_data/export/`. Se o normal falhar, o
+adversarial não começa; se um ataque falhar, o export não roda. Os jobs já
+submetidos continuam mesmo se você desligar o computador.
+
 ## 8. Piloto adversarial de fluxo
 
 ```bash

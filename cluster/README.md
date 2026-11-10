@@ -531,3 +531,28 @@ $RESULTS_ROOT/new_data/smoke/...
 Checkpoint a cada 50 amostras. Retome reenviando o mesmo comando; se a
 configuração mudou, use `FORCE=1`. `BATCH_SIZE` pode mudar numa retomada após
 OOM porque não entra no hash do checkpoint.
+
+### 16.6 Rodada autônoma (dependências SLURM)
+
+`DEPENDENCY` é repassado ao `sbatch` em qualquer submissão. Para deixar a
+cadeia rodando sem depender da sua máquina:
+
+```bash
+# 1. normal (guarde o ID)
+NORMAL_JOB=$(bash cluster/submit.sh new-data normal | awk 'NR==1{print $NF}')
+
+# 2. adversarial só começa se o normal terminar com sucesso
+ARRAY_JOB=$(DEPENDENCY="afterok:${NORMAL_JOB}" \
+  bash cluster/submit.sh new-data adversarial all primary | awk 'NR==1{print $NF}')
+
+# 3. exportação só roda se todos os ataques do array terminarem bem
+DEPENDENCY="afterok:${ARRAY_JOB}" \
+  bash cluster/submit.sh new-data export-job
+```
+
+Para rodar também as sensibilidades, capture cada array e encadeie o export
+com `afterok:id1:id2`. O `export-job` roda sem GPU e grava em
+`$RESULTS_ROOT/new_data/export/` (`summary.csv`, `summary.md`,
+`summary.json`). Se o normal falhar, o adversarial não começa; se um ataque
+falhar, o export não roda. Os jobs já submetidos continuam mesmo se você
+desligar o computador local; os checkpoints cobrem preempção/requeue.

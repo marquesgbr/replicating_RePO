@@ -118,6 +118,7 @@ def test_submit_normal_forwards_modes_and_scoring_env(cluster_env):
 def test_submit_adversarial_all_builds_nine_attack_array(cluster_env):
     env, tmp_path = cluster_env
     env["CONCURRENCY"] = "2"
+    env["DEPENDENCY"] = "afterok:29540"
 
     completed = _run(
         CLUSTER_DIR / "submit.sh",
@@ -128,6 +129,7 @@ def test_submit_adversarial_all_builds_nine_attack_array(cluster_env):
     assert completed.returncode == 0, completed.stderr
     call = (tmp_path / "sbatch.log").read_text(encoding="utf-8")
     assert "--array=0-8%2" in call
+    assert "--dependency afterok:29540" in call
     assert "VARIANT=primary" in call
     assert "SAMPLE_MODE=random" in call
     assert "THRESHOLD_POLICY=calibrated" in call
@@ -138,6 +140,49 @@ def test_submit_adversarial_all_builds_nine_attack_array(cluster_env):
     assert len(attacks) == 9
     assert "ddos" in attacks
     assert "xss" in attacks
+
+
+def test_submit_export_job_is_cpu_only_and_dependency_aware(cluster_env):
+    env, tmp_path = cluster_env
+    env["DEPENDENCY"] = "afterok:999"
+    export_dir = tmp_path / "export"
+    env["NEW_DATA_EXPORT_DIR"] = str(export_dir)
+
+    completed = _run(
+        CLUSTER_DIR / "submit.sh", ["new-data", "export-job"], env
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    call = (tmp_path / "sbatch.log").read_text(encoding="utf-8")
+    assert "--dependency afterok:999" in call
+    assert "--gres" not in call
+    assert "TASK=new_data_export" in call
+    assert f"NEW_DATA_EXPORT_DIR={export_dir}" in call
+
+
+def test_job_export_runs_the_aggregator(cluster_env):
+    env, tmp_path = cluster_env
+    env["PY_MODE"] = "log"
+    export_dir = tmp_path / "export"
+
+    completed = subprocess.run(
+        ["bash", "cluster/slurm/job.sh"],
+        cwd=REPO_ROOT,
+        env={
+            **env,
+            "TASK": "new_data_export",
+            "MODEL": "new_data",
+            "NEW_DATA_EXPORT_DIR": str(export_dir),
+        },
+        text=True,
+        capture_output=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    argv = (tmp_path / "python.log").read_text(encoding="utf-8")
+    assert "cluster/aggregate_new_data.py" in argv
+    assert f"--results-dir {tmp_path / 'results' / 'new_data'}" in argv
+    assert f"--out {export_dir}" in argv
 
 
 def test_job_uses_the_retrained_model_and_the_dataset_results_root(cluster_env):

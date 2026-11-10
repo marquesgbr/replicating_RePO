@@ -91,6 +91,9 @@ submit_gpu_job() {
     extra_args+=("$@")
     shift
   done
+  if [[ -n "${DEPENDENCY:-}" ]]; then
+    extra_args+=(--dependency "${DEPENDENCY}")
+  fi
   if [[ -n "${EXCLUDE:-}" ]]; then
     # --exclude não altera a contagem de nós (ao contrário de --nodelist).
     extra_args+=(--exclude "${EXCLUDE}")
@@ -102,6 +105,39 @@ submit_gpu_job() {
     --chdir "${REPO_ROOT}" \
     --partition "${PARTITION}" \
     --gres "${GRES}" \
+    --cpus-per-task "${CPUS_PER_TASK}" \
+    --mem "${MEM}" \
+    --time "${walltime}" \
+    --requeue \
+    "${extra_args[@]}" \
+    --export "${exports}" \
+    --output "${RESULTS_ROOT}/logs/${out_pattern}" \
+    --error "${RESULTS_ROOT}/logs/${err_pattern}" \
+    "${CLUSTER_DIR}/slurm/job.sh"
+}
+
+submit_cpu_job() {
+  local job_name="$1"
+  local walltime="$2"
+  local exports="$3"
+  local extra_args=()
+  shift 3
+  while (($#)); do
+    extra_args+=("$@")
+    shift
+  done
+  if [[ -n "${DEPENDENCY:-}" ]]; then
+    extra_args+=(--dependency "${DEPENDENCY}")
+  fi
+  if [[ -n "${EXCLUDE:-}" ]]; then
+    extra_args+=(--exclude "${EXCLUDE}")
+  fi
+  local out_pattern="${OUTPUT_PATTERN:-%x-%j.out}"
+  local err_pattern="${out_pattern%.out}.err"
+  sbatch --parsable \
+    --job-name="${job_name}" \
+    --chdir "${REPO_ROOT}" \
+    --partition "${PARTITION}" \
     --cpus-per-task "${CPUS_PER_TASK}" \
     --mem "${MEM}" \
     --time "${walltime}" \
@@ -390,6 +426,14 @@ task_new_data_export() {
   echo "[ok] resumo do novo dataset em ${out_dir}"
 }
 
+task_new_data_export_job() {
+  local out_dir="${NEW_DATA_EXPORT_DIR:-${RESULTS_ROOT}/new_data/export}"
+  local job_id
+  job_id="$(submit_cpu_job "repo-new-data-export" "00:30:00" \
+    "$(export_args new_data_export new_data "DATASET=new_data,NEW_DATA_RESULTS=${RESULTS_ROOT}/new_data,NEW_DATA_EXPORT_DIR=${out_dir}")")"
+  echo "[submit] new-data export job: ${job_id} -> ${out_dir}"
+}
+
 usage() {
   cat <<'EOF'
 Uso: bash cluster/submit.sh <comando> [argumentos]
@@ -407,11 +451,12 @@ Novo dataset:
   new-data smoke [ataque]
   new-data train
   new-data export
+  new-data export-job        # exportação encadeada por dependência SLURM
 
 Variáveis: PARTITION, CPUS_PER_TASK, MEM, GRES, CONCURRENCY,
   WALLTIME_* (inclui WALLTIME_NEW_DATA_*), MODEL_SOURCE, MODEL_DIR,
   SEED, FORCE=1, NODELIST, MAX_SAMPLES, N_MASKS, BATCH_SIZE,
-  CHECKPOINT_EVERY, SMOKE=1.
+  CHECKPOINT_EVERY, SMOKE=1, DEPENDENCY=afterok:<jobid>.
 EOF
 }
 
@@ -449,6 +494,7 @@ case "${command}" in
       smoke) task_new_data_smoke "${1:-ddos}" ;;
       train) task_new_data_train ;;
       export) task_new_data_export ;;
+      export-job) task_new_data_export_job ;;
       *) usage; exit 2 ;;
     esac
     ;;
