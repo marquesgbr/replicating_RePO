@@ -508,3 +508,31 @@ Task 0 (baseline) ──► Task 1 (variância) ──► G2
 
 Tasks 2, 3 e 4 são independentes depois de Task 1 e podem rodar em paralelo
 (2 jobs concorrentes no Apuana).
+
+## 14. Status de execução (piloto em CPU, 2026-11-10)
+
+Executado na branch `feat/mask-efficiency`, em CPU (TensorFlow 2.21), com o
+harness de `code/mask_experiments/`:
+
+- **Task 0:** concluída; baseline de 15.047 amostras reproduziu threshold e
+  TPR macro de referência (ver seção 9 da Task 0).
+- **Task 1:** concluída no piloto (5 k benignos + 300 por ataque, 3 repetições,
+  3 políticas × 6 valores de `n_masks`); resultados em
+  `results/mask_efficiency/variance_flow.json`.
+- **Task 2:** concluída no piloto (5 variantes × 4 ataques × 20 amostras,
+  ataque adaptativo); resultados em `adversarial_pilot.json`.
+- **Task 3:** concluída no piloto (cascata e RePO sequencial); resultados em
+  `cascade_flow.json`. O ataque **direto** no estágio barato não foi
+  implementado; usou-se `iid-5` como proxy no piloto adversarial.
+- **Task 4:** parcial; aluno de passe único treinado e avaliado no cenário
+  normal (`distillation_flow.json`). O ataque adaptativo no aluno não foi
+  executado.
+- **Task 5:** parcial; avaliação **normal** dos pacotes com as três políticas
+  (`packet_normal.json`). O ataque de pacotes não foi executado.
+- **Task 6:** consolidado em `docs/MASK_EFFICIENCY_RESULTS.md`; a seção do
+  `report.tex` fica pendente até a rodada completa.
+
+As pendências (ataque no aluno, ataque no estágio barato da cascata, ataque de
+pacotes, arrays completos de 11 ataques) exigem GPU e entram na rodada do
+Apuana.
+

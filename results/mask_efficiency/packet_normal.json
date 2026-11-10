@@ -1,0 +1,93 @@
+{
+  "dataset": {
+    "counts": {
+      "Benign": 540,
+      "Botnet": 125,
+      "DDoS": 125,
+      "FTP-Patator": 166,
+      "GoldenEye": 83,
+      "Heartbleed": 83,
+      "Hulk": 83,
+      "Infiltration": 166,
+      "PortScan": 125,
+      "SSH-Patator": 166,
+      "Slowhttptest": 83,
+      "Slowloris": 83,
+      "Web-Attack": 166
+    },
+    "days": [
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday"
+    ],
+    "n_windows": 1994,
+    "name": "cicids2017-packet",
+    "seed": 2019
+  },
+  "experiment": "packet_normal",
+  "runtime_seconds": 54.78136952500017,
+  "schema_version": "mask_exp_v1",
+  "variants": {
+    "balanced-25": {
+      "n_masks": 25,
+      "policy": "balanced",
+      "repo": {
+        "fpr": 0.011111111111111112,
+        "threshold_fpr_0.01": 0.02395672458329476,
+        "tpr": {
+          "macro": 0.5617699890470974,
+          "weighted": 0.5209627329192547
+        }
+      },
+      "repo_plus": {
+        "fpr": 0.011111111111111112,
+        "threshold_fpr_0.01": 0.09680451379329086,
+        "tpr": {
+          "macro": 0.5790887185104052,
+          "weighted": 0.5403726708074534
+        }
+      }
+    },
+    "covering-25": {
+      "n_masks": 25,
+      "policy": "covering",
+      "repo": {
+        "fpr": 0.011111111111111112,
+        "threshold_fpr_0.01": 0.024395578581929242,
+        "tpr": {
+          "macro": 0.5528455640744797,
+          "weighted": 0.5100931677018633
+        }
+      },
+      "repo_plus": {
+        "fpr": 0.011111111111111112,
+        "threshold_fpr_0.01": 0.09733345976852559,
+        "tpr": {
+          "macro": 0.5743483023001095,
+          "weighted": 0.5341614906832298
+        }
+      }
+    },
+    "iid-100": {
+      "n_masks": 100,
+      "policy": "iid",
+      "repo": {
+        "fpr": 0.011111111111111112,
+        "threshold_fpr_0.01": 0.02324883780714671,
+        "tpr": {
+          "macro": 0.5717984665936473,
+          "weighted": 0.531832298136646
+        }
+      },
+      "repo_plus": {
+        "fpr": 0.011111111111111112,
+        "threshold_fpr_0.01": 0.0870879134686222,
+        "tpr": {
+          "macro": 0.5845476451259584,
+          "weighted": 0.5442546583850931
+        }
+      }
+    }
+  }
+}
