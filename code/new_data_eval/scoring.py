@@ -29,15 +29,29 @@ level (the model is injected by the caller), and it is imported lazily by
 
 from __future__ import annotations
 
-import hashlib
 import inspect
 import math
+import time
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Sequence
 
 import numpy as np
 
 from new_data_eval.data import N_FEATURES, normalize_features
+from new_data_eval.masking import (
+    DEFAULT_N_MASKS,
+    IIDMaskPolicy,
+    MASK_PROBABILITY,
+    MaskPolicy,
+    PHASES,
+    PHASE_ATTACK,
+    PHASE_ORIGINAL,
+    PHASE_VICTIM,
+    REPO_PLUS_GROUPS,
+    derive_seed as _derive_seed,
+    mask_seed as _mask_seed,
+)
 
 __all__ = [
     "DEFAULT_BATCH_SIZE",
@@ -49,6 +63,7 @@ __all__ = [
     "PHASE_ORIGINAL",
     "PHASE_VICTIM",
     "REPO_PLUS_GROUPS",
+    "ScoringCost",
     "load_model",
     "reconstruction_errors",
     "repo_plus_scores",
@@ -60,29 +75,52 @@ __all__ = [
 ]
 
 
-#: Phase of the score computed on the untouched (original) sample.
-PHASE_ORIGINAL = "original"
-
-#: Phase of the score computed during the attack optimization.
-PHASE_ATTACK = "attack"
-
-#: Phase of the score computed on the adversarial (victim) sample.
-PHASE_VICTIM = "victim"
-
-#: Every phase used to derive the stateless mask seeds.
-PHASES: tuple[str, ...] = (PHASE_ORIGINAL, PHASE_ATTACK, PHASE_VICTIM)
-
-#: Number of groups used by the RePO+ aggregate (100 masks -> 5 groups of 20).
-REPO_PLUS_GROUPS = 5
-
-#: Probability of masking (zeroing) a feature in every random mask.
-MASK_PROBABILITY = 0.75
-
-#: Default number of masks drawn for every sample.
-DEFAULT_N_MASKS = 100
-
 #: Default number of model rows (masked samples) per forward pass.
 DEFAULT_BATCH_SIZE = 100
+
+#: Policy used when the caller does not select one (reference behaviour).
+DEFAULT_MASK_POLICY: MaskPolicy = IIDMaskPolicy()
+
+
+@dataclass
+class ScoringCost:
+    """Counters of the work performed by one scoring call.
+
+    ``masked_rows`` is the number of rows sent to the model (one row per
+    sample and mask), ``model_calls`` is the number of forward passes and
+    ``model_seconds`` is the wall clock spent inside the model.  The counters
+    are additive so several calls can feed the same instance.
+    """
+
+    masked_rows: int = 0
+    model_calls: int = 0
+    model_seconds: float = 0.0
+    per_call_seconds: list[float] = field(default_factory=list)
+
+    def add_call(self, rows: int, seconds: float) -> None:
+        self.masked_rows += int(rows)
+        self.model_calls += 1
+        self.model_seconds += float(seconds)
+        self.per_call_seconds.append(float(seconds))
+
+    def merge(self, other: "ScoringCost") -> None:
+        self.masked_rows += other.masked_rows
+        self.model_calls += other.model_calls
+        self.model_seconds += other.model_seconds
+        self.per_call_seconds.extend(other.per_call_seconds)
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "masked_rows": int(self.masked_rows),
+            "model_calls": int(self.model_calls),
+            "model_seconds": round(float(self.model_seconds), 6),
+            "mean_call_ms": (
+                round(1000.0 * float(np.mean(self.per_call_seconds)), 3)
+                if self.per_call_seconds
+                else 0.0
+            ),
+        }
+
 
 
 def _as_error_matrix(errors: np.ndarray) -> np.ndarray:
@@ -206,36 +244,6 @@ def load_model(model_dir: Path) -> Any:
     return _load_compat_model(str(path))
 
 
-def _derive_seed(*parts: object) -> int:
-    """Return a stable 64 bit seed derived from ``parts``.
-
-    The derivation uses BLAKE2b instead of :func:`hash` so the seeds do not
-    depend on the interpreter hash randomization -- the same seed must always
-    produce the same masks.
-    """
-    payload = "|".join(str(part) for part in parts).encode("utf-8")
-    return int.from_bytes(hashlib.blake2b(payload, digest_size=8).digest(), "big")
-
-
-def _mask_seed(
-    seed: int,
-    sample_index: int,
-    phase: str,
-    repeat: int,
-    paired_seed: int | None,
-) -> int:
-    """Return the seed of the masks of one ``(sample, phase, repeat)`` triple.
-
-    Without ``paired_seed`` the phase takes part in the derivation, so every
-    phase uses its own masks.  With ``paired_seed`` the phase is dropped and
-    the seed of the paired run is used instead: the before/after phases of
-    the paired sensitivity analysis then share the very same masks.
-    """
-    if paired_seed is None:
-        return _derive_seed("mask", seed, sample_index, phase, repeat)
-    return _derive_seed("mask-paired", paired_seed, sample_index, repeat)
-
-
 def _sample_masks(
     seed: int,
     sample_index: int,
@@ -243,18 +251,25 @@ def _sample_masks(
     repeat: int,
     n_masks: int,
     paired_seed: int | None,
+    *,
+    policy: MaskPolicy | None = None,
 ) -> np.ndarray:
     """Return the ``(n_masks, N_FEATURES)`` masks of one sample.
 
     A mask keeps a feature with probability ``1 - MASK_PROBABILITY`` (the
     reference notebooks keep a feature when ``uniform > 0.75``) and zeroes it
-    otherwise.
+    otherwise.  The work is delegated to ``policy`` (the reference IID policy
+    when it is omitted), so the same call sites serve every research variant.
     """
-    generator = np.random.default_rng(
-        _mask_seed(seed, sample_index, phase, repeat, paired_seed)
+    return (policy or DEFAULT_MASK_POLICY).masks(
+        seed=seed,
+        sample_index=sample_index,
+        phase=phase,
+        repeat=repeat,
+        n_masks=n_masks,
+        n_features=N_FEATURES,
+        paired_seed=paired_seed,
     )
-    uniforms = generator.random((n_masks, N_FEATURES))
-    return (uniforms > MASK_PROBABILITY).astype(np.float32)
 
 
 def _accepts_training(model: Any) -> bool:
@@ -404,9 +419,14 @@ def _store_errors(
     filled: int,
     model: Any,
     supports_training: bool,
+    cost: ScoringCost | None = None,
 ) -> None:
     """Reconstruct one batch of masked samples and store the mask errors."""
+    started = time.perf_counter()
     reconstructions = _predict(model, inputs[:filled], supports_training)
+    elapsed = time.perf_counter() - started
+    if cost is not None:
+        cost.add_call(filled, elapsed)
     residuals = reconstructions.astype(np.float64) - targets[:filled].astype(np.float64)
     mse = np.mean(np.square(residuals), axis=1)
     errors[slots[:filled, 0], slots[:filled, 1]] = mse
@@ -423,6 +443,8 @@ def _reconstruction_errors_normalized(
     phase: str,
     score_repeats: int,
     paired_seed: int | None,
+    mask_policy: MaskPolicy | None = None,
+    cost: ScoringCost | None = None,
 ) -> np.ndarray:
     """Return the per-mask errors of every sample and repeat.
 
@@ -445,7 +467,13 @@ def _reconstruction_errors_normalized(
         for row in range(n_samples):
             target = x_norm[row]
             masks = _sample_masks(
-                seed, int(indices[row]), phase, repeat, n_masks, paired_seed
+                seed,
+                int(indices[row]),
+                phase,
+                repeat,
+                n_masks,
+                paired_seed,
+                policy=mask_policy,
             )
             block = target * masks
             start = 0
@@ -466,6 +494,7 @@ def _reconstruction_errors_normalized(
                         filled,
                         model,
                         supports_training,
+                        cost,
                     )
                     filled = 0
         if filled:
@@ -477,6 +506,7 @@ def _reconstruction_errors_normalized(
                 filled,
                 model,
                 supports_training,
+                cost,
             )
 
     return errors
@@ -495,6 +525,8 @@ def reconstruction_errors(
     sample_indices: Sequence[int] | None = None,
     score_repeats: int = 1,
     paired_seed: int | None = None,
+    mask_policy: MaskPolicy | None = None,
+    cost: ScoringCost | None = None,
 ) -> np.ndarray:
     """Return the reconstruction error of every sample and mask.
 
@@ -513,6 +545,10 @@ def reconstruction_errors(
     ``paired_seed`` replaces the seed of the masks and drops the phase from
     their derivation, so the before/after phases of a paired sensitivity
     analysis share the same masks.
+
+    ``mask_policy`` selects how the masks are generated (the reference IID
+    policy when it is omitted) and ``cost``, when supplied, accumulates the
+    number of masked rows, model calls and model time of the call.
 
     .. note::
         When ``score_repeats > 1`` the returned matrix is the **elementwise
@@ -544,6 +580,8 @@ def reconstruction_errors(
         phase=phase,
         score_repeats=score_repeats,
         paired_seed=paired_seed,
+        mask_policy=mask_policy,
+        cost=cost,
     )
     return errors.mean(axis=0)
 
@@ -562,6 +600,8 @@ def score_samples(
     sample_indices: Sequence[int] | None = None,
     score_repeats: int = 1,
     paired_seed: int | None = None,
+    mask_policy: MaskPolicy | None = None,
+    cost: ScoringCost | None = None,
 ) -> np.ndarray:
     """Return the RePO (``mode="repo"``) or RePO+ (``mode="repo_plus"``) scores.
 
@@ -598,6 +638,8 @@ def score_samples(
         phase=phase,
         score_repeats=score_repeats,
         paired_seed=paired_seed,
+        mask_policy=mask_policy,
+        cost=cost,
     )
     scores = np.stack(
         [score_from_errors(errors[repeat], mode) for repeat in range(errors.shape[0])]

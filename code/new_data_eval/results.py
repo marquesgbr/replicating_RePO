@@ -260,6 +260,39 @@ def _runtime(value: Any) -> float:
     return seconds
 
 
+_COST_KEYS: tuple[str, ...] = (
+    "masked_rows",
+    "model_calls",
+    "model_seconds",
+    "mean_call_ms",
+)
+
+
+def _cost_payload(value: Any) -> dict[str, Any] | None:
+    """Return the validated cost block, or ``None`` when it is absent.
+
+    The block is informational: it is stored in the result document but is
+    deliberately **not** part of the configuration hash, so instrumenting a
+    run never changes its identity.
+    """
+    if value is None:
+        return None
+    mapping = _as_mapping(value, "cost")
+    payload: dict[str, Any] = {}
+    for key in _COST_KEYS:
+        if key not in mapping:
+            continue
+        number = float(mapping[key])
+        if not np.isfinite(number) or number < 0.0:
+            raise ValueError(
+                f"cost[{key!r}] must be finite and non-negative, got {mapping[key]!r}"
+            )
+        payload[key] = (
+            int(number) if key in ("masked_rows", "model_calls") else number
+        )
+    return payload
+
+
 def _environment(value: Any) -> dict[str, Any]:
     """Return the environment manifest, computing it when not supplied."""
     if value is None:
@@ -467,6 +500,7 @@ def build_normal_result(**kwargs: Any) -> dict[str, Any]:
     finished_at = _take(kwargs, "finished_at", None, function=function)
     environment = _take(kwargs, "environment", None, function=function)
     commit = _take(kwargs, "git_commit", _MISSING, function=function)
+    cost = _take(kwargs, "cost", None, function=function)
     _reject_extra(kwargs, function=function)
 
     score_array = np.asarray(scores, dtype=np.float64).ravel()
@@ -512,7 +546,7 @@ def build_normal_result(**kwargs: Any) -> dict[str, Any]:
         "git_commit": resolved_commit,
     }
 
-    return {
+    payload = {
         "schema_version": SCHEMA_VERSION,
         "status": status,
         "experiment": "normal",
@@ -533,6 +567,10 @@ def build_normal_result(**kwargs: Any) -> dict[str, Any]:
         "started_at": _timestamp(started_at),
         "finished_at": _timestamp(finished_at),
     }
+    cost_payload = _cost_payload(cost)
+    if cost_payload is not None:
+        payload["cost"] = cost_payload
+    return payload
 
 
 def build_adversarial_result(**kwargs: Any) -> dict[str, Any]:
@@ -613,6 +651,7 @@ def build_adversarial_result(**kwargs: Any) -> dict[str, Any]:
     victim_tpr = _rate_or_compute(
         kwargs, "victim_tpr", "victim_scores", attack_threshold, n_samples
     )
+    cost = _take(kwargs, "cost", None, function=function)
     _reject_extra(kwargs, function=function)
 
     if n_samples:
@@ -633,7 +672,7 @@ def build_adversarial_result(**kwargs: Any) -> dict[str, Any]:
         "git_commit": resolved_commit,
     }
 
-    return {
+    payload = {
         "schema_version": SCHEMA_VERSION,
         "status": status,
         "experiment": "adversarial",
@@ -661,3 +700,7 @@ def build_adversarial_result(**kwargs: Any) -> dict[str, Any]:
         "started_at": _timestamp(started_at),
         "finished_at": _timestamp(finished_at),
     }
+    cost_payload = _cost_payload(cost)
+    if cost_payload is not None:
+        payload["cost"] = cost_payload
+    return payload

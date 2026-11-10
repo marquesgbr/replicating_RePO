@@ -68,6 +68,7 @@ from new_data_eval.scoring import (
     PHASE_ORIGINAL,
     PHASE_VICTIM,
     REPO_PLUS_GROUPS,
+    ScoringCost,
     load_model,
     reconstruction_errors,
     score_from_errors,
@@ -525,6 +526,7 @@ def _collect_scores(
     paired_seed: int | None,
     chunk_size: int,
     max_samples: int | None,
+    cost: ScoringCost | None = None,
 ) -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray, int, int]:
     """Stream ``test_csv`` and return the scores, labels and row counts.
 
@@ -578,6 +580,7 @@ def _collect_scores(
                 sample_indices=sample_indices,
                 score_repeats=1,
                 paired_seed=paired_seed,
+                cost=cost,
             )
             for mode in modes:
                 score_parts[mode].append(score_from_errors(errors, mode))
@@ -597,6 +600,7 @@ def _collect_scores(
                         sample_indices=sample_indices,
                         score_repeats=score_repeats,
                         paired_seed=paired_seed,
+                        cost=cost,
                     )
                 )
 
@@ -697,6 +701,7 @@ def run_normal(args: argparse.Namespace) -> int:
         "train_max": file_sha256(Path(meta_dir) / "train_max.npy"),
     }
 
+    cost = ScoringCost()
     (
         scores_by_mode,
         labels,
@@ -716,6 +721,7 @@ def run_normal(args: argparse.Namespace) -> int:
         paired_seed=args.seed if args.paired_scoring else None,
         chunk_size=args.chunk_size,
         max_samples=args.max_samples,
+        cost=cost,
     )
     finished_at = datetime.now(timezone.utc)
     runtime_seconds = (finished_at - started_at).total_seconds()
@@ -774,6 +780,7 @@ def run_normal(args: argparse.Namespace) -> int:
             finished_at=finished_at,
             environment=environment,
             git_commit=commit,
+            cost=cost.as_dict(),
         )
         path = output_dir / f"{mode}.json"
         write_json_atomic(path, payload)
