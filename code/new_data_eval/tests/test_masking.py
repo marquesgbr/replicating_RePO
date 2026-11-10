@@ -19,6 +19,9 @@ from new_data_eval.masking import (
     IIDMaskPolicy,
     MASK_PROBABILITY,
     PHASES,
+    POLICIES,
+    BalancedMaskPolicy,
+    CoveringMaskPolicy,
     derive_seed,
     mask_seed,
 )
@@ -141,3 +144,60 @@ def test_phases_and_derivation_are_exported():
     assert PHASES == ("original", "attack", "victim")
     assert derive_seed("a", 1) == derive_seed("a", 1)
     assert derive_seed("a", 1) != derive_seed("a", 2)
+
+
+def test_balanced_policy_keeps_exactly_one_quarter_per_row():
+    masks = BalancedMaskPolicy().masks(
+        seed=2019,
+        sample_index=4,
+        phase="original",
+        repeat=0,
+        n_masks=50,
+        n_features=77,
+    )
+    assert masks.shape == (50, 77)
+    assert set(np.unique(masks)) == {0.0, 1.0}
+    kept = masks.sum(axis=1)
+    assert np.all(kept == round((1.0 - MASK_PROBABILITY) * 77))
+    # Still stateless.
+    again = BalancedMaskPolicy().masks(
+        seed=2019, sample_index=4, phase="original", repeat=0,
+        n_masks=50, n_features=77,
+    )
+    np.testing.assert_array_equal(masks, again)
+
+
+def test_covering_policy_covers_every_feature_in_every_group():
+    n_masks = 25
+    masks = CoveringMaskPolicy().masks(
+        seed=2020,
+        sample_index=9,
+        phase="original",
+        repeat=1,
+        n_masks=n_masks,
+        n_features=77,
+    )
+    assert np.all(masks.sum(axis=1) == round((1.0 - MASK_PROBABILITY) * 77))
+    for start in range(0, n_masks, n_masks // 5):
+        group = masks[start : start + n_masks // 5]
+        assert np.all(group.sum(axis=0) > 0)
+
+
+def test_covering_policy_falls_back_when_coverage_is_impossible():
+    kwargs = dict(
+        seed=2020, sample_index=5, phase="original", repeat=0,
+        n_features=77,
+    )
+    covering = CoveringMaskPolicy().masks(n_masks=10, **kwargs)
+    balanced = BalancedMaskPolicy().masks(n_masks=10, **kwargs)
+    # 10 masks -> groups of 2 -> 38 slots < 77 features: coverage is
+    # impossible, so the policy degrades to the balanced masks.
+    np.testing.assert_array_equal(covering, balanced)
+
+
+def test_policy_registry_exposes_the_three_policies():
+    assert set(POLICIES) == {"iid", "balanced", "covering"}
+    assert POLICIES["iid"].name == "iid"
+    assert POLICIES["balanced"].name == "balanced"
+    assert POLICIES["covering"].name == "covering"
+

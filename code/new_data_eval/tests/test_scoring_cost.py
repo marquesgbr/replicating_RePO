@@ -85,6 +85,24 @@ def test_cost_does_not_change_a_score(meta):
     assert cost.masked_rows == 5 * 20
 
 
+def test_error_repeats_keep_the_full_tensor_and_match_the_mean(meta):
+    from new_data_eval.scoring import (
+        reconstruction_error_repeats,
+        reconstruction_errors,
+    )
+
+    x = np.random.default_rng(1).random((3, 77)).astype(np.float32)
+    kwargs = dict(n_masks=20, seed=2019, batch_size=5)
+    repeats = reconstruction_error_repeats(
+        CountingModel(), x, *meta, score_repeats=3, **kwargs
+    )
+    assert repeats.shape == (3, 3, 20)
+    averaged = reconstruction_errors(
+        CountingModel(), x, *meta, score_repeats=3, **kwargs
+    )
+    np.testing.assert_allclose(repeats.mean(axis=0), averaged, rtol=0.0, atol=0.0)
+
+
 def test_cost_merge_and_empty_dict():
     empty = ScoringCost().as_dict()
     assert empty == {

@@ -66,6 +66,7 @@ __all__ = [
     "ScoringCost",
     "load_model",
     "reconstruction_errors",
+    "reconstruction_error_repeats",
     "repo_plus_scores",
     "repo_scores",
     "score_from_errors",
@@ -584,6 +585,59 @@ def reconstruction_errors(
         cost=cost,
     )
     return errors.mean(axis=0)
+
+
+def reconstruction_error_repeats(
+    model: Any,
+    x_raw: np.ndarray,
+    train_min: np.ndarray,
+    train_max: np.ndarray,
+    *,
+    n_masks: int = DEFAULT_N_MASKS,
+    batch_size: int = DEFAULT_BATCH_SIZE,
+    seed: int = 2019,
+    phase: str = PHASE_ORIGINAL,
+    sample_indices: Sequence[int] | None = None,
+    score_repeats: int = 1,
+    paired_seed: int | None = None,
+    mask_policy: MaskPolicy | None = None,
+    cost: ScoringCost | None = None,
+) -> np.ndarray:
+    """Return the per-repeat, per-mask errors of every sample.
+
+    Unlike :func:`reconstruction_errors`, which averages the repeats, this
+    helper keeps the full ``(score_repeats, n_samples, n_masks)`` tensor.  It
+    is the input of the variance study: the dispersion of the scores across
+    independent mask sets is exactly what the mask-count analysis measures.
+
+    .. warning::
+        The RePO+ aggregate must be applied **per repeat** and then averaged;
+        aggregating the repeat-mean matrix is a different (biased) statistic.
+        Use :func:`score_from_errors` on ``errors[repeat]``.
+    """
+    x_norm, indices = _prepare_scoring(
+        x_raw,
+        train_min,
+        train_max,
+        n_masks=n_masks,
+        batch_size=batch_size,
+        score_repeats=score_repeats,
+        phase=phase,
+        sample_indices=sample_indices,
+    )
+    return _reconstruction_errors_normalized(
+        model,
+        x_norm,
+        indices,
+        n_masks=n_masks,
+        batch_size=batch_size,
+        seed=seed,
+        phase=phase,
+        score_repeats=score_repeats,
+        paired_seed=paired_seed,
+        mask_policy=mask_policy,
+        cost=cost,
+    )
 
 
 def score_samples(

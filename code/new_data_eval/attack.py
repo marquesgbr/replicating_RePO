@@ -37,6 +37,7 @@ from typing import Any, Literal, Mapping, Sequence
 import numpy as np
 
 from new_data_eval.data import N_FEATURES
+from new_data_eval.masking import MaskPolicy
 from new_data_eval.scoring import (
     MASK_PROBABILITY,
     PHASE_ATTACK,
@@ -188,6 +189,10 @@ class AttackOutcome:
     kind: Literal["evaded", "backup", "no_change", "not_fooled"]
     x_adv: np.ndarray | None = None
     score: float | None = None
+    #: Forward passes performed by the attack (informational).
+    model_calls: int = 0
+    #: Masked rows sent to the model (``model_calls * n_masks``).
+    masks_evaluated: int = 0
 
 
 class FlowAttack:
@@ -207,6 +212,7 @@ class FlowAttack:
         n_masks: int = 100,
         score_repeats: int = 1,
         paired_seed: int | None = None,
+        mask_policy: MaskPolicy | None = None,
     ) -> None:
         num_input = int(num_input)
         if num_input != N_FEATURES:
@@ -232,6 +238,7 @@ class FlowAttack:
         self.score_repeats = score_repeats
         self.paired_seed = None if paired_seed is None else int(paired_seed)
         self.seed = int(seed)
+        self.mask_policy = mask_policy
         self.real_threshold = self._finite_threshold(real_threshold, "real_threshold")
         self.attack_threshold = self._finite_threshold(
             attack_threshold, "attack_threshold"
@@ -360,10 +367,24 @@ class FlowAttack:
     def _iteration_masks(self, sample_index: int, iteration: int) -> np.ndarray:
         """Return the mask of one optimization step.
 
-        The mask depends only on ``(seed, sample_index, iteration)`` and keeps
-        a feature with probability ``1 - MASK_PROBABILITY`` (the reference
-        keeps a feature when ``uniform > 0.75``).
+        Without a policy, the mask depends only on
+        ``(seed, sample_index, iteration)`` and keeps a feature with
+        probability ``1 - MASK_PROBABILITY`` (the reference keeps a feature
+        when ``uniform > 0.75``).  With a policy, the policy draws the mask
+        with the same stateless key, so a balanced or covering attack is
+        reproducible too.  The default path is kept byte-identical to the
+        reference implementation.
         """
+        if self.mask_policy is not None:
+            return self.mask_policy.masks(
+                seed=self.seed,
+                sample_index=int(sample_index),
+                phase=PHASE_ATTACK,
+                repeat=int(iteration),
+                n_masks=self.n_masks,
+                n_features=self.num_input,
+                paired_seed=self.paired_seed,
+            )
         generator = np.random.default_rng(
             _derive_seed("attack-mask", self.seed, int(sample_index), int(iteration))
         )
@@ -440,6 +461,7 @@ class FlowAttack:
             sample_indices=[int(sample_index)],
             score_repeats=self.score_repeats,
             paired_seed=self.paired_seed,
+            mask_policy=self.mask_policy,
         )
         return float(scores[0])
 
@@ -452,9 +474,27 @@ class FlowAttack:
 
         self.alpha.assign(np.zeros((1, self.num_input), dtype=np.float32))
 
+        self._model_calls = 0
+        self._masks_evaluated = 0
+
+        def outcome(
+            kind: str,
+            x_adv: np.ndarray | None = None,
+            score: float | None = None,
+        ) -> AttackOutcome:
+            return AttackOutcome(
+                kind=kind,
+                x_adv=x_adv,
+                score=score,
+                model_calls=self._model_calls,
+                masks_evaluated=self._masks_evaluated,
+            )
+
         initial_score = self.score(orig_sample, sample_index, PHASE_ATTACK)
+        self._model_calls += self.score_repeats
+        self._masks_evaluated += self.n_masks * self.score_repeats
         if initial_score < self.attack_threshold:
-            return AttackOutcome(kind="no_change", x_adv=None, score=initial_score)
+            return outcome("no_change", score=initial_score)
 
         backup: list[np.ndarray] = []
         backup_score: list[float] = []
@@ -542,9 +582,11 @@ class FlowAttack:
                 adv_ex_np[np.isinf(adv_ex_np)] = 0
                 adv_ex_np[np.isnan(adv_ex_np)] = 0
                 score = self.score(adv_ex_np, sample_index, PHASE_ATTACK)
+                self._model_calls += 1 + self.score_repeats
+                self._masks_evaluated += self.n_masks * (1 + self.score_repeats)
                 if score < self.attack_threshold:
-                    return AttackOutcome(
-                        kind="evaded",
+                    return outcome(
+                        "evaded",
                         x_adv=np.array(adv_ex_np[0], dtype=np.float32, copy=True),
                         score=score,
                     )
@@ -557,13 +599,13 @@ class FlowAttack:
 
         for mask in (self.mask_l1, self.mask_l2, self.mask_l3):
             for optimizer, total_iter in zip(self.optimizers, ITERATIONS):
-                outcome = optimize(optimizer, total_iter, mask)
-                if outcome is not None:
-                    return outcome
+                result = optimize(optimizer, total_iter, mask)
+                if result is not None:
+                    return result
 
         if backup:
-            return AttackOutcome(kind="backup", x_adv=backup[0], score=backup_score[0])
-        return AttackOutcome(kind="not_fooled", x_adv=None, score=None)
+            return outcome("backup", x_adv=backup[0], score=backup_score[0])
+        return outcome("not_fooled")
 
     # -- checkpoint helpers -------------------------------------------------
 
