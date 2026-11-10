@@ -218,7 +218,7 @@ Autentique-se quando solicitado e escolha um runtime com GPU. Não é necessári
 iniciar `jupyter lab`, copiar URL ou configurar `LD_LIBRARY_PATH` nesse fluxo.
 
 Depois de conectar, execute
-[code/Colab_Setup.ipynb](./code/Colab_Setup.ipynb) no mesmo runtime. A primeira
+[code/Colab_Setup.ipynb](../code/Colab_Setup.ipynb) no mesmo runtime. A primeira
 célula confirma a versão do Python, TensorFlow e a GPU; as demais configuram o
 repositório e testam os modelos.
 

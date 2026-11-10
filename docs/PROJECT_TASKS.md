@@ -161,7 +161,7 @@ solução do artigo de referência.
 ## 7. Relatório
 
 Os requisitos detalhados estão em
-[requisitos_relatório.md](./requisitos_relatório.md).
+[REPORT_REQUIREMENTS.md](./REPORT_REQUIREMENTS.md).
 
 ### Abstract/Resumo
 
