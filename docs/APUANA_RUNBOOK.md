@@ -455,6 +455,38 @@ squeue -u "$USER"
 ls -1 "$SCRATCH/replicating-repo-results/logs/"repo-adv-*_*.out
 ```
 
+### 10.1 Estudo de eficiência das máscaras (`mask-exp`)
+
+O namespace `mask-exp` reaproveita o harness de `code/mask_experiments/` e
+roda as três direções com métricas adversariais por direção:
+
+```bash
+bash cluster/submit.sh mask-exp baseline
+bash cluster/submit.sh mask-exp variance
+bash cluster/submit.sh mask-exp adversarial all      # Direção A
+bash cluster/submit.sh mask-exp cascade              # Direção B (normal)
+bash cluster/submit.sh mask-exp cascade-attack all   # Direção B (ataque)
+bash cluster/submit.sh mask-exp distill              # Direção C (treina o aluno)
+bash cluster/submit.sh mask-exp distill-attack all   # Direção C (ataque)
+bash cluster/submit.sh mask-exp packet
+bash cluster/submit.sh mask-exp aggregate            # merge + Markdown
+```
+
+`distill-attack` só pode rodar depois do `distill` (o aluno fica em
+`$RESULTS_ROOT/mask_efficiency/distillation_student.keras`).  Para encadear:
+
+```bash
+DISTILL_JOB=$(bash cluster/submit.sh mask-exp distill | awk 'NR==1{print $NF}')
+DEPENDENCY="afterok:${DISTILL_JOB}" \
+  bash cluster/submit.sh mask-exp distill-attack all
+```
+
+Os defaults são de produção (100 k benignos, 5 k por ataque, 11 ataques).
+Para um smoke, reduza `MASK_MAX_BENIGN`, `MASK_MAX_PER_ATTACK`,
+`MASK_PER_ATTACK` e use `MASK_ATTACK_SET=pilot` (4 ataques).  As métricas
+adversariais e as saídas estão descritas em
+[`../cluster/README.md`](../cluster/README.md), seção 17.
+
 ## 11. Se um job for interrompido
 
 Reenvie o mesmo ataque:

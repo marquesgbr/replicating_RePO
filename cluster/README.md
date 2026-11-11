@@ -556,3 +556,94 @@ com `afterok:id1:id2`. O `export-job` roda sem GPU e grava em
 `summary.json`). Se o normal falhar, o adversarial não começa; se um ataque
 falhar, o export não roda. Os jobs já submetidos continuam mesmo se você
 desligar o computador local; os checkpoints cobrem preempção/requeue.
+
+## 17. Eficiência do sistema de máscaras (`mask-exp`)
+
+O namespace `mask-exp` avalia as três direções do estudo de máscaras com o
+mesmo harness local de `code/mask_experiments/`.  Todos os resultados vão para
+`$RESULTS_ROOT/mask_efficiency/`; os jobs adversariais são arrays com um job
+por ataque e o agregador junta os JSONs e gera o Markdown.
+
+### 17.1 Sequência recomendada
+
+```bash
+# 1. baseline congelado (Gate G1)
+bash cluster/submit.sh mask-exp baseline
+
+# 2. curva de variância e custo (Direção A)
+bash cluster/submit.sh mask-exp variance
+
+# 3. avaliação adversarial das políticas (Direção A)
+bash cluster/submit.sh mask-exp adversarial all
+
+# 4. cascata e decisão sequencial (Direção B)
+bash cluster/submit.sh mask-exp cascade
+bash cluster/submit.sh mask-exp cascade-attack all
+
+# 5. destilação e ataque ao aluno (Direção C)
+bash cluster/submit.sh mask-exp distill
+bash cluster/submit.sh mask-exp distill-attack all
+
+# 6. confirmação normal em pacotes
+bash cluster/submit.sh mask-exp packet
+
+# 7. merge dos arrays + relatório consolidado
+bash cluster/submit.sh mask-exp aggregate
+```
+
+`mask-exp distill-attack` exige que `distillation_student.keras` já exista;
+submeta o `distill` primeiro (ou use `DEPENDENCY=afterok:<id>`). O
+`cascade-attack` recalcula os próprios thresholds e não depende do `cascade`.
+
+### 17.2 Métricas adversariais por direção
+
+| Direção | O que é medido | Onde |
+|---|---|---|
+| A — máscaras | TPR de vítima no FPR casado, `fooled`, `no_change`, máscaras/ataque | `adversarial/<ataque>.json` |
+| B — cascata | TPR de vítima da cascata, `bypass` do estágio barato, `fooled` | `cascade_attack/<ataque>.json` |
+| C — destilação | TPR de vítima do aluno vs. professor nos **mesmos** exemplos | `distill_attack/<ataque>.json` |
+
+O TPR de vítima é sempre medido com o threshold do próprio detector,
+recalibrado no FPR de 10 %; o ataque de referência usa a mesma projeção de
+viabilidade e o atacante conhece a política/número de máscaras do detector.
+
+### 17.3 Defaults de produção e smoke
+
+Os defaults do `mask-exp` são de produção (`MASK_MAX_BENIGN=100000`,
+`MASK_MAX_PER_ATTACK=5000`, `MASK_PER_ATTACK=5000`, 11 ataques).  Para um
+smoke barato:
+
+```bash
+MASK_MAX_BENIGN=2000 MASK_MAX_PER_ATTACK=200 MASK_PER_ATTACK=20 \
+  MASK_ATTACK_SET=pilot bash cluster/submit.sh mask-exp adversarial all
+
+MASK_MAX_BENIGN=2000 MASK_MAX_PER_ATTACK=200 MASK_PER_ATTACK=20 \
+  bash cluster/submit.sh mask-exp distill-attack all
+```
+
+O cache de amostragem fica desligado nos jobs (`MASK_CACHE` vazio) para evitar
+corrida entre os jobs do array; cada job reamostra as CSVs (≈13 s).
+
+### 17.4 Saídas
+
+```
+$RESULTS_ROOT/mask_efficiency/
+  baseline_flow.json
+  variance_flow.json
+  adversarial/<ataque>.json
+  adversarial_all.json          # merge do array
+  cascade_flow.json
+  cascade_attack/<ataque>.json
+  cascade_attack_all.json
+  distillation_flow.json
+  distillation_student.keras
+  distill_attack/<ataque>.json
+  distill_attack_all.json
+  packet_normal.json
+  MASK_EFFICIENCY_RESULTS.md    # relatório consolidado
+```
+
+O `mask-exp aggregate` roda em CPU, faz o merge dos arrays e chama
+`python -m mask_experiments.aggregate`.  Para copiar o relatório para o
+repositório, `cp` do `$RESULTS_ROOT` ou use o `export` do projeto.
+

@@ -63,6 +63,13 @@ WALLTIME_ADV="${WALLTIME_ADV:-1-23:00:00}"
 WALLTIME_NEW_DATA_NORMAL="${WALLTIME_NEW_DATA_NORMAL:-02:00:00}"
 WALLTIME_NEW_DATA_ADV="${WALLTIME_NEW_DATA_ADV:-1-23:00:00}"
 WALLTIME_NEW_DATA_TRAIN="${WALLTIME_NEW_DATA_TRAIN:-1-00:00:00}"
+WALLTIME_MASK_BASELINE="${WALLTIME_MASK_BASELINE:-02:00:00}"
+WALLTIME_MASK_VARIANCE="${WALLTIME_MASK_VARIANCE:-06:00:00}"
+WALLTIME_MASK_ADV="${WALLTIME_MASK_ADV:-1-23:00:00}"
+WALLTIME_MASK_CASCADE="${WALLTIME_MASK_CASCADE:-06:00:00}"
+WALLTIME_MASK_DISTILL="${WALLTIME_MASK_DISTILL:-06:00:00}"
+WALLTIME_MASK_PACKET="${WALLTIME_MASK_PACKET:-06:00:00}"
+WALLTIME_MASK_AGGREGATE="${WALLTIME_MASK_AGGREGATE:-00:30:00}"
 
 export_args() {
   local task="$1"
@@ -434,6 +441,102 @@ task_new_data_export_job() {
   echo "[submit] new-data export job: ${job_id} -> ${out_dir}"
 }
 
+mask_attack_set() {
+  local set="${1:-pilot}"
+  PYTHONPATH="${REPO_ROOT}/code" "${VENV}/bin/python" - "${set}" <<'PY'
+import sys
+
+if sys.argv[1] == "all":
+    from mask_experiments.data import FLOW_ATTACKS
+    attacks = FLOW_ATTACKS
+else:
+    from mask_experiments.adversarial import DEFAULT_ATTACKS
+    attacks = DEFAULT_ATTACKS
+print("\n".join(attacks))
+PY
+}
+
+task_mask_single() {
+  local kind="$1"
+  local walltime
+  case "${kind}" in
+    baseline) walltime="${WALLTIME_MASK_BASELINE}" ;;
+    variance) walltime="${WALLTIME_MASK_VARIANCE}" ;;
+    cascade) walltime="${WALLTIME_MASK_CASCADE}" ;;
+    distill) walltime="${WALLTIME_MASK_DISTILL}" ;;
+    packet) walltime="${WALLTIME_MASK_PACKET}" ;;
+    *) echo "[error] kind inválido: ${kind}" >&2; exit 2 ;;
+  esac
+  local extra="MASK_RESULTS=${RESULTS_ROOT}/mask_efficiency"
+  local job_id
+  job_id="$(submit_gpu_job "repo-mask-${kind}" "${walltime}" \
+    "$(export_args "mask_${kind}" flow "${extra}")")"
+  echo "[submit] mask-exp ${kind}: ${job_id}"
+}
+
+task_mask_attack() {
+  local kind="$1"
+  local attack="$2"
+  local walltime="${WALLTIME_MASK_ADV}"
+  local task
+  case "${kind}" in
+    adversarial) task="mask_adversarial" ;;
+    cascade-attack) task="mask_cascade_attack" ;;
+    distill-attack) task="mask_distill_attack" ;;
+    *) echo "[error] kind inválido: ${kind}" >&2; exit 2 ;;
+  esac
+  if [[ "${kind}" == "distill-attack" \
+     && ! -f "${RESULTS_ROOT}/mask_efficiency/distillation_student.keras" ]]; then
+    echo "[error] aluno ausente: ${RESULTS_ROOT}/mask_efficiency/distillation_student.keras" >&2
+    echo "[hint] rode 'bash cluster/submit.sh mask-exp distill' primeiro" >&2
+    exit 2
+  fi
+  local list_dir="${RESULTS_ROOT}/mask_efficiency/attack-lists"
+  mkdir -p "${list_dir}"
+  local list_file
+  list_file="$(mktemp "${list_dir}/${kind}-XXXXXXXX.txt")"
+  if [[ "${attack,,}" == "all" ]]; then
+    mask_attack_set "${MASK_ATTACK_SET:-all}" > "${list_file}"
+    echo "[list] $(grep -cve '^[[:space:]]*$' "${list_file}") ataques -> ${list_file}"
+  else
+    printf '%s\n' "${attack}" > "${list_file}"
+    echo "[list] 1 ataque -> ${list_file}"
+  fi
+  local count
+  count="$(grep -cve '^[[:space:]]*$' "${list_file}")"
+  local array_spec="0-$((count - 1))%${CONCURRENCY}"
+  local extra="MASK_RESULTS=${RESULTS_ROOT}/mask_efficiency"
+  if [[ -n "${MASK_PER_ATTACK:-}" ]]; then
+    extra+=",MASK_PER_ATTACK=${MASK_PER_ATTACK}"
+  fi
+  if [[ -n "${MASK_VARIANTS:-}" ]]; then
+    extra+=",MASK_VARIANTS=${MASK_VARIANTS//,/+}"
+  fi
+  if [[ -n "${MASK_CHEAP_ATTACK:-}" ]]; then
+    extra+=",MASK_CHEAP_ATTACK=${MASK_CHEAP_ATTACK//,/+}"
+  fi
+  if [[ -n "${MASK_CASCADE_FN:-}" ]]; then
+    extra+=",MASK_CASCADE_FN=${MASK_CASCADE_FN}"
+  fi
+  local job_name="repo-mask-${kind}"
+  if [[ "${attack,,}" != "all" ]]; then
+    job_name+="-$(echo "${attack}" | tr ' /' '--' | tr -cd '[:alnum:]._-')"
+  fi
+  local job_id
+  job_id="$(OUTPUT_PATTERN='%x-%A_%a.out' submit_gpu_job "${job_name}" "${walltime}" \
+    "$(export_args "${task}" flow "${extra}")" \
+    --array="${array_spec}")"
+  echo "[submit] mask-exp ${kind}: array ${array_spec} -> ${job_id}"
+  echo "[list] ${list_file}"
+}
+
+task_mask_aggregate() {
+  local job_id
+  job_id="$(submit_cpu_job "repo-mask-aggregate" "${WALLTIME_MASK_AGGREGATE}" \
+    "$(export_args mask_aggregate flow "MASK_RESULTS=${RESULTS_ROOT}/mask_efficiency")")"
+  echo "[submit] mask-exp aggregate: ${job_id}"
+}
+
 usage() {
   cat <<'EOF'
 Uso: bash cluster/submit.sh <comando> [argumentos]
@@ -453,10 +556,23 @@ Novo dataset:
   new-data export
   new-data export-job        # exportação encadeada por dependência SLURM
 
+Máscaras (eficiência do RePO):
+  mask-exp baseline
+  mask-exp variance
+  mask-exp adversarial <ataque|all>
+  mask-exp cascade
+  mask-exp cascade-attack <ataque|all>
+  mask-exp distill
+  mask-exp distill-attack <ataque|all>
+  mask-exp packet
+  mask-exp aggregate
+
 Variáveis: PARTITION, CPUS_PER_TASK, MEM, GRES, CONCURRENCY,
-  WALLTIME_* (inclui WALLTIME_NEW_DATA_*), MODEL_SOURCE, MODEL_DIR,
-  SEED, FORCE=1, NODELIST, MAX_SAMPLES, N_MASKS, BATCH_SIZE,
+  WALLTIME_* (inclui WALLTIME_NEW_DATA_* e WALLTIME_MASK_*), MODEL_SOURCE,
+  MODEL_DIR, SEED, FORCE=1, NODELIST, MAX_SAMPLES, N_MASKS, BATCH_SIZE,
   CHECKPOINT_EVERY, SMOKE=1, DEPENDENCY=afterok:<jobid>.
+  Máscaras: MASK_MAX_BENIGN, MASK_MAX_PER_ATTACK, MASK_PER_ATTACK,
+  MASK_VARIANTS, MASK_CHEAP_ATTACK, MASK_CASCADE_FN, MASK_ATTACK_SET=pilot|all.
 EOF
 }
 
@@ -495,6 +611,31 @@ case "${command}" in
       train) task_new_data_train ;;
       export) task_new_data_export ;;
       export-job) task_new_data_export_job ;;
+      *) usage; exit 2 ;;
+    esac
+    ;;
+  mask-exp)
+    subcommand="${1:-}"
+    shift || true
+    case "${subcommand}" in
+      baseline) task_mask_single baseline ;;
+      variance) task_mask_single variance ;;
+      cascade) task_mask_single cascade ;;
+      distill) task_mask_single distill ;;
+      packet) task_mask_single packet ;;
+      adversarial)
+        [[ $# -ge 1 ]] || { usage; exit 2; }
+        task_mask_attack adversarial "$1"
+        ;;
+      cascade-attack)
+        [[ $# -ge 1 ]] || { usage; exit 2; }
+        task_mask_attack cascade-attack "$1"
+        ;;
+      distill-attack)
+        [[ $# -ge 1 ]] || { usage; exit 2; }
+        task_mask_attack distill-attack "$1"
+        ;;
+      aggregate) task_mask_aggregate ;;
       *) usage; exit 2 ;;
     esac
     ;;
