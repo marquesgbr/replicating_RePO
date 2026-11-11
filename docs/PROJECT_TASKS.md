@@ -152,13 +152,16 @@ dados além dos dados usados pelo artigo de referência.
 - [x] Registrar quantidades por classe.
   - Evidência: 3.590.733 linhas válidas no teste e contagens por classe em
     `docs/NEW_DATASET.md` (obtidas de `validate`).
-- [ ] Executar a avaliação da solução de referência no dataset adicional.
-  - Pendente: somente smoke local em CPU foi executado; a avaliação normal
-    completa e os 9 ataques adversariais exigem GPU/Apuana.
-  - Tooling pronto: `cluster/submit.sh new-data smoke|normal|adversarial|train|export`
+- [x] Executar a avaliação da solução de referência no dataset adicional.
+  - Evidência: normal completo (3.590.733 amostras, 45,8 min) e array
+    adversarial `29541` com os 9 ataques (30.864 amostras), no Apuana, commit
+    `cdc39d6`. Resultados em `$HOME/replicating-repo-results/new_data/`.
+  - Tooling: `cluster/submit.sh new-data smoke|normal|adversarial|train|export`
     (ver `docs/APUANA_RUNBOOK.md`, seção 7.1).
-- [ ] Consolidar os resultados para comparação.
-  - Pendente: depende da conclusão da avaliação completa acima.
+- [x] Consolidar os resultados para comparação.
+  - Evidência: `docs/NEW_DATASET_ANALYSIS.md` (normal, adversarial, comparação
+    com fluxo e pacotes, limitações e conclusões). Export agregado em
+    `$HOME/replicating-repo-results/new_data/export/`.
 
 ## 6. Melhoria proposta pela equipe
 

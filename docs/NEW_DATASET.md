@@ -318,10 +318,11 @@ Com `--variant primary` esse comando falharia de propósito: o normal de
 verificação é truncado (`sampling.mode="first_n"`), e o resultado canônico só
 aceita um normal completo. O erro ocorre antes de qualquer escrita.
 
-**A avaliação completa continua pendente.** O teste normal integral (~2,1 GB,
-3,59 milhões de linhas) e o adversarial dos 9 ataques com 5.000 amostras cada
-exigem GPU e devem ser executados no Apuana ou equivalente. Os números acima
-são apenas smoke, não resultados finais.
+**A avaliação completa foi executada no Apuana** (commit `cdc39d6`): o normal
+percorreu as 3.590.733 linhas válidas e o adversarial avaliou os 9 ataques
+(30.864 amostras). Os números consolidados estão em
+`docs/NEW_DATASET_ANALYSIS.md`; os smoke acima continuam sendo apenas
+verificações de pipeline, não resultados finais.
 
 Os notebooks `code/new_data_RePO_Normal_Test.ipynb` e
 `code/new_data_RePO_Adversarial.ipynb` são wrappers finos dessa CLI: eles não
