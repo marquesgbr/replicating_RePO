@@ -73,6 +73,7 @@ def run_distillation(
     seed: int = 2019,
     batch_size: int = 100,
     epochs: int = DEFAULT_EPOCHS,
+    student_out: Path | None = None,
 ) -> dict[str, Any]:
     import tensorflow as tf
 
@@ -137,6 +138,12 @@ def run_distillation(
     student_threshold = threshold_at_fpr(predicted[benign], 0.01)
 
     residuals = predicted - y_test
+    student_path: str | None = None
+    if student_out is not None:
+        student_out = Path(student_out)
+        student_out.parent.mkdir(parents=True, exist_ok=True)
+        student.save(student_out)
+        student_path = str(student_out)
     payload = {
         "schema_version": "mask_exp_v1",
         "experiment": "distillation",
@@ -164,6 +171,7 @@ def run_distillation(
             "mae": float(np.mean(np.abs(residuals))),
             "single_pass_forward": True,
             "adversarial_evaluated": False,
+            "path": student_path,
         },
         "runtime_seconds": time.perf_counter() - started,
     }
@@ -188,6 +196,15 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--seed", type=int, default=2019)
     parser.add_argument("--batch-size", type=int, default=100)
     parser.add_argument(
+        "--student-out",
+        default=str(
+            REPO_ROOT
+            / "results"
+            / "mask_efficiency"
+            / "distillation_student.keras"
+        ),
+    )
+    parser.add_argument(
         "--out",
         default=str(REPO_ROOT / "results" / "mask_efficiency" / "distillation_flow.json"),
     )
@@ -206,6 +223,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         seed=args.seed,
         batch_size=args.batch_size,
         epochs=args.epochs,
+        student_out=Path(args.student_out) if args.student_out else None,
     )
     write_json_atomic(Path(args.out), payload)
     print(f"wrote {args.out}")

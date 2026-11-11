@@ -1,0 +1,177 @@
+{
+  "attacks": {
+    "DDoS": {
+      "cheap25": {
+        "already_benign": 12,
+        "bypass_rate": 0.0,
+        "conditional_drop": 0.0,
+        "fooled": 0,
+        "kinds": {
+          "backup": 0,
+          "evaded": 0,
+          "no_change": 0,
+          "not_fooled": 20
+        },
+        "masks_evaluated": 27025,
+        "n": 20,
+        "normal_tpr": 0.4,
+        "victim_tpr": 0.4
+      },
+      "cheap5": {
+        "already_benign": 12,
+        "bypass_rate": 0.0,
+        "conditional_drop": 0.0,
+        "fooled": 0,
+        "kinds": {
+          "backup": 0,
+          "evaded": 0,
+          "no_change": 0,
+          "not_fooled": 20
+        },
+        "masks_evaluated": 5405,
+        "n": 20,
+        "normal_tpr": 0.4,
+        "victim_tpr": 0.4
+      }
+    },
+    "DoS Hulk": {
+      "cheap25": {
+        "already_benign": 5,
+        "bypass_rate": 0.0,
+        "conditional_drop": 0.0,
+        "fooled": 0,
+        "kinds": {
+          "backup": 0,
+          "evaded": 0,
+          "no_change": 0,
+          "not_fooled": 20
+        },
+        "masks_evaluated": 27025,
+        "n": 20,
+        "normal_tpr": 0.75,
+        "victim_tpr": 0.75
+      },
+      "cheap5": {
+        "already_benign": 5,
+        "bypass_rate": 0.0,
+        "conditional_drop": 0.0,
+        "fooled": 0,
+        "kinds": {
+          "backup": 0,
+          "evaded": 0,
+          "no_change": 0,
+          "not_fooled": 20
+        },
+        "masks_evaluated": 5405,
+        "n": 20,
+        "normal_tpr": 0.75,
+        "victim_tpr": 0.75
+      }
+    },
+    "DoS slowloris": {
+      "cheap25": {
+        "already_benign": 16,
+        "bypass_rate": 0.0,
+        "conditional_drop": 0.0,
+        "fooled": 0,
+        "kinds": {
+          "backup": 0,
+          "evaded": 0,
+          "no_change": 0,
+          "not_fooled": 20
+        },
+        "masks_evaluated": 27025,
+        "n": 20,
+        "normal_tpr": 0.2,
+        "victim_tpr": 0.2
+      },
+      "cheap5": {
+        "already_benign": 16,
+        "bypass_rate": 0.0,
+        "conditional_drop": 0.0,
+        "fooled": 0,
+        "kinds": {
+          "backup": 0,
+          "evaded": 0,
+          "no_change": 0,
+          "not_fooled": 20
+        },
+        "masks_evaluated": 5405,
+        "n": 20,
+        "normal_tpr": 0.2,
+        "victim_tpr": 0.2
+      }
+    },
+    "FTP-Patator": {
+      "cheap25": {
+        "already_benign": 20,
+        "bypass_rate": 0.0,
+        "conditional_drop": null,
+        "fooled": 0,
+        "kinds": {
+          "backup": 0,
+          "evaded": 0,
+          "no_change": 0,
+          "not_fooled": 20
+        },
+        "masks_evaluated": 27025,
+        "n": 20,
+        "normal_tpr": 0.0,
+        "victim_tpr": 0.0
+      },
+      "cheap5": {
+        "already_benign": 20,
+        "bypass_rate": 0.0,
+        "conditional_drop": null,
+        "fooled": 0,
+        "kinds": {
+          "backup": 0,
+          "evaded": 0,
+          "no_change": 0,
+          "not_fooled": 20
+        },
+        "masks_evaluated": 5405,
+        "n": 20,
+        "normal_tpr": 0.0,
+        "victim_tpr": 0.0
+      }
+    }
+  },
+  "configs": {
+    "cheap25": {
+      "benign_skip_rate": 0.4152,
+      "n_cheap": 25,
+      "normal_tpr": {
+        "macro": 0.2727272727272727,
+        "weighted": 0.19839825263924282
+      },
+      "t_low": 0.00041998158535821745,
+      "threshold": 0.09681908121116986
+    },
+    "cheap5": {
+      "benign_skip_rate": 0.3692,
+      "n_cheap": 5,
+      "normal_tpr": {
+        "macro": 0.2727272727272727,
+        "weighted": 0.19839825263924282
+      },
+      "t_low": 0.0027779271037135277,
+      "threshold": 0.09681908121116986
+    }
+  },
+  "dataset": {
+    "attacks": {
+      "DDoS": 20,
+      "DoS Hulk": 20,
+      "DoS slowloris": 20,
+      "FTP-Patator": 20
+    },
+    "false_negative_rate_target": 0.01,
+    "n_benign": 5000,
+    "name": "cicids2017-flow",
+    "seed": 2019
+  },
+  "experiment": "cascade_attack",
+  "runtime_seconds": 374.78369170899987,
+  "schema_version": "mask_exp_v1"
+}

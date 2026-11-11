@@ -7,7 +7,7 @@
     "seed": 2019
   },
   "experiment": "distillation",
-  "runtime_seconds": 38.90155959000003,
+  "runtime_seconds": 21.152068487999713,
   "schema_version": "mask_exp_v1",
   "student": {
     "adversarial_evaluated": false,
@@ -15,6 +15,7 @@
     "epochs": 40,
     "final_train_loss": 2.0228870198479854e-05,
     "mae": 0.0073983592830426,
+    "path": "../results/mask_efficiency/distillation_student.keras",
     "rmse": 0.010917192814763438,
     "single_pass_forward": true,
     "spearman": 0.9478039744471708,

@@ -522,17 +522,26 @@ harness de `code/mask_experiments/`:
 - **Task 2:** concluída no piloto (5 variantes × 4 ataques × 20 amostras,
   ataque adaptativo); resultados em `adversarial_pilot.json`.
 - **Task 3:** concluída no piloto (cascata e RePO sequencial); resultados em
-  `cascade_flow.json`. O ataque **direto** no estágio barato não foi
-  implementado; usou-se `iid-5` como proxy no piloto adversarial.
-- **Task 4:** parcial; aluno de passe único treinado e avaliado no cenário
-  normal (`distillation_flow.json`). O ataque adaptativo no aluno não foi
-  executado.
+  `cascade_flow.json`. O ataque **direto** no estágio barato foi executado em
+  `cascade_attack.json` (o ataque de referência não conseguiu bypassar
+  `t_low`).
+- **Task 4:** concluída no piloto; aluno de passe único treinado, avaliado no
+  cenário normal (`distillation_flow.json`) e atacado diretamente
+  (`distill_attack.json`). A destilação perde robustez adversarial.
 - **Task 5:** parcial; avaliação **normal** dos pacotes com as três políticas
   (`packet_normal.json`). O ataque de pacotes não foi executado.
 - **Task 6:** consolidado em `docs/MASK_EFFICIENCY_RESULTS.md`; a seção do
   `report.tex` fica pendente até a rodada completa.
 
-As pendências (ataque no aluno, ataque no estágio barato da cascata, ataque de
-pacotes, arrays completos de 11 ataques) exigem GPU e entram na rodada do
-Apuana.
+**Integração com o Apuana (2026-11-10):** o namespace `mask-exp` de
+`cluster/submit.sh` e os casos `mask_*` de `cluster/slurm/job.sh` executam
+todas as direções, com arrays por ataque, merge automático
+(`mask_experiments.merge`) e relatório consolidado
+(`mask_experiments.aggregate`).  Ver `cluster/README.md`, seção 17, e
+`docs/APUANA_RUNBOOK.md`, seção 10.1.  As métricas adversariais por direção
+estão na seção 2 do relatório.
+
+As pendências (arrays completos de 11 ataques, ataque de pacotes, retreino
+com máscaras estruturadas e rodada em GPU) entram na execução do Apuana.
+
 

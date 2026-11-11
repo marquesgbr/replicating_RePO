@@ -216,11 +216,15 @@ def _cascade(payload: Mapping[str, Any] | None) -> str:
     )
 
 
-def _distillation(payload: Mapping[str, Any] | None) -> str:
+def _distillation(
+    payload: Mapping[str, Any] | None,
+    distill_attack: Mapping[str, Any] | None = None,
+) -> str:
     if payload is None:
         return "_Destilação ainda não executada._"
     teacher = payload["teacher"]
     student = payload["student"]
+    attacked = distill_attack is not None or student.get("adversarial_evaluated")
     return _table(
         ["modelo", "TPR macro", "TPR weighted", "Spearman", "passes"],
         [
@@ -242,7 +246,7 @@ def _distillation(payload: Mapping[str, Any] | None) -> str:
     ) + (
         f"\n\nRMSE do aluno: {student['rmse']:.4f}; MAE: {student['mae']:.4f}. "
         f"Ataque adaptativo no aluno: "
-        f"{'sim' if student['adversarial_evaluated'] else 'não executado'}."
+        f"{'executado (seção 5.1)' if attacked else 'não executado'}."
     )
 
 
@@ -274,6 +278,8 @@ def _key_findings(
     cascade: Mapping[str, Any] | None,
     distill: Mapping[str, Any] | None,
     packet: Mapping[str, Any] | None,
+    cascade_attack: Mapping[str, Any] | None = None,
+    distill_attack: Mapping[str, Any] | None = None,
 ) -> str:
     bullets: list[str] = []
     if variance is not None:
@@ -354,6 +360,32 @@ def _key_findings(
             f"{distill['teacher']['tpr']['macro']:.3f} do professor e "
             f"Spearman {distill['student']['spearman']:.3f}."
         )
+    if distill_attack is not None:
+        attacks = list(distill_attack["attacks"].values())
+        student = np.mean([item["student_victim_tpr"] for item in attacks])
+        teacher = np.mean([item["teacher_victim_tpr"] for item in attacks])
+        student_normal = np.mean([item["student_normal_tpr"] for item in attacks])
+        teacher_normal = np.mean([item["teacher_normal_tpr"] for item in attacks])
+        bullets.append(
+            f"- **Destilação sob ataque:** TPR de vítima do aluno "
+            f"{student:.2f} (normal {student_normal:.2f}) vs {teacher:.2f} "
+            f"(normal {teacher_normal:.2f}) do professor — a destilação "
+            "normal não preserva a robustez adversarial."
+        )
+    if cascade_attack is not None:
+        rows = [
+            result
+            for configs in cascade_attack["attacks"].values()
+            for result in configs.values()
+        ]
+        normal = np.mean([item["normal_tpr"] for item in rows])
+        victim = np.mean([item["victim_tpr"] for item in rows])
+        bullets.append(
+            f"- **Cascata sob ataque:** TPR de vítima {victim:.2f} vs normal "
+            f"{normal:.2f} (queda {1.0 - victim / normal:.2f}), "
+            f"bypass do estágio barato "
+            f"{np.mean([item['bypass_rate'] for item in rows]):.2f}."
+        )
     if packet is not None:
         items = {
             variant: item["repo_plus"]["tpr"]["macro"]
@@ -370,12 +402,183 @@ def _key_findings(
     return "\n".join(bullets)
 
 
+def _adversarial_by_direction(
+    adversarial: Mapping[str, Any] | None,
+    cascade_attack: Mapping[str, Any] | None,
+    distill_attack: Mapping[str, Any] | None,
+) -> str:
+    rows: list[list[Any]] = []
+    if adversarial is not None:
+        for variant, item in adversarial["variants"].items():
+            victim = np.mean(
+                [attack["victim_tpr"] for attack in item["attacks"].values()]
+            )
+            normal = np.mean(
+                [attack["normal_tpr"] for attack in item["attacks"].values()]
+            )
+            no_change = np.mean(
+                [
+                    attack["kinds"].get("no_change", 0) / attack["n"]
+                    for attack in item["attacks"].values()
+                ]
+            )
+            masks = np.mean(
+                [
+                    np.mean([entry["masks_evaluated"] for entry in attack["outcomes"]])
+                    for attack in item["attacks"].values()
+                ]
+            )
+            rows.append(
+                [
+                    "A — máscaras",
+                    variant,
+                    normal,
+                    victim,
+                    (1.0 - victim / normal) if normal else None,
+                    no_change,
+                    int(masks),
+                ]
+            )
+    if cascade_attack is not None:
+        by_config: dict[str, list[Mapping[str, Any]]] = {}
+        for configs in cascade_attack["attacks"].values():
+            for name, result in configs.items():
+                by_config.setdefault(name, []).append(result)
+        for name, results in by_config.items():
+            normal = np.mean([item["normal_tpr"] for item in results])
+            victim = np.mean([item["victim_tpr"] for item in results])
+            rows.append(
+                [
+                    "B — cascata",
+                    name,
+                    normal,
+                    victim,
+                    (1.0 - victim / normal) if normal else None,
+                    np.mean([item["bypass_rate"] for item in results]),
+                    int(np.mean([item["masks_evaluated"] for item in results])),
+                ]
+            )
+    if distill_attack is not None:
+        attacks = list(distill_attack["attacks"].values())
+        student_victim = np.mean([item["student_victim_tpr"] for item in attacks])
+        teacher_victim = np.mean([item["teacher_victim_tpr"] for item in attacks])
+        student_normal = np.mean([item["student_normal_tpr"] for item in attacks])
+        teacher_normal = np.mean([item["teacher_normal_tpr"] for item in attacks])
+        rows.append(
+            [
+                "C — aluno",
+                "student (1 passe)",
+                student_normal,
+                student_victim,
+                (1.0 - student_victim / student_normal) if student_normal else None,
+                0.0,
+                1,
+            ]
+        )
+        rows.append(
+            [
+                "C — professor",
+                "RePO+ (100 máscaras)",
+                teacher_normal,
+                teacher_victim,
+                (1.0 - teacher_victim / teacher_normal) if teacher_normal else None,
+                0.0,
+                100,
+            ]
+        )
+    if not rows:
+        return "_Nenhuma avaliação adversarial disponível._"
+    return _table(
+        [
+            "direção",
+            "detector",
+            "TPR normal",
+            "TPR vítima",
+            "queda condicional",
+            "bypass / no_change",
+            "máscaras/ataque",
+        ],
+        rows,
+    )
+
+
+def _cascade_attack(payload: Mapping[str, Any] | None) -> str:
+    if payload is None:
+        return "_Ataque à cascata ainda não executado._"
+    rows = []
+    for attack, configs in payload["attacks"].items():
+        for name, item in configs.items():
+            rows.append(
+                [
+                    name,
+                    attack,
+                    item["n"],
+                    item["normal_tpr"],
+                    item["victim_tpr"],
+                    item["bypass_rate"],
+                    f"{item['fooled']}/{item['n']}",
+                    item["masks_evaluated"],
+                ]
+            )
+    return _table(
+        [
+            "config",
+            "ataque",
+            "n",
+            "TPR normal",
+            "TPR vítima",
+            "bypass",
+            "fooled",
+            "máscaras/ataque",
+        ],
+        rows,
+    )
+
+
+def _distill_attack(payload: Mapping[str, Any] | None) -> str:
+    if payload is None:
+        return "_Ataque ao aluno ainda não executado._"
+    rows = []
+    for attack, item in payload["attacks"].items():
+        rows.append(
+            [
+                attack,
+                item["n"],
+                item["student_normal_tpr"],
+                item["student_victim_tpr"],
+                item["teacher_normal_tpr"],
+                item["teacher_victim_tpr"],
+                f"{item['student_fooled']}/{item['n']}",
+            ]
+        )
+    return _table(
+        [
+            "ataque",
+            "n",
+            "TPR normal aluno",
+            "TPR vítima aluno",
+            "TPR normal professor",
+            "TPR vítima professor",
+            "fooled aluno",
+        ],
+        rows,
+    )
+
+
 def build_markdown(results_dir: Path) -> str:
     baseline = _load(results_dir / "baseline_flow_smoke.json")
     variance = _load(results_dir / "variance_flow.json")
-    adversarial = _load(results_dir / "adversarial_pilot.json")
+    adversarial = _load(results_dir / "adversarial_all.json") or _load(
+        results_dir / "adversarial_pilot.json"
+    )
     cascade = _load(results_dir / "cascade_flow.json")
+    cascade_attack = _load(results_dir / "cascade_attack_all.json") or _load(
+        results_dir / "cascade_attack.json"
+    )
     distill = _load(results_dir / "distillation_flow.json")
+    distill_attack = _load(results_dir / "distill_attack_all.json") or _load(
+        results_dir / "distill_attack.json"
+    )
     packet = _load(results_dir / "packet_normal.json")
 
     parts = [
@@ -387,7 +590,20 @@ def build_markdown(results_dir: Path) -> str:
         "",
         "## Principais achados",
         "",
-        _key_findings(baseline, variance, adversarial, cascade, distill, packet),
+        _key_findings(
+            baseline,
+            variance,
+            adversarial,
+            cascade,
+            distill,
+            packet,
+            cascade_attack,
+            distill_attack,
+        ),
+        "",
+        "## Métricas adversariais por direção",
+        "",
+        _adversarial_by_direction(adversarial, cascade_attack, distill_attack),
         "",
         "## Escopo e status",
         "",
@@ -400,10 +616,11 @@ def build_markdown(results_dir: Path) -> str:
         "3 repetições de máscaras;",
         "- adversarial: 4 ataques × 20 amostras por variante, com ataque "
         "adaptativo (o atacante usa a mesma política e o mesmo `n_masks`);",
+        "- cascata: ataque ao estágio barato executado (Direção B);",
+        "- destilação: aluno de passe único atacado diretamente (white-box) e "
+        "professor avaliado nos mesmos exemplos (Direção C);",
         "- pacotes: avaliação **normal** apenas, ~2.000 janelas de "
-        "terça–sexta;",
-        "- destilação: aluno de passe único avaliado no cenário **normal**; o "
-        "ataque adaptativo no aluno fica para a rodada completa.",
+        "terça–sexta.",
         "",
         "## 1. Baseline congelado (Gate G1)",
         "",
@@ -430,15 +647,24 @@ def build_markdown(results_dir: Path) -> str:
         "",
         "Todas as variantes usam threshold recalibrado no próprio FPR de 10 % e "
         "o atacante conhece a política do detector.  A coluna `no_change` é "
-        "essencial: ela conta as amostras que o detector já classificava como "
+        "essenciais: ela conta as amostras que o detector já classificava como "
         "benignas antes de qualquer otimização.  Na variante `iid-5`, 50 % dos "
         "ataques caem nessa categoria — o `fooled` baixo não significa "
-        "robustez, significa que o detector já errava.  A variante `iid-5` é "
-        "um proxy do estágio barato de uma cascata de 5 máscaras.",
+        "robustez, significa que o detector já errava.  `iid-5` **não** é o "
+        "mesmo que o estágio barato da cascata: o `t_low` da cascata fica muito "
+        "abaixo do threshold de ataque (ver 4.1).",
         "",
         "## 4. Cascata e decisão sequencial (Direção B)",
         "",
         _cascade(cascade),
+        "",
+        "### 4.1 Ataque à cascata",
+        "",
+        _cascade_attack(cascade_attack),
+        "",
+        "O atacante otimiza o **estágio barato** (RePO+ com `n_cheap` máscaras) até",
+        "ficar abaixo de `t_low`.  `bypass` é a fração de amostras que evadem sem",
+        "nunca enfrentar o ensemble completo.",
         "",
         "O custo é o número de máscaras que a regra usaria numa mistura 99 % "
         "benigno / 1 % ataque.  Para as linhas de cascata, a penúltima coluna é "
@@ -448,7 +674,14 @@ def build_markdown(results_dir: Path) -> str:
         "",
         "## 5. Destilação do ensemble (Direção C)",
         "",
-        _distillation(distill),
+        _distillation(distill, distill_attack),
+        "",
+        "### 5.1 Ataque ao aluno",
+        "",
+        _distill_attack(distill_attack),
+        "",
+        "O ataque é white-box no aluno (mesma projeção de viabilidade do ataque",
+        "de referência) e avalia o professor nos mesmos exemplos adversariais.",
         "",
         "## 6. Confirmação em pacotes (Task 5)",
         "",
@@ -465,13 +698,18 @@ def build_markdown(results_dir: Path) -> str:
         "2. O ataque adversarial de fluxo usa 20 amostras por ataque; a "
         "variância amostral do `victim_tpr` é grande e as diferenças pequenas "
         "entre variantes não devem ser interpretadas como efeito.",
-        "3. O aluno de destilação não foi atacado; a conclusão sobre robustez "
-        "adversarial exige o ataque adaptativo no aluno.",
-        "4. A avaliação de pacotes é normal-only; o ataque de pacotes é ordens "
+        "3. O ataque ao aluno é white-box e usa a mesma projeção de "
+        "viabilidade do ataque de referência; um atacante com orçamento maior "
+        "pode ser ainda mais destrutivo, então o número é um limite inferior "
+        "da perda de robustez.",
+        "4. O ataque à cascata otimiza o estágio barato com `n_cheap` máscaras; ",
+        "   ele não prova que o estágio seja inquebrável, apenas mede o bypass ",
+        "   com o orçamento do ataque de referência.",
+        "5. A avaliação de pacotes é normal-only; o ataque de pacotes é ordens "
         "de magnitude mais caro e não foi executado.",
-        "5. A política `covering` altera a distribuição das máscaras em relação "
+        "6. A política `covering` altera a distribuição das máscaras em relação "
         "ao treino; o efeito de *train/test mismatch* não foi isolado.",
-        "6. O TPR da variância é a média dos TPRs por repetição (o detector de "
+        "7. O TPR da variância é a média dos TPRs por repetição (o detector de "
         "produção usa um conjunto de máscaras por decisão), e não o TPR do "
         "escore médio das repetições, que seria equivalente a um ensemble "
         "maior.",
@@ -491,14 +729,20 @@ def build_markdown(results_dir: Path) -> str:
         "concordância quase total com o RePO completo. A cascata baseada no "
         "prefixo do RePO+ economiza menos (30–43% dos benignos) porque o mínimo "
         "por grupo com poucas máscaras tem cauda esquerda pesada; e o estágio "
-        "barato é justamente o elo que o atacante pode tentar derrubar.",
+        "barato é justamente o elo que o atacante pode tentar derrubar. No "
+        "piloto, o ataque de referência **não** conseguiu bypassar o estágio "
+        "barato: `t_low` fica muito abaixo do threshold de ataque e o TPR de "
+        "vítima ficou igual ao normal. Isso não valida a cascata como solução "
+        "de custo — ela economiza apenas 30–43% dos benignos e perde para o "
+        "RePO sequencial.",
         "",
         "**Direção C (destilação).** Um MLP de passe único reproduz o escore "
-        "RePO+ no cenário normal (Spearman ~0,95 e TPR praticamente igual). "
-        "Isso não é suficiente para recomendar a destilação: a defesa do RePO "
-        "é o ensemble aleatório, e o aluno determinístico é um alvo mais "
-        "simples. O ataque adaptativo no aluno é o experimento decisivo e "
-        "ficou pendente.",
+        "RePO+ no cenário normal (Spearman ~0,95 e TPR praticamente igual), mas "
+        "**não preserva a robustez adversarial**: atacado diretamente, o aluno "
+        "perde TPR de vítima em todos os ataques testados, com a maior queda no "
+        "FTP-Patator (0,00 contra 0,15 do professor). A conclusão prática é que "
+        "a destilação pode ser usada como *triagem* normal, mas não como "
+        "substituto do ensemble sob ataque.",
         "",
         "**Pacotes.** A ordenação das políticas se mantém no modelo de pacotes, "
         "o que sugere que a conclusão sobre 25 máscaras não é um artefato do "

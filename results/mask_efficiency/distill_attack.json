@@ -1,0 +1,93 @@
+{
+  "attacks": {
+    "DDoS": {
+      "kinds": {
+        "backup": 2,
+        "evaded": 2,
+        "no_change": 7,
+        "not_fooled": 9
+      },
+      "masks_evaluated": 62920,
+      "n": 20,
+      "student_fooled": 2,
+      "student_normal_tpr": 0.65,
+      "student_victim_tpr": 0.55,
+      "teacher_fooled": 0,
+      "teacher_normal_tpr": 0.7,
+      "teacher_victim_tpr": 0.7
+    },
+    "DoS Hulk": {
+      "kinds": {
+        "backup": 0,
+        "evaded": 3,
+        "no_change": 1,
+        "not_fooled": 16
+      },
+      "masks_evaluated": 90310,
+      "n": 20,
+      "student_fooled": 3,
+      "student_normal_tpr": 0.95,
+      "student_victim_tpr": 0.8,
+      "teacher_fooled": 0,
+      "teacher_normal_tpr": 1.0,
+      "teacher_victim_tpr": 1.0
+    },
+    "DoS slowloris": {
+      "kinds": {
+        "backup": 5,
+        "evaded": 4,
+        "no_change": 4,
+        "not_fooled": 7
+      },
+      "masks_evaluated": 69710,
+      "n": 20,
+      "student_fooled": 4,
+      "student_normal_tpr": 0.8,
+      "student_victim_tpr": 0.6,
+      "teacher_fooled": 1,
+      "teacher_normal_tpr": 0.8,
+      "teacher_victim_tpr": 0.75
+    },
+    "FTP-Patator": {
+      "kinds": {
+        "backup": 0,
+        "evaded": 7,
+        "no_change": 13,
+        "not_fooled": 0
+      },
+      "masks_evaluated": 4530,
+      "n": 20,
+      "student_fooled": 7,
+      "student_normal_tpr": 0.35,
+      "student_victim_tpr": 0.0,
+      "teacher_fooled": 4,
+      "teacher_normal_tpr": 0.35,
+      "teacher_victim_tpr": 0.15
+    }
+  },
+  "dataset": {
+    "attack_factor": 0.8,
+    "attacks": {
+      "DDoS": 20,
+      "DoS Hulk": 20,
+      "DoS slowloris": 20,
+      "FTP-Patator": 20
+    },
+    "n_benign": 5000,
+    "name": "cicids2017-flow",
+    "seed": 2019
+  },
+  "experiment": "distill_attack",
+  "runtime_seconds": 147.1110662909996,
+  "schema_version": "mask_exp_v1",
+  "thresholds": {
+    "student": {
+      "attack": 0.018288344144821167,
+      "fpr_0.10": 0.02286043018102646
+    },
+    "teacher": {
+      "attack": 0.013390064639333985,
+      "fpr_0.10": 0.01673758079916748
+    }
+  }
+}

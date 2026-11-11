@@ -11,7 +11,23 @@
 - **Sequencial:** 5.6 máscaras/amostra, TPR macro 0.273 e 99.7% de concordância com o RePO completo.
 - **Cascata:** o melhor orçamento usa 61.7 máscaras/amostra e pula 43% dos benignos, mas o estágio barato tem FN de 1.0%.
 - **Destilação:** aluno de passe único tem TPR 0.276 vs 0.275 do professor e Spearman 0.948.
+- **Destilação sob ataque:** TPR de vítima do aluno 0.49 (normal 0.69) vs 0.65 (normal 0.71) do professor — a destilação normal não preserva a robustez adversarial.
+- **Cascata sob ataque:** TPR de vítima 0.34 vs normal 0.34 (queda 0.00), bypass do estágio barato 0.00.
 - **Pacotes (normal):** balanced-25 0.579; covering-25 0.574; iid-100 0.585 — melhor iid-100.
+
+## Métricas adversariais por direção
+
+| direção | detector | TPR normal | TPR vítima | queda condicional | bypass / no_change | máscaras/ataque |
+|---|---|---|---|---|---|---|
+| A — máscaras | balanced-25 | 0.7125 | 0.6000 | 0.1579 | 0.2750 | 14277 |
+| A — máscaras | covering-25 | 0.7250 | 0.6125 | 0.1552 | 0.2750 | 14481 |
+| A — máscaras | iid-100 | 0.7250 | 0.5750 | 0.2069 | 0.2750 | 57172 |
+| A — máscaras | iid-25 | 0.7250 | 0.5625 | 0.2241 | 0.2750 | 14590 |
+| A — máscaras | iid-5 | 0.6000 | 0.5750 | 0.0417 | 0.5000 | 2296 |
+| B — cascata | cheap25 | 0.3375 | 0.3375 | 0.0000 | 0.0000 | 27025 |
+| B — cascata | cheap5 | 0.3375 | 0.3375 | 0.0000 | 0.0000 | 5405 |
+| C — aluno | student (1 passe) | 0.6875 | 0.4875 | 0.2909 | 0.0000 | 1 |
+| C — professor | RePO+ (100 máscaras) | 0.7125 | 0.6500 | 0.0877 | 0.0000 | 100 |
 
 ## Escopo e status
 
@@ -19,8 +35,9 @@ Este relatório consolida um **piloto em CPU** das direções A (menos máscaras
 
 - fluxo: 5.000 benignos + 300 amostras por ataque (CICIDS2017), 3 repetições de máscaras;
 - adversarial: 4 ataques × 20 amostras por variante, com ataque adaptativo (o atacante usa a mesma política e o mesmo `n_masks`);
-- pacotes: avaliação **normal** apenas, ~2.000 janelas de terça–sexta;
-- destilação: aluno de passe único avaliado no cenário **normal**; o ataque adaptativo no aluno fica para a rodada completa.
+- cascata: ataque ao estágio barato executado (Direção B);
+- destilação: aluno de passe único atacado diretamente (white-box) e professor avaliado nos mesmos exemplos (Direção C);
+- pacotes: avaliação **normal** apenas, ~2.000 janelas de terça–sexta.
 
 ## 1. Baseline congelado (Gate G1)
 
@@ -94,7 +111,7 @@ Leitura: `n_masks` menor reduz o custo linearmente; a pergunta é quanto o TPR e
 | iid-25 | 0.0278 | 0.0223 | 0.5625 | 0.2750 | 0.2750 | 14590 |
 | iid-5 | 0.0799 | 0.0639 | 0.5750 | 0.0875 | 0.5000 | 2296 |
 
-Todas as variantes usam threshold recalibrado no próprio FPR de 10 % e o atacante conhece a política do detector.  A coluna `no_change` é essencial: ela conta as amostras que o detector já classificava como benignas antes de qualquer otimização.  Na variante `iid-5`, 50 % dos ataques caem nessa categoria — o `fooled` baixo não significa robustez, significa que o detector já errava.  A variante `iid-5` é um proxy do estágio barato de uma cascata de 5 máscaras.
+Todas as variantes usam threshold recalibrado no próprio FPR de 10 % e o atacante conhece a política do detector.  A coluna `no_change` é essenciais: ela conta as amostras que o detector já classificava como benignas antes de qualquer otimização.  Na variante `iid-5`, 50 % dos ataques caem nessa categoria — o `fooled` baixo não significa robustez, significa que o detector já errava.  `iid-5` **não** é o mesmo que o estágio barato da cascata: o `t_low` da cascata fica muito abaixo do threshold de ataque (ver 4.1).
 
 ## 4. Cascata e decisão sequencial (Direção B)
 
@@ -112,6 +129,23 @@ Todas as variantes usam threshold recalibrado no próprio FPR de 10 % e o atacan
 | cheap5_fn0.01 | 65.0225 | 0.2730 | 0.1988 | 0.3718 | 0.0102 |
 | RePO sequencial | 5.5513 | 0.2733 | 0.1813 | 0.0102 | 0.9966 |
 
+### 4.1 Ataque à cascata
+
+| config | ataque | n | TPR normal | TPR vítima | bypass | fooled | máscaras/ataque |
+|---|---|---|---|---|---|---|---|
+| cheap25 | DDoS | 20 | 0.4000 | 0.4000 | 0.0000 | 0/20 | 27025 |
+| cheap5 | DDoS | 20 | 0.4000 | 0.4000 | 0.0000 | 0/20 | 5405 |
+| cheap25 | DoS Hulk | 20 | 0.7500 | 0.7500 | 0.0000 | 0/20 | 27025 |
+| cheap5 | DoS Hulk | 20 | 0.7500 | 0.7500 | 0.0000 | 0/20 | 5405 |
+| cheap25 | DoS slowloris | 20 | 0.2000 | 0.2000 | 0.0000 | 0/20 | 27025 |
+| cheap5 | DoS slowloris | 20 | 0.2000 | 0.2000 | 0.0000 | 0/20 | 5405 |
+| cheap25 | FTP-Patator | 20 | 0.0000 | 0.0000 | 0.0000 | 0/20 | 27025 |
+| cheap5 | FTP-Patator | 20 | 0.0000 | 0.0000 | 0.0000 | 0/20 | 5405 |
+
+O atacante otimiza o **estágio barato** (RePO+ com `n_cheap` máscaras) até
+ficar abaixo de `t_low`.  `bypass` é a fração de amostras que evadem sem
+nunca enfrentar o ensemble completo.
+
 O custo é o número de máscaras que a regra usaria numa mistura 99 % benigno / 1 % ataque.  Para as linhas de cascata, a penúltima coluna é a taxa de benignos que pulam o ensemble e a última é o FN do estágio barato; para o RePO sequencial, a penúltima é o FPR e a última é a concordância com o RePO completo.
 
 ## 5. Destilação do ensemble (Direção C)
@@ -121,7 +155,19 @@ O custo é o número de máscaras que a regra usaria numa mistura 99 % benigno /
 | professor (100 máscaras) | 0.2751 | 0.2075 | 1.0000 | 100 |
 | aluno (passe único) | 0.2761 | 0.2087 | 0.9478 | 1 |
 
-RMSE do aluno: 0.0109; MAE: 0.0074. Ataque adaptativo no aluno: não executado.
+RMSE do aluno: 0.0109; MAE: 0.0074. Ataque adaptativo no aluno: executado (seção 5.1).
+
+### 5.1 Ataque ao aluno
+
+| ataque | n | TPR normal aluno | TPR vítima aluno | TPR normal professor | TPR vítima professor | fooled aluno |
+|---|---|---|---|---|---|---|
+| DDoS | 20 | 0.6500 | 0.5500 | 0.7000 | 0.7000 | 2/20 |
+| DoS Hulk | 20 | 0.9500 | 0.8000 | 1.0000 | 1.0000 | 3/20 |
+| DoS slowloris | 20 | 0.8000 | 0.6000 | 0.8000 | 0.7500 | 4/20 |
+| FTP-Patator | 20 | 0.3500 | 0.0000 | 0.3500 | 0.1500 | 7/20 |
+
+O ataque é white-box no aluno (mesma projeção de viabilidade do ataque
+de referência) e avalia o professor nos mesmos exemplos adversariais.
 
 ## 6. Confirmação em pacotes (Task 5)
 
@@ -142,18 +188,21 @@ O TPR absoluto de pacotes não é comparável ao artigo porque o threshold foi c
 
 1. Os números são de um piloto em CPU, com amostras menores que as do plano; não substituem as rodadas completas no Apuana.
 2. O ataque adversarial de fluxo usa 20 amostras por ataque; a variância amostral do `victim_tpr` é grande e as diferenças pequenas entre variantes não devem ser interpretadas como efeito.
-3. O aluno de destilação não foi atacado; a conclusão sobre robustez adversarial exige o ataque adaptativo no aluno.
-4. A avaliação de pacotes é normal-only; o ataque de pacotes é ordens de magnitude mais caro e não foi executado.
-5. A política `covering` altera a distribuição das máscaras em relação ao treino; o efeito de *train/test mismatch* não foi isolado.
-6. O TPR da variância é a média dos TPRs por repetição (o detector de produção usa um conjunto de máscaras por decisão), e não o TPR do escore médio das repetições, que seria equivalente a um ensemble maior.
+3. O ataque ao aluno é white-box e usa a mesma projeção de viabilidade do ataque de referência; um atacante com orçamento maior pode ser ainda mais destrutivo, então o número é um limite inferior da perda de robustez.
+4. O ataque à cascata otimiza o estágio barato com `n_cheap` máscaras; 
+   ele não prova que o estágio seja inquebrável, apenas mede o bypass 
+   com o orçamento do ataque de referência.
+5. A avaliação de pacotes é normal-only; o ataque de pacotes é ordens de magnitude mais caro e não foi executado.
+6. A política `covering` altera a distribuição das máscaras em relação ao treino; o efeito de *train/test mismatch* não foi isolado.
+7. O TPR da variância é a média dos TPRs por repetição (o detector de produção usa um conjunto de máscaras por decisão), e não o TPR do escore médio das repetições, que seria equivalente a um ensemble maior.
 
 ## 8. Conclusões por direção
 
 **Direção A (menos máscaras / máscaras estruturadas).** O TPR macro é notavelmente estável com 25 máscaras: a perda fica dentro do ruído do piloto e o custo cai ~4×. As máscaras `balanced` e `covering` não superam a `iid` em TPR, mas `covering` reduz o desvio do escore entre repetições. O ganho é real, mas o limite seguro depende do ataque: a variante de 5 máscaras já mostra que o detector fica mais fácil de satisfazer (muitos ataques viram `no_change`).
 
-**Direção B (cascata / sequencial).** A decisão sequencial baseada na média é o melhor caminho: ~5–6 máscaras por amostra, mesmo TPR e concordância quase total com o RePO completo. A cascata baseada no prefixo do RePO+ economiza menos (30–43% dos benignos) porque o mínimo por grupo com poucas máscaras tem cauda esquerda pesada; e o estágio barato é justamente o elo que o atacante pode tentar derrubar.
+**Direção B (cascata / sequencial).** A decisão sequencial baseada na média é o melhor caminho: ~5–6 máscaras por amostra, mesmo TPR e concordância quase total com o RePO completo. A cascata baseada no prefixo do RePO+ economiza menos (30–43% dos benignos) porque o mínimo por grupo com poucas máscaras tem cauda esquerda pesada; e o estágio barato é justamente o elo que o atacante pode tentar derrubar. No piloto, o ataque de referência **não** conseguiu bypassar o estágio barato: `t_low` fica muito abaixo do threshold de ataque e o TPR de vítima ficou igual ao normal. Isso não valida a cascata como solução de custo — ela economiza apenas 30–43% dos benignos e perde para o RePO sequencial.
 
-**Direção C (destilação).** Um MLP de passe único reproduz o escore RePO+ no cenário normal (Spearman ~0,95 e TPR praticamente igual). Isso não é suficiente para recomendar a destilação: a defesa do RePO é o ensemble aleatório, e o aluno determinístico é um alvo mais simples. O ataque adaptativo no aluno é o experimento decisivo e ficou pendente.
+**Direção C (destilação).** Um MLP de passe único reproduz o escore RePO+ no cenário normal (Spearman ~0,95 e TPR praticamente igual), mas **não preserva a robustez adversarial**: atacado diretamente, o aluno perde TPR de vítima em todos os ataques testados, com a maior queda no FTP-Patator (0,00 contra 0,15 do professor). A conclusão prática é que a destilação pode ser usada como *triagem* normal, mas não como substituto do ensemble sob ataque.
 
 **Pacotes.** A ordenação das políticas se mantém no modelo de pacotes, o que sugere que a conclusão sobre 25 máscaras não é um artefato do fluxo. A confirmação adversarial de pacotes continua em aberto.
 
