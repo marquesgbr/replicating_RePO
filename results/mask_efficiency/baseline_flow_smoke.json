@@ -1,0 +1,334 @@
+{
+  "config_hash": "cc079ac066c6b0f14f03344adac270e5847f224d3ff6dfc80f3a7b0947ed49bc",
+  "cost": {
+    "masked_rows": 3009400,
+    "mean_call_ms": 1.172,
+    "model_calls": 30094,
+    "model_seconds": 35.257733
+  },
+  "dataset": {
+    "counts": {
+      "BENIGN": 10000,
+      "Bot": 500,
+      "DDoS": 500,
+      "DoS GoldenEye": 500,
+      "DoS Hulk": 500,
+      "DoS Slowhttptest": 500,
+      "DoS slowloris": 500,
+      "FTP-Patator": 500,
+      "Heartbleed": 11,
+      "Infiltration": 36,
+      "PortScan": 500,
+      "SSH-Patator": 500,
+      "Web Attack": 500
+    },
+    "days": [
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday"
+    ],
+    "n_features": 77,
+    "n_samples": 15047,
+    "name": "cicids2017-flow",
+    "sampling": {
+      "max_benign": 10000,
+      "max_per_attack": 500,
+      "seed": 2019
+    }
+  },
+  "environment": {
+    "keras": "3.15.1",
+    "machine": "x86_64",
+    "numpy": "2.5.4",
+    "pandas": "3.1.1",
+    "platform": "Linux-7.2.15-76070215-generic-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "python": "3.13.12",
+    "python_executable": "/tmp/opencode/tfvenv/bin/python",
+    "python_implementation": "CPython",
+    "tensorflow": null
+  },
+  "experiment": "baseline",
+  "git_commit": "e1cbb4edf8b9adffa75bde7bbe8441e08ac0ac29",
+  "model": {
+    "path": "/home/gl-pereira/Projects/replicating_RePO/models/flw_model",
+    "sha256": "5200bdd29cb97868f4830b882d01a1dfcf24462f5659f5b9ed1b1f550074cae2"
+  },
+  "modes": {
+    "repo": {
+      "average_tpr": {
+        "fpr_0.01": {
+          "macro": 0.24068686868686873,
+          "weighted": 0.15240818121838576
+        },
+        "fpr_0.1": {
+          "macro": 0.4783636363636363,
+          "weighted": 0.3945458544095008
+        }
+      },
+      "class_rates": {
+        "fpr_0.01": {
+          "BENIGN": {
+            "fpr": 0.01,
+            "n": 10000,
+            "rate": 0.01
+          },
+          "Bot": {
+            "n": 500,
+            "rate": 0.008
+          },
+          "DDoS": {
+            "n": 500,
+            "rate": 0.322
+          },
+          "DoS GoldenEye": {
+            "n": 500,
+            "rate": 0.16
+          },
+          "DoS Hulk": {
+            "n": 500,
+            "rate": 0.642
+          },
+          "DoS Slowhttptest": {
+            "n": 500,
+            "rate": 0.01
+          },
+          "DoS slowloris": {
+            "n": 500,
+            "rate": 0.2
+          },
+          "FTP-Patator": {
+            "n": 500,
+            "rate": 0.0
+          },
+          "Heartbleed": {
+            "n": 11,
+            "rate": 1.0
+          },
+          "Infiltration": {
+            "n": 36,
+            "rate": 0.3055555555555556
+          },
+          "PortScan": {
+            "n": 500,
+            "rate": 0.0
+          },
+          "SSH-Patator": {
+            "n": 500,
+            "rate": 0.0
+          },
+          "Web Attack": {
+            "n": 500,
+            "rate": 0.0
+          }
+        },
+        "fpr_0.1": {
+          "BENIGN": {
+            "fpr": 0.1,
+            "n": 10000,
+            "rate": 0.1
+          },
+          "Bot": {
+            "n": 500,
+            "rate": 0.018
+          },
+          "DDoS": {
+            "n": 500,
+            "rate": 0.624
+          },
+          "DoS GoldenEye": {
+            "n": 500,
+            "rate": 0.38
+          },
+          "DoS Hulk": {
+            "n": 500,
+            "rate": 0.694
+          },
+          "DoS Slowhttptest": {
+            "n": 500,
+            "rate": 0.432
+          },
+          "DoS slowloris": {
+            "n": 500,
+            "rate": 0.354
+          },
+          "FTP-Patator": {
+            "n": 500,
+            "rate": 0.006
+          },
+          "Heartbleed": {
+            "n": 11,
+            "rate": 1.0
+          },
+          "Infiltration": {
+            "n": 36,
+            "rate": 0.75
+          },
+          "PortScan": {
+            "n": 500,
+            "rate": 1.0
+          },
+          "SSH-Patator": {
+            "n": 500,
+            "rate": 0.004
+          },
+          "Web Attack": {
+            "n": 500,
+            "rate": 0.002
+          }
+        }
+      },
+      "fpr": {
+        "fpr_0.01": 0.01,
+        "fpr_0.1": 0.1
+      },
+      "thresholds": {
+        "fpr_0.01": 0.04109032346815021,
+        "fpr_0.1": 0.017585691749089395
+      }
+    },
+    "repo_plus": {
+      "average_tpr": {
+        "fpr_0.01": {
+          "macro": 0.25802020202020204,
+          "weighted": 0.18187816142511545
+        },
+        "fpr_0.1": {
+          "macro": 0.5642222222222222,
+          "weighted": 0.5040686166703321
+        }
+      },
+      "class_rates": {
+        "fpr_0.01": {
+          "BENIGN": {
+            "fpr": 0.01,
+            "n": 10000,
+            "rate": 0.01
+          },
+          "Bot": {
+            "n": 500,
+            "rate": 0.012
+          },
+          "DDoS": {
+            "n": 500,
+            "rate": 0.4
+          },
+          "DoS GoldenEye": {
+            "n": 500,
+            "rate": 0.218
+          },
+          "DoS Hulk": {
+            "n": 500,
+            "rate": 0.644
+          },
+          "DoS Slowhttptest": {
+            "n": 500,
+            "rate": 0.136
+          },
+          "DoS slowloris": {
+            "n": 500,
+            "rate": 0.206
+          },
+          "FTP-Patator": {
+            "n": 500,
+            "rate": 0.0
+          },
+          "Heartbleed": {
+            "n": 11,
+            "rate": 1.0
+          },
+          "Infiltration": {
+            "n": 36,
+            "rate": 0.2222222222222222
+          },
+          "PortScan": {
+            "n": 500,
+            "rate": 0.0
+          },
+          "SSH-Patator": {
+            "n": 500,
+            "rate": 0.0
+          },
+          "Web Attack": {
+            "n": 500,
+            "rate": 0.0
+          }
+        },
+        "fpr_0.1": {
+          "BENIGN": {
+            "fpr": 0.1,
+            "n": 10000,
+            "rate": 0.1
+          },
+          "Bot": {
+            "n": 500,
+            "rate": 0.026
+          },
+          "DDoS": {
+            "n": 500,
+            "rate": 0.616
+          },
+          "DoS GoldenEye": {
+            "n": 500,
+            "rate": 0.678
+          },
+          "DoS Hulk": {
+            "n": 500,
+            "rate": 0.998
+          },
+          "DoS Slowhttptest": {
+            "n": 500,
+            "rate": 0.92
+          },
+          "DoS slowloris": {
+            "n": 500,
+            "rate": 0.672
+          },
+          "FTP-Patator": {
+            "n": 500,
+            "rate": 0.466
+          },
+          "Heartbleed": {
+            "n": 11,
+            "rate": 1.0
+          },
+          "Infiltration": {
+            "n": 36,
+            "rate": 0.6944444444444444
+          },
+          "PortScan": {
+            "n": 500,
+            "rate": 0.13
+          },
+          "SSH-Patator": {
+            "n": 500,
+            "rate": 0.006
+          },
+          "Web Attack": {
+            "n": 500,
+            "rate": 0.02
+          }
+        }
+      },
+      "fpr": {
+        "fpr_0.01": 0.01,
+        "fpr_0.1": 0.1
+      },
+      "thresholds": {
+        "fpr_0.01": 0.10577873800976903,
+        "fpr_0.1": 0.016747926245271536
+      }
+    }
+  },
+  "runtime_seconds": 56.6708305850002,
+  "schema_version": "mask_exp_v1",
+  "scoring": {
+    "batch_size": 100,
+    "mask_probability": 0.75,
+    "n_masks": 100,
+    "policy": "iid",
+    "score_repeats": 1,
+    "seed": 2019
+  }
+}

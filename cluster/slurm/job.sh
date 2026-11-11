@@ -29,7 +29,20 @@ cd "${REPO_ROOT}"
 
 : "${TASK:?defina TASK=train|normal|adversarial|new_data_*}"
 
+# Listas passadas por --export usam '+' no lugar de ',' (mesma convenção do
+# SCORE_MODE dos jobs de fluxo/pacotes).
+if [[ "${TASK}" == mask_* ]]; then
+  MASK_VARIANTS="${MASK_VARIANTS:-}"
+  MASK_VARIANTS="${MASK_VARIANTS//+/,}"
+  MASK_CHEAP_ATTACK="${MASK_CHEAP_ATTACK:-}"
+  MASK_CHEAP_ATTACK="${MASK_CHEAP_ATTACK//+/,}"
+  export MASK_VARIANTS MASK_CHEAP_ATTACK
+fi
+
 print_runtime_env
+if [[ -n "${MASK_STEP_NOTE:-}" ]]; then
+  echo "[step] ${MASK_STEP_NOTE}"
+fi
 
 case "${TASK}" in
   new_data_*) MODEL="${MODEL:-new_data}" ;;
@@ -247,6 +260,219 @@ case "${TASK}" in
     exec "${PY}" "${REPO_ROOT}/cluster/aggregate_new_data.py" \
       --results-dir "${NEW_DATA_RESULTS}" \
       --out "${NEW_DATA_EXPORT_DIR:-${RESULTS_ROOT}/new_data/export}"
+    ;;
+  mask_baseline)
+    MASK_RESULTS="${MASK_RESULTS:-${RESULTS_ROOT}/mask_efficiency}"
+    MASK_MODEL_DIR="${MASK_MODEL_DIR:-${REPO_ROOT}/models/flw_model}"
+    mkdir -p "${MASK_RESULTS}"
+    MASK_ARGS=(
+      --data-dir "${REPO_ROOT}/data"
+      --model-dir "${MASK_MODEL_DIR}"
+      --max-benign "${MASK_MAX_BENIGN:-100000}"
+      --max-per-attack "${MASK_MAX_PER_ATTACK:-5000}"
+      --n-masks "${MASK_N_MASKS:-100}"
+      --batch-size "${MASK_BATCH_SIZE:-1024}"
+      --seed "${SEED}"
+      --out "${MASK_RESULTS}/baseline_flow.json"
+    )
+    if [[ -n "${MASK_CACHE:-}" ]]; then
+      MASK_ARGS+=(--cache "${MASK_CACHE}")
+    fi
+    exec "${PY}" -m mask_experiments.runner "${MASK_ARGS[@]}"
+    ;;
+  mask_variance)
+    MASK_RESULTS="${MASK_RESULTS:-${RESULTS_ROOT}/mask_efficiency}"
+    MASK_MODEL_DIR="${MASK_MODEL_DIR:-${REPO_ROOT}/models/flw_model}"
+    mkdir -p "${MASK_RESULTS}"
+    MASK_ARGS=(
+      --data-dir "${REPO_ROOT}/data"
+      --model-dir "${MASK_MODEL_DIR}"
+      --max-benign "${MASK_MAX_BENIGN:-100000}"
+      --max-per-attack "${MASK_MAX_PER_ATTACK:-5000}"
+      --n-masks "${MASK_VARIANCE_N:-5,10,20,25,50,100}"
+      --policies "${MASK_POLICIES:-iid,balanced,covering}"
+      --repeats "${MASK_REPEATS:-3}"
+      --batch-size "${MASK_BATCH_SIZE:-1024}"
+      --seed "${SEED}"
+      --out "${MASK_RESULTS}/variance_flow.json"
+      --csv "${MASK_RESULTS}/variance_flow.csv"
+    )
+    if [[ -n "${MASK_CACHE:-}" ]]; then
+      MASK_ARGS+=(--cache "${MASK_CACHE}")
+    fi
+    exec "${PY}" -m mask_experiments.variance "${MASK_ARGS[@]}"
+    ;;
+  mask_adversarial)
+    MASK_RESULTS="${MASK_RESULTS:-${RESULTS_ROOT}/mask_efficiency}"
+    MASK_MODEL_DIR="${MASK_MODEL_DIR:-${REPO_ROOT}/models/flw_model}"
+    ATTACK="${ATTACK:-}"
+    if [[ -z "${ATTACK}" && -n "${ATTACK_LIST_FILE:-}" ]]; then
+      if [[ -z "${SLURM_ARRAY_TASK_ID:-}" ]]; then
+        echo "[error] ATTACK_LIST_FILE exige um job array (SLURM_ARRAY_TASK_ID)" >&2
+        exit 2
+      fi
+      ATTACK="$(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" "${ATTACK_LIST_FILE}")"
+      ATTACK="${ATTACK%$'\r'}"
+    fi
+    if [[ -z "${ATTACK}" ]]; then
+      echo "[error] defina ATTACK ou ATTACK_LIST_FILE" >&2
+      exit 2
+    fi
+    mkdir -p "${MASK_RESULTS}/adversarial"
+    MASK_ARGS=(
+      --data-dir "${REPO_ROOT}/data"
+      --model-dir "${MASK_MODEL_DIR}"
+      --max-benign "${MASK_MAX_BENIGN:-100000}"
+      --max-per-attack "${MASK_MAX_PER_ATTACK:-5000}"
+      --per-attack "${MASK_PER_ATTACK:-5000}"
+      --attacks "${ATTACK}"
+      --variants "${MASK_VARIANTS:-iid:100,iid:25,balanced:25,covering:25}"
+      --batch-size "${MASK_BATCH_SIZE:-1024}"
+      --seed "${SEED}"
+      --out "${MASK_RESULTS}/adversarial/${ATTACK}.json"
+    )
+    if [[ -n "${MASK_CACHE:-}" ]]; then
+      MASK_ARGS+=(--cache "${MASK_CACHE}")
+    fi
+    exec "${PY}" -m mask_experiments.adversarial "${MASK_ARGS[@]}"
+    ;;
+  mask_cascade)
+    MASK_RESULTS="${MASK_RESULTS:-${RESULTS_ROOT}/mask_efficiency}"
+    MASK_MODEL_DIR="${MASK_MODEL_DIR:-${REPO_ROOT}/models/flw_model}"
+    mkdir -p "${MASK_RESULTS}"
+    MASK_ARGS=(
+      --data-dir "${REPO_ROOT}/data"
+      --model-dir "${MASK_MODEL_DIR}"
+      --max-benign "${MASK_MAX_BENIGN:-100000}"
+      --max-per-attack "${MASK_MAX_PER_ATTACK:-5000}"
+      --n-masks "${MASK_N_MASKS:-100}"
+      --repeats "${MASK_REPEATS:-3}"
+      --cheap "${MASK_CHEAP:-5,10,25}"
+      --fn-rates "${MASK_FN_RATES:-0.0,0.001,0.01}"
+      --batch-size "${MASK_BATCH_SIZE:-1024}"
+      --seed "${SEED}"
+      --out "${MASK_RESULTS}/cascade_flow.json"
+    )
+    if [[ -n "${MASK_CACHE:-}" ]]; then
+      MASK_ARGS+=(--cache "${MASK_CACHE}")
+    fi
+    exec "${PY}" -m mask_experiments.cascade "${MASK_ARGS[@]}"
+    ;;
+  mask_cascade_attack)
+    MASK_RESULTS="${MASK_RESULTS:-${RESULTS_ROOT}/mask_efficiency}"
+    MASK_MODEL_DIR="${MASK_MODEL_DIR:-${REPO_ROOT}/models/flw_model}"
+    ATTACK="${ATTACK:-}"
+    if [[ -z "${ATTACK}" && -n "${ATTACK_LIST_FILE:-}" ]]; then
+      if [[ -z "${SLURM_ARRAY_TASK_ID:-}" ]]; then
+        echo "[error] ATTACK_LIST_FILE exige um job array (SLURM_ARRAY_TASK_ID)" >&2
+        exit 2
+      fi
+      ATTACK="$(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" "${ATTACK_LIST_FILE}")"
+      ATTACK="${ATTACK%$'\r'}"
+    fi
+    if [[ -z "${ATTACK}" ]]; then
+      echo "[error] defina ATTACK ou ATTACK_LIST_FILE" >&2
+      exit 2
+    fi
+    mkdir -p "${MASK_RESULTS}/cascade_attack"
+    MASK_ARGS=(
+      --data-dir "${REPO_ROOT}/data"
+      --model-dir "${MASK_MODEL_DIR}"
+      --max-benign "${MASK_MAX_BENIGN:-100000}"
+      --max-per-attack "${MASK_MAX_PER_ATTACK:-5000}"
+      --per-attack "${MASK_PER_ATTACK:-5000}"
+      --attacks "${ATTACK}"
+      --cheap "${MASK_CHEAP_ATTACK:-5,25}"
+      --fn-rate "${MASK_CASCADE_FN:-0.01}"
+      --fpr "${MASK_CASCADE_FPR:-0.10}"
+      --batch-size "${MASK_BATCH_SIZE:-1024}"
+      --seed "${SEED}"
+      --out "${MASK_RESULTS}/cascade_attack/${ATTACK}.json"
+    )
+    if [[ -n "${MASK_CACHE:-}" ]]; then
+      MASK_ARGS+=(--cache "${MASK_CACHE}")
+    fi
+    exec "${PY}" -m mask_experiments.cascade_attack "${MASK_ARGS[@]}"
+    ;;
+  mask_distill)
+    MASK_RESULTS="${MASK_RESULTS:-${RESULTS_ROOT}/mask_efficiency}"
+    MASK_MODEL_DIR="${MASK_MODEL_DIR:-${REPO_ROOT}/models/flw_model}"
+    mkdir -p "${MASK_RESULTS}"
+    MASK_ARGS=(
+      --data-dir "${REPO_ROOT}/data"
+      --model-dir "${MASK_MODEL_DIR}"
+      --max-benign "${MASK_MAX_BENIGN:-100000}"
+      --max-per-attack "${MASK_MAX_PER_ATTACK:-5000}"
+      --n-masks "${MASK_N_MASKS:-100}"
+      --epochs "${MASK_EPOCHS:-40}"
+      --batch-size "${MASK_BATCH_SIZE:-1024}"
+      --seed "${SEED}"
+      --out "${MASK_RESULTS}/distillation_flow.json"
+      --student-out "${MASK_RESULTS}/distillation_student.keras"
+    )
+    if [[ -n "${MASK_CACHE:-}" ]]; then
+      MASK_ARGS+=(--cache "${MASK_CACHE}")
+    fi
+    exec "${PY}" -m mask_experiments.distill "${MASK_ARGS[@]}"
+    ;;
+  mask_distill_attack)
+    MASK_RESULTS="${MASK_RESULTS:-${RESULTS_ROOT}/mask_efficiency}"
+    MASK_MODEL_DIR="${MASK_MODEL_DIR:-${REPO_ROOT}/models/flw_model}"
+    ATTACK="${ATTACK:-}"
+    if [[ -z "${ATTACK}" && -n "${ATTACK_LIST_FILE:-}" ]]; then
+      if [[ -z "${SLURM_ARRAY_TASK_ID:-}" ]]; then
+        echo "[error] ATTACK_LIST_FILE exige um job array (SLURM_ARRAY_TASK_ID)" >&2
+        exit 2
+      fi
+      ATTACK="$(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" "${ATTACK_LIST_FILE}")"
+      ATTACK="${ATTACK%$'\r'}"
+    fi
+    if [[ -z "${ATTACK}" ]]; then
+      echo "[error] defina ATTACK ou ATTACK_LIST_FILE" >&2
+      exit 2
+    fi
+    if [[ ! -f "${MASK_RESULTS}/distillation_student.keras" ]]; then
+      echo "[error] aluno ausente: ${MASK_RESULTS}/distillation_student.keras" >&2
+      echo "[hint] rode 'bash cluster/submit.sh mask-exp distill' primeiro" >&2
+      exit 2
+    fi
+    mkdir -p "${MASK_RESULTS}/distill_attack"
+    MASK_ARGS=(
+      --data-dir "${REPO_ROOT}/data"
+      --model-dir "${MASK_MODEL_DIR}"
+      --student "${MASK_RESULTS}/distillation_student.keras"
+      --max-benign "${MASK_MAX_BENIGN:-100000}"
+      --max-per-attack "${MASK_MAX_PER_ATTACK:-5000}"
+      --per-attack "${MASK_PER_ATTACK:-5000}"
+      --attacks "${ATTACK}"
+      --batch-size "${MASK_BATCH_SIZE:-1024}"
+      --seed "${SEED}"
+      --out "${MASK_RESULTS}/distill_attack/${ATTACK}.json"
+    )
+    if [[ -n "${MASK_CACHE:-}" ]]; then
+      MASK_ARGS+=(--cache "${MASK_CACHE}")
+    fi
+    exec "${PY}" -m mask_experiments.distill_attack "${MASK_ARGS[@]}"
+    ;;
+  mask_packet)
+    MASK_RESULTS="${MASK_RESULTS:-${RESULTS_ROOT}/mask_efficiency}"
+    mkdir -p "${MASK_RESULTS}"
+    MASK_ARGS=(
+      --data-dir "${REPO_ROOT}/data"
+      --model-dir "${REPO_ROOT}/models/pkt_model"
+      --windows "${MASK_PACKET_WINDOWS:-2000}"
+      --variants "${MASK_PACKET_VARIANTS:-iid:100,balanced:25,covering:25}"
+      --seed "${SEED}"
+      --out "${MASK_RESULTS}/packet_normal.json"
+    )
+    exec "${PY}" -m mask_experiments.packet "${MASK_ARGS[@]}"
+    ;;
+  mask_aggregate)
+    MASK_RESULTS="${MASK_RESULTS:-${RESULTS_ROOT}/mask_efficiency}"
+    "${PY}" -m mask_experiments.merge --results-dir "${MASK_RESULTS}"
+    exec "${PY}" -m mask_experiments.aggregate \
+      --results-dir "${MASK_RESULTS}" \
+      --out "${MASK_RESULTS}/MASK_EFFICIENCY_RESULTS.md"
     ;;
   *)
     echo "[error] TASK inválido: ${TASK}" >&2

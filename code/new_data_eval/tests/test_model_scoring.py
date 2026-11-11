@@ -160,6 +160,52 @@ def test_score_repeats_average_independent_scores(tiny_model, meta):
     np.testing.assert_allclose(again, repeated, rtol=1e-12, atol=1e-12)
 
 
+def test_reconstruction_errors_match_the_reference_numbers():
+    """Guard the exact numeric path of the mask based scoring.
+
+    The expected values were produced by the reference implementation (before
+    the ``MaskPolicy`` abstraction) with an identity model, so a change in the
+    seed derivation, in the keep rule or in the error definition is caught even
+    without TensorFlow.
+    """
+
+    class Identity:
+        def __call__(self, inputs, training=False):
+            del training
+            return np.asarray(inputs, dtype=np.float32)
+
+    x = ((np.arange(3 * 77).reshape(3, 77) % 7) / 7.0).astype(np.float32)
+    train_min = np.zeros(77, dtype=np.float32)
+    train_max = np.ones(77, dtype=np.float32)
+
+    errors = reconstruction_errors(
+        Identity(), x, train_min, train_max, n_masks=10, batch_size=4, seed=2019
+    )
+    expected_errors = np.array(
+        [
+            [0.20063573, 0.19029914, 0.20461133, 0.17943248, 0.20434629,
+             0.20461134, 0.19241947, 0.20646662, 0.16087964, 0.19347963],
+            [0.21521296, 0.21150239, 0.19480483, 0.21468288, 0.22607962,
+             0.23827149, 0.19772028, 0.17969752, 0.19878044, 0.21468288],
+            [0.17890240, 0.18579345, 0.16962598, 0.17148126, 0.20010565,
+             0.22634466, 0.20911702, 0.19321459, 0.23032027, 0.19984061],
+        ]
+    )
+    np.testing.assert_allclose(errors, expected_errors, rtol=0.0, atol=1e-8)
+    np.testing.assert_allclose(
+        scoring.score_from_errors(errors, "repo"),
+        [0.19371817, 0.20914353, 0.19647459],
+        rtol=0.0,
+        atol=1e-8,
+    )
+    np.testing.assert_allclose(
+        scoring.score_from_errors(errors, "repo_plus"),
+        [0.92737702, 1.01086481, 0.94168922],
+        rtol=0.0,
+        atol=1e-8,
+    )
+
+
 def test_reconstruction_errors_average_the_repeats(monkeypatch, tiny_model, meta):
     # Two distinct, hand-written per-repeat error matrices.  Their mean is
     # different from either repeat, so a regression to errors[0] (or to any

@@ -478,3 +478,24 @@ def test_results_are_written_as_one_atomic_json_file(tmp_path):
     write_json_atomic(path, payload)
     assert json.loads(path.read_text())["model_type"] == MODEL_TYPE
     assert [item.name for item in path.parent.iterdir()] == ["repo_plus.json"]
+
+
+def test_build_normal_result_accepts_an_optional_cost_block():
+    cost = {"masked_rows": 500, "model_calls": 5, "model_seconds": 0.25,
+            "mean_call_ms": 50.0}
+
+    with_cost = build_normal_result(**_normal_inputs(), cost=cost)
+    without_cost = build_normal_result(**_normal_inputs())
+
+    assert with_cost["cost"] == cost
+    assert "cost" not in without_cost
+    # Instrumentation is not part of the run identity.
+    assert with_cost["config_hash"] == without_cost["config_hash"]
+
+
+def test_build_normal_result_rejects_invalid_cost_values():
+    with pytest.raises(ValueError, match="cost"):
+        build_normal_result(
+            **_normal_inputs(), cost={"masked_rows": -1}
+        )
+
