@@ -30,6 +30,7 @@ fi
 MODE="full"
 DRY_RUN=0
 SKIP_AGGREGATE=0
+CHAIN_DEPENDENCY="${CHAIN_DEPENDENCY:-}"
 
 usage() {
   cat <<'EOF'
@@ -40,6 +41,10 @@ Uso: bash cluster/run_mask_study.sh [opcoes]
   --dry-run         imprime os comandos e o manifesto sem submeter
   --no-aggregate    submete tudo menos o passo de agregacao
   -h, --help        esta ajuda
+
+Variavel opcional:
+  CHAIN_DEPENDENCY  dependencia SLURM para o primeiro job (ex.: afterok:12345),
+                    usada para encadear uma rodada completa depois de um smoke.
 EOF
 }
 
@@ -164,6 +169,9 @@ echo "[chain] amostra:    ${MASK_MAX_BENIGN} benignos + ${MASK_MAX_PER_ATTACK}/a
 echo "[chain] ataques:    ${MASK_ATTACK_SET}"
 echo "[chain] variantes:  ${MASK_VARIANTS}"
 echo "[chain] aprovacao:  ${MASK_PER_ATTACK}/ataque"
+if [[ -n "${CHAIN_DEPENDENCY}" ]]; then
+  echo "[chain] dependencia externa: ${CHAIN_DEPENDENCY}"
+fi
 echo "=================================================================="
 
 # ---------------------------------------------------------------------------
@@ -171,7 +179,7 @@ echo "=================================================================="
 # ---------------------------------------------------------------------------
 submit_step baseline \
   "Congela thresholds e TPR do RePO/RePO+ (100 mascaras) na mesma amostra; Gate G1." \
-  "" \
+  "${CHAIN_DEPENDENCY}" \
   bash "${CLUSTER_DIR}/submit.sh" mask-exp baseline
 
 # ---------------------------------------------------------------------------
