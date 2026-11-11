@@ -212,25 +212,25 @@ O TPR absoluto de pacotes não é comparável ao artigo porque o threshold foi c
 
 ## 9. Reprodução
 
+A cadeia completa no Apuana submete todas as etapas com dependências `afterok` e grava um manifesto dos jobs:
+
 ```bash
-cd code
-PYTHONPATH=. python -m mask_experiments.runner \
-  --max-benign 10000 --max-per-attack 500 --n-masks 100 \
-  --out ../results/mask_efficiency/baseline_flow_smoke.json
-
-PYTHONPATH=. python -m mask_experiments.variance \
-  --max-benign 5000 --max-per-attack 300 --repeats 3
-
-PYTHONPATH=. python -m mask_experiments.adversarial \
-  --per-attack 20 --variants iid:100,iid:25,balanced:25,covering:25
-
-PYTHONPATH=. python -m mask_experiments.cascade
-
-PYTHONPATH=. python -m mask_experiments.distill
-
-PYTHONPATH=. python -m mask_experiments.packet --windows 2000
-
-PYTHONPATH=. python -m mask_experiments.aggregate
+bash cluster/run_mask_study.sh            # matriz completa
+bash cluster/run_mask_study.sh --smoke    # smoke de todas as etapas
 ```
 
-Ambiente do piloto: Python 3.13, TensorFlow 2.21 CPU, NumPy 2.x, sem GPU.  Seed 2019 em todas as etapas.
+Cada job grava em `$RESULTS_ROOT/mask_efficiency/`; o último passo faz o merge dos arrays e gera este relatório.  Para rodar uma etapa isolada:
+
+```bash
+bash cluster/submit.sh mask-exp baseline
+bash cluster/submit.sh mask-exp variance
+bash cluster/submit.sh mask-exp adversarial all
+bash cluster/submit.sh mask-exp cascade
+bash cluster/submit.sh mask-exp cascade-attack all
+bash cluster/submit.sh mask-exp distill
+bash cluster/submit.sh mask-exp distill-attack all
+bash cluster/submit.sh mask-exp packet
+bash cluster/submit.sh mask-exp aggregate
+```
+
+O piloto local (Python 3.13, TensorFlow 2.21 CPU, sem GPU) usou `--max-benign 5000 --max-per-attack 300 --repeats 3 --per-attack 20`; os números de produção vêm dos defaults do `run_mask_study.sh`.  Seed 2019 em todas as etapas.

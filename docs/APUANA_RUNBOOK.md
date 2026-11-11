@@ -461,7 +461,17 @@ A matriz completa de runs (status, escala, custo e métricas afetadas) está em
 [`MASK_EFFICIENCY_RUNS.md`](MASK_EFFICIENCY_RUNS.md).
 
 O namespace `mask-exp` reaproveita o harness de `code/mask_experiments/` e
-roda as três direções com métricas adversariais por direção:
+roda as três direções com métricas adversariais por direção.  A cadeia
+completa, com dependências `afterok` e manifesto dos jobs, é um comando:
+
+```bash
+bash cluster/run_mask_study.sh            # matriz completa
+bash cluster/run_mask_study.sh --smoke    # valida todas as etapas
+bash cluster/run_mask_study.sh --dry-run  # só imprime o plano
+```
+
+Cada job recebe `MASK_STEP_NOTE` e o log começa com `[step] <descrição>`.
+Para rodar uma etapa isolada:
 
 ```bash
 bash cluster/submit.sh mask-exp baseline
@@ -476,7 +486,8 @@ bash cluster/submit.sh mask-exp aggregate            # merge + Markdown
 ```
 
 `distill-attack` só pode rodar depois do `distill` (o aluno fica em
-`$RESULTS_ROOT/mask_efficiency/distillation_student.keras`).  Para encadear:
+`$RESULTS_ROOT/mask_efficiency/distillation_student.keras`); a cadeia já usa
+`afterok`.  Para encadear manualmente:
 
 ```bash
 DISTILL_JOB=$(bash cluster/submit.sh mask-exp distill | awk 'NR==1{print $NF}')

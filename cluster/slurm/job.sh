@@ -40,6 +40,9 @@ if [[ "${TASK}" == mask_* ]]; then
 fi
 
 print_runtime_env
+if [[ -n "${MASK_STEP_NOTE:-}" ]]; then
+  echo "[step] ${MASK_STEP_NOTE}"
+fi
 
 case "${TASK}" in
   new_data_*) MODEL="${MODEL:-new_data}" ;;

@@ -28,6 +28,8 @@ O desenho segue o que já foi validado no projeto `ml_PIDS`:
 | `aggregate_new_data.py` | consolida os resultados do novo dataset | login |
 | `submit.sh` | submete os jobs e imprime os IDs | login |
 | `submit.sh new-data ...` | avalia o novo dataset (`data/new_data`) | login |
+| `submit.sh mask-exp ...` | roda uma etapa do estudo de máscaras | login |
+| `run_mask_study.sh` | submete a cadeia completa do estudo de máscaras com `afterok` | login |
 
 O runner preserva as fórmulas dos notebooks de referência:
 
@@ -567,37 +569,54 @@ por ataque e o agregador junta os JSONs e gera o Markdown.
 ### 17.1 Sequência recomendada
 
 A matriz completa (status de cada run, escala, custo e métricas afetadas) está
-em [`../docs/MASK_EFFICIENCY_RUNS.md`](../docs/MASK_EFFICIENCY_RUNS.md).  O
-roteiro abaixo é a execução de produção.
+em [`../docs/MASK_EFFICIENCY_RUNS.md`](../docs/MASK_EFFICIENCY_RUNS.md).
+
+**Cadeia completa em um comando** (no nó de login, dentro do repositório):
 
 ```bash
-# 1. baseline congelado (Gate G1)
+bash cluster/run_mask_study.sh            # produção
+bash cluster/run_mask_study.sh --smoke    # valida a cadeia inteira
+bash cluster/run_mask_study.sh --dry-run  # só imprime o plano
+```
+
+O script submete as etapas com dependências `afterok`, grava
+`$RESULTS_ROOT/mask_efficiency/chain_manifest.tsv` e passa `MASK_STEP_NOTE`
+para cada job; o log de cada job começa com `[step] <descrição>`.  Se uma
+etapa falhar, as seguintes não começam.  Para retomar, reenvie só a etapa que
+falhou e depois o `aggregate`.
+
+Etapas e o que cada uma faz:
+
+| Etapa | O que faz | Saída |
+|---|---|---|
+| `baseline` | congela thresholds/TPR do RePO e RePO+ (Gate G1) | `baseline_flow.json` |
+| `variance` | curva TPR normal × `n_masks` × política e custo | `variance_flow.json` |
+| `adversarial` | ataque adaptativo nas 9 variantes (array por ataque) | `adversarial/<ataque>.json` |
+| `cascade` | cascata + RePO sequencial na mistura 99/1 | `cascade_flow.json` |
+| `cascade_attack` | ataque ao estágio barato (array por ataque) | `cascade_attack/<ataque>.json` |
+| `distill` | treina o aluno de passe único | `distillation_flow.json` + `.keras` |
+| `distill_attack` | ataque white-box no aluno, professor pareado | `distill_attack/<ataque>.json` |
+| `packet` | confirmação normal no modelo de pacotes | `packet_normal.json` |
+| `aggregate` | merge dos arrays + Markdown consolidado | `MASK_EFFICIENCY_RESULTS.md` |
+
+Para submeter uma etapa isolada (ou depurar), use os comandos manuais:
+
+```bash
 bash cluster/submit.sh mask-exp baseline
-
-# 2. curva de variância e custo (Direção A)
 bash cluster/submit.sh mask-exp variance
-
-# 3. avaliação adversarial das políticas (Direção A)
 bash cluster/submit.sh mask-exp adversarial all
-
-# 4. cascata e decisão sequencial (Direção B)
 bash cluster/submit.sh mask-exp cascade
 bash cluster/submit.sh mask-exp cascade-attack all
-
-# 5. destilação e ataque ao aluno (Direção C)
 bash cluster/submit.sh mask-exp distill
 bash cluster/submit.sh mask-exp distill-attack all
-
-# 6. confirmação normal em pacotes
 bash cluster/submit.sh mask-exp packet
-
-# 7. merge dos arrays + relatório consolidado
 bash cluster/submit.sh mask-exp aggregate
 ```
 
 `mask-exp distill-attack` exige que `distillation_student.keras` já exista;
-submeta o `distill` primeiro (ou use `DEPENDENCY=afterok:<id>`). O
-`cascade-attack` recalcula os próprios thresholds e não depende do `cascade`.
+submeta o `distill` primeiro (ou use `DEPENDENCY=afterok:<id>`, que é o que a
+cadeia faz). O `cascade-attack` recalcula os próprios thresholds e não depende
+do `cascade`.
 
 ### 17.2 Métricas adversariais por direção
 
@@ -615,7 +634,13 @@ viabilidade e o atacante conhece a política/número de máscaras do detector.
 
 Os defaults do `mask-exp` são de produção (`MASK_MAX_BENIGN=100000`,
 `MASK_MAX_PER_ATTACK=5000`, `MASK_PER_ATTACK=5000`, 11 ataques).  Para um
-smoke barato:
+smoke barato de **todas as etapas**:
+
+```bash
+bash cluster/run_mask_study.sh --smoke
+```
+
+Para um smoke de uma etapa isolada:
 
 ```bash
 MASK_MAX_BENIGN=2000 MASK_MAX_PER_ATTACK=200 MASK_PER_ATTACK=20 \

@@ -486,6 +486,7 @@ task_mask_attack() {
     *) echo "[error] kind inválido: ${kind}" >&2; exit 2 ;;
   esac
   if [[ "${kind}" == "distill-attack" \
+     && -z "${DEPENDENCY:-}" \
      && ! -f "${RESULTS_ROOT}/mask_efficiency/distillation_student.keras" ]]; then
     echo "[error] aluno ausente: ${RESULTS_ROOT}/mask_efficiency/distillation_student.keras" >&2
     echo "[hint] rode 'bash cluster/submit.sh mask-exp distill' primeiro" >&2

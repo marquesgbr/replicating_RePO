@@ -318,6 +318,17 @@ R10 aggregate  ← depende de R2, R4, R6, R7
 Encadeamento no Apuana:
 
 ```bash
+bash cluster/run_mask_study.sh            # matriz completa
+bash cluster/run_mask_study.sh --smoke    # smoke de todas as etapas
+bash cluster/run_mask_study.sh --dry-run  # só imprime o plano
+```
+
+O script submete todas as etapas com `afterok`, grava o manifesto
+`$RESULTS_ROOT/mask_efficiency/chain_manifest.tsv` e injeta
+`MASK_STEP_NOTE` em cada job (o log começa com `[step] <descrição>`).  Se
+preferir encadear manualmente:
+
+```bash
 BASE=$(bash cluster/submit.sh mask-exp baseline | awk 'NR==1{print $NF}')
 VAR=$(DEPENDENCY="afterok:${BASE}" bash cluster/submit.sh mask-exp variance | awk 'NR==1{print $NF}')
 ADV=$(DEPENDENCY="afterok:${VAR}" bash cluster/submit.sh mask-exp adversarial all | awk 'NR==1{print $NF}')

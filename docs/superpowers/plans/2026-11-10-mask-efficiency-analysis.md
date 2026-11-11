@@ -538,9 +538,11 @@ harness de `code/mask_experiments/`:
 `cluster/submit.sh` e os casos `mask_*` de `cluster/slurm/job.sh` executam
 todas as direções, com arrays por ataque, merge automático
 (`mask_experiments.merge`) e relatório consolidado
-(`mask_experiments.aggregate`).  Ver `cluster/README.md`, seção 17, e
-`docs/APUANA_RUNBOOK.md`, seção 10.1.  As métricas adversariais por direção
-estão na seção 2 do relatório.
+(`mask_experiments.aggregate`).  A cadeia completa é submetida por
+`cluster/run_mask_study.sh` (dependências `afterok`, manifesto em
+`chain_manifest.tsv` e `[step]` no log de cada job).  Ver
+`cluster/README.md`, seção 17, e `docs/APUANA_RUNBOOK.md`, seção 10.1.  As
+métricas adversariais por direção estão na seção 2 do relatório.
 
 As pendências (arrays completos de 11 ataques, ataque de pacotes, retreino
 com máscaras estruturadas e rodada em GPU) entram na execução do Apuana.
