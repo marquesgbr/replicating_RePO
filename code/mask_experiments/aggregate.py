@@ -587,6 +587,9 @@ def build_markdown(results_dir: Path) -> str:
         "> Documento gerado por `python -m mask_experiments.aggregate`.  Todo número "
         "abaixo vem de um JSON em `results/mask_efficiency/`; os comandos de "
         "reprodução estão no fim.",
+        ">",
+        "> A matriz completa de runs (o que já foi feito, o que falta, escala e "
+        "custo) está em [`MASK_EFFICIENCY_RUNS.md`](MASK_EFFICIENCY_RUNS.md).",
         "",
         "## Principais achados",
         "",

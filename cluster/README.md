@@ -566,6 +566,10 @@ por ataque e o agregador junta os JSONs e gera o Markdown.
 
 ### 17.1 Sequência recomendada
 
+A matriz completa (status de cada run, escala, custo e métricas afetadas) está
+em [`../docs/MASK_EFFICIENCY_RUNS.md`](../docs/MASK_EFFICIENCY_RUNS.md).  O
+roteiro abaixo é a execução de produção.
+
 ```bash
 # 1. baseline congelado (Gate G1)
 bash cluster/submit.sh mask-exp baseline

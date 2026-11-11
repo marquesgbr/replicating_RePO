@@ -438,6 +438,7 @@ contradição é reportada).
 
 **Files:**
 - Create: `code/mask_experiments/aggregate.py`
+- Create: `docs/MASK_EFFICIENCY_RUNS.md` (matriz de runs e custo)
 - Modify: `report.tex`, `docs/REPLICATION_ANALYSIS.md` (seção nova),
   `docs/NEW_DATASET.md` (nota de protocolo, se aplicável)
 - Create: `docs/figures/cost_robustness.pdf`, `docs/figures/n_masks_curve.pdf`

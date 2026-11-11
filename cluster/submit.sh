@@ -518,6 +518,9 @@ task_mask_attack() {
   if [[ -n "${MASK_CASCADE_FN:-}" ]]; then
     extra+=",MASK_CASCADE_FN=${MASK_CASCADE_FN}"
   fi
+  if [[ -n "${MASK_CASCADE_FPR:-}" ]]; then
+    extra+=",MASK_CASCADE_FPR=${MASK_CASCADE_FPR}"
+  fi
   local job_name="repo-mask-${kind}"
   if [[ "${attack,,}" != "all" ]]; then
     job_name+="-$(echo "${attack}" | tr ' /' '--' | tr -cd '[:alnum:]._-')"
@@ -572,7 +575,8 @@ Variáveis: PARTITION, CPUS_PER_TASK, MEM, GRES, CONCURRENCY,
   MODEL_DIR, SEED, FORCE=1, NODELIST, MAX_SAMPLES, N_MASKS, BATCH_SIZE,
   CHECKPOINT_EVERY, SMOKE=1, DEPENDENCY=afterok:<jobid>.
   Máscaras: MASK_MAX_BENIGN, MASK_MAX_PER_ATTACK, MASK_PER_ATTACK,
-  MASK_VARIANTS, MASK_CHEAP_ATTACK, MASK_CASCADE_FN, MASK_ATTACK_SET=pilot|all.
+  MASK_VARIANTS, MASK_CHEAP_ATTACK, MASK_CASCADE_FN, MASK_CASCADE_FPR,
+  MASK_ATTACK_SET=pilot|all.
 EOF
 }
 

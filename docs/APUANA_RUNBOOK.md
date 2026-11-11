@@ -457,6 +457,9 @@ ls -1 "$SCRATCH/replicating-repo-results/logs/"repo-adv-*_*.out
 
 ### 10.1 Estudo de eficiência das máscaras (`mask-exp`)
 
+A matriz completa de runs (status, escala, custo e métricas afetadas) está em
+[`MASK_EFFICIENCY_RUNS.md`](MASK_EFFICIENCY_RUNS.md).
+
 O namespace `mask-exp` reaproveita o harness de `code/mask_experiments/` e
 roda as três direções com métricas adversariais por direção:
 
