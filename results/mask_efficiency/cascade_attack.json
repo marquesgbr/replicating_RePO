@@ -2,7 +2,7 @@
   "attacks": {
     "DDoS": {
       "cheap25": {
-        "already_benign": 12,
+        "already_benign": 5,
         "bypass_rate": 0.0,
         "conditional_drop": 0.0,
         "fooled": 0,
@@ -14,11 +14,11 @@
         },
         "masks_evaluated": 27025,
         "n": 20,
-        "normal_tpr": 0.4,
-        "victim_tpr": 0.4
+        "normal_tpr": 0.75,
+        "victim_tpr": 0.75
       },
       "cheap5": {
-        "already_benign": 12,
+        "already_benign": 5,
         "bypass_rate": 0.0,
         "conditional_drop": 0.0,
         "fooled": 0,
@@ -30,13 +30,13 @@
         },
         "masks_evaluated": 5405,
         "n": 20,
-        "normal_tpr": 0.4,
-        "victim_tpr": 0.4
+        "normal_tpr": 0.75,
+        "victim_tpr": 0.75
       }
     },
     "DoS Hulk": {
       "cheap25": {
-        "already_benign": 5,
+        "already_benign": 0,
         "bypass_rate": 0.0,
         "conditional_drop": 0.0,
         "fooled": 0,
@@ -48,11 +48,11 @@
         },
         "masks_evaluated": 27025,
         "n": 20,
-        "normal_tpr": 0.75,
-        "victim_tpr": 0.75
+        "normal_tpr": 1.0,
+        "victim_tpr": 1.0
       },
       "cheap5": {
-        "already_benign": 5,
+        "already_benign": 0,
         "bypass_rate": 0.0,
         "conditional_drop": 0.0,
         "fooled": 0,
@@ -64,13 +64,13 @@
         },
         "masks_evaluated": 5405,
         "n": 20,
-        "normal_tpr": 0.75,
-        "victim_tpr": 0.75
+        "normal_tpr": 1.0,
+        "victim_tpr": 1.0
       }
     },
     "DoS slowloris": {
       "cheap25": {
-        "already_benign": 16,
+        "already_benign": 8,
         "bypass_rate": 0.0,
         "conditional_drop": 0.0,
         "fooled": 0,
@@ -82,11 +82,11 @@
         },
         "masks_evaluated": 27025,
         "n": 20,
-        "normal_tpr": 0.2,
-        "victim_tpr": 0.2
+        "normal_tpr": 0.6,
+        "victim_tpr": 0.6
       },
       "cheap5": {
-        "already_benign": 16,
+        "already_benign": 8,
         "bypass_rate": 0.0,
         "conditional_drop": 0.0,
         "fooled": 0,
@@ -98,15 +98,15 @@
         },
         "masks_evaluated": 5405,
         "n": 20,
-        "normal_tpr": 0.2,
-        "victim_tpr": 0.2
+        "normal_tpr": 0.6,
+        "victim_tpr": 0.6
       }
     },
     "FTP-Patator": {
       "cheap25": {
-        "already_benign": 20,
+        "already_benign": 8,
         "bypass_rate": 0.0,
-        "conditional_drop": null,
+        "conditional_drop": 0.0,
         "fooled": 0,
         "kinds": {
           "backup": 0,
@@ -116,13 +116,13 @@
         },
         "masks_evaluated": 27025,
         "n": 20,
-        "normal_tpr": 0.0,
-        "victim_tpr": 0.0
+        "normal_tpr": 0.6,
+        "victim_tpr": 0.6
       },
       "cheap5": {
-        "already_benign": 20,
+        "already_benign": 8,
         "bypass_rate": 0.0,
-        "conditional_drop": null,
+        "conditional_drop": 0.0,
         "fooled": 0,
         "kinds": {
           "backup": 0,
@@ -132,8 +132,8 @@
         },
         "masks_evaluated": 5405,
         "n": 20,
-        "normal_tpr": 0.0,
-        "victim_tpr": 0.0
+        "normal_tpr": 0.6,
+        "victim_tpr": 0.6
       }
     }
   },
@@ -142,21 +142,21 @@
       "benign_skip_rate": 0.4152,
       "n_cheap": 25,
       "normal_tpr": {
-        "macro": 0.2727272727272727,
-        "weighted": 0.19839825263924282
+        "macro": 0.5667676767676767,
+        "weighted": 0.5089188205314888
       },
       "t_low": 0.00041998158535821745,
-      "threshold": 0.09681908121116986
+      "threshold": 0.01673758079916748
     },
     "cheap5": {
       "benign_skip_rate": 0.3692,
       "n_cheap": 5,
       "normal_tpr": {
-        "macro": 0.2727272727272727,
-        "weighted": 0.19839825263924282
+        "macro": 0.5667676767676767,
+        "weighted": 0.5089188205314888
       },
       "t_low": 0.0027779271037135277,
-      "threshold": 0.09681908121116986
+      "threshold": 0.01673758079916748
     }
   },
   "dataset": {
@@ -167,11 +167,12 @@
       "FTP-Patator": 20
     },
     "false_negative_rate_target": 0.01,
+    "fpr": 0.1,
     "n_benign": 5000,
     "name": "cicids2017-flow",
     "seed": 2019
   },
   "experiment": "cascade_attack",
-  "runtime_seconds": 374.78369170899987,
+  "runtime_seconds": 359.49173831699954,
   "schema_version": "mask_exp_v1"
 }

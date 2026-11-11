@@ -12,7 +12,7 @@
 - **Cascata:** o melhor orçamento usa 61.7 máscaras/amostra e pula 43% dos benignos, mas o estágio barato tem FN de 1.0%.
 - **Destilação:** aluno de passe único tem TPR 0.276 vs 0.275 do professor e Spearman 0.948.
 - **Destilação sob ataque:** TPR de vítima do aluno 0.49 (normal 0.69) vs 0.65 (normal 0.71) do professor — a destilação normal não preserva a robustez adversarial.
-- **Cascata sob ataque:** TPR de vítima 0.34 vs normal 0.34 (queda 0.00), bypass do estágio barato 0.00.
+- **Cascata sob ataque:** TPR de vítima 0.74 vs normal 0.74 (queda 0.00), bypass do estágio barato 0.00.
 - **Pacotes (normal):** balanced-25 0.579; covering-25 0.574; iid-100 0.585 — melhor iid-100.
 
 ## Métricas adversariais por direção
@@ -24,10 +24,12 @@
 | A — máscaras | iid-100 | 0.7250 | 0.5750 | 0.2069 | 0.2750 | 57172 |
 | A — máscaras | iid-25 | 0.7250 | 0.5625 | 0.2241 | 0.2750 | 14590 |
 | A — máscaras | iid-5 | 0.6000 | 0.5750 | 0.0417 | 0.5000 | 2296 |
-| B — cascata | cheap25 | 0.3375 | 0.3375 | 0.0000 | 0.0000 | 27025 |
-| B — cascata | cheap5 | 0.3375 | 0.3375 | 0.0000 | 0.0000 | 5405 |
+| B — cascata | cheap25 | 0.7375 | 0.7375 | 0.0000 | 0.0000 | 27025 |
+| B — cascata | cheap5 | 0.7375 | 0.7375 | 0.0000 | 0.0000 | 5405 |
 | C — aluno | student (1 passe) | 0.6875 | 0.4875 | 0.2909 | 0.0000 | 1 |
 | C — professor | RePO+ (100 máscaras) | 0.7125 | 0.6500 | 0.0877 | 0.0000 | 100 |
+
+Todas as taxas são medidas no threshold adversarial do próprio detector (FPR de 10 %; no fluxo, o threshold de ataque é 0,8× o threshold real).  `máscaras/ataque` é o custo do **ataque**, não o custo de produção: em A é o `n_masks` do detector/atacante, em B é o `n_cheap` do estágio barato e em C é 1 passe do aluno (o professor usa 100 máscaras).
 
 ## Escopo e status
 
@@ -133,14 +135,14 @@ Todas as variantes usam threshold recalibrado no próprio FPR de 10 % e o atacan
 
 | config | ataque | n | TPR normal | TPR vítima | bypass | fooled | máscaras/ataque |
 |---|---|---|---|---|---|---|---|
-| cheap25 | DDoS | 20 | 0.4000 | 0.4000 | 0.0000 | 0/20 | 27025 |
-| cheap5 | DDoS | 20 | 0.4000 | 0.4000 | 0.0000 | 0/20 | 5405 |
-| cheap25 | DoS Hulk | 20 | 0.7500 | 0.7500 | 0.0000 | 0/20 | 27025 |
-| cheap5 | DoS Hulk | 20 | 0.7500 | 0.7500 | 0.0000 | 0/20 | 5405 |
-| cheap25 | DoS slowloris | 20 | 0.2000 | 0.2000 | 0.0000 | 0/20 | 27025 |
-| cheap5 | DoS slowloris | 20 | 0.2000 | 0.2000 | 0.0000 | 0/20 | 5405 |
-| cheap25 | FTP-Patator | 20 | 0.0000 | 0.0000 | 0.0000 | 0/20 | 27025 |
-| cheap5 | FTP-Patator | 20 | 0.0000 | 0.0000 | 0.0000 | 0/20 | 5405 |
+| cheap25 | DDoS | 20 | 0.7500 | 0.7500 | 0.0000 | 0/20 | 27025 |
+| cheap5 | DDoS | 20 | 0.7500 | 0.7500 | 0.0000 | 0/20 | 5405 |
+| cheap25 | DoS Hulk | 20 | 1.0000 | 1.0000 | 0.0000 | 0/20 | 27025 |
+| cheap5 | DoS Hulk | 20 | 1.0000 | 1.0000 | 0.0000 | 0/20 | 5405 |
+| cheap25 | DoS slowloris | 20 | 0.6000 | 0.6000 | 0.0000 | 0/20 | 27025 |
+| cheap5 | DoS slowloris | 20 | 0.6000 | 0.6000 | 0.0000 | 0/20 | 5405 |
+| cheap25 | FTP-Patator | 20 | 0.6000 | 0.6000 | 0.0000 | 0/20 | 27025 |
+| cheap5 | FTP-Patator | 20 | 0.6000 | 0.6000 | 0.0000 | 0/20 | 5405 |
 
 O atacante otimiza o **estágio barato** (RePO+ com `n_cheap` máscaras) até
 ficar abaixo de `t_low`.  `bypass` é a fração de amostras que evadem sem

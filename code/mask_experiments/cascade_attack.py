@@ -68,6 +68,7 @@ def run_cascade_attack(
     attacks: Iterable[str] = DEFAULT_ATTACKS,
     cheap_options: Iterable[int] = DEFAULT_CHEAP,
     fn_rate: float = DEFAULT_FN_RATE,
+    fpr: float = 0.10,
     seed: int = 2019,
     batch_size: int = 100,
 ) -> dict[str, Any]:
@@ -123,6 +124,7 @@ def run_cascade_attack(
             "attacks": {name: int(len(rows)) for name, rows in selected.items()},
             "seed": seed,
             "false_negative_rate_target": fn_rate,
+            "fpr": float(fpr),
         },
         "configs": {},
         "attacks": {},
@@ -137,7 +139,7 @@ def run_cascade_attack(
         probe = cascade_decisions(
             errors, n_cheap=n_cheap, t_low=t_low, threshold=0.0
         )
-        threshold = threshold_at_fpr(probe.score[benign], 0.01)
+        threshold = threshold_at_fpr(probe.score[benign], fpr)
         full_original = cheap_repo_plus(errors, errors.shape[1])
         normal = _decide(cheap, full_original, t_low, threshold)
         config = {
@@ -250,6 +252,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--attacks", default=",".join(DEFAULT_ATTACKS))
     parser.add_argument("--cheap", default="5,25")
     parser.add_argument("--fn-rate", type=float, default=DEFAULT_FN_RATE)
+    parser.add_argument("--fpr", type=float, default=0.10)
     parser.add_argument("--seed", type=int, default=2019)
     parser.add_argument("--batch-size", type=int, default=100)
     parser.add_argument(
@@ -273,6 +276,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         attacks=[item.strip() for item in args.attacks.split(",") if item.strip()],
         cheap_options=[int(value) for value in args.cheap.split(",")],
         fn_rate=args.fn_rate,
+        fpr=args.fpr,
         seed=args.seed,
         batch_size=args.batch_size,
     )

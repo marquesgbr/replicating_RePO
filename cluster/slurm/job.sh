@@ -381,6 +381,7 @@ case "${TASK}" in
       --attacks "${ATTACK}"
       --cheap "${MASK_CHEAP_ATTACK:-5,25}"
       --fn-rate "${MASK_CASCADE_FN:-0.01}"
+      --fpr "${MASK_CASCADE_FPR:-0.10}"
       --batch-size "${MASK_BATCH_SIZE:-1024}"
       --seed "${SEED}"
       --out "${MASK_RESULTS}/cascade_attack/${ATTACK}.json"

@@ -605,6 +605,12 @@ def build_markdown(results_dir: Path) -> str:
         "",
         _adversarial_by_direction(adversarial, cascade_attack, distill_attack),
         "",
+        "Todas as taxas são medidas no threshold adversarial do próprio detector "
+        "(FPR de 10 %; no fluxo, o threshold de ataque é 0,8× o threshold real).  "
+        "`máscaras/ataque` é o custo do **ataque**, não o custo de produção: em "
+        "A é o `n_masks` do detector/atacante, em B é o `n_cheap` do estágio "
+        "barato e em C é 1 passe do aluno (o professor usa 100 máscaras).",
+        "",
         "## Escopo e status",
         "",
         "Este relatório consolida um **piloto em CPU** das direções A (menos "
