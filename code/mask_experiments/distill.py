@@ -120,7 +120,15 @@ def run_distillation(
             tf.keras.layers.Dense(1),
         ]
     )
-    student.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss="mse")
+    # XLA's Triton autotuner cannot compile GEMM configs on the small MIG
+    # slices of cluster-node6 (``Autotuner could not compile any configs for
+    # HLO``), which aborted the training run.  Keras resolves
+    # ``jit_compile="auto"`` to True on GPU, so opt out explicitly.
+    student.compile(
+        optimizer=tf.keras.optimizers.Adam(1e-3),
+        loss="mse",
+        jit_compile=False,
+    )
     history = student.fit(
         x_train,
         y_train,
