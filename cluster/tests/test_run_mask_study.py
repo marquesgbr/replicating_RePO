@@ -98,6 +98,7 @@ def test_smoke_chain_submits_all_steps_and_chains_dependencies(tmp_path):
     # The student is trained by an earlier job, so the submission guard must be
     # bypassed when a dependency is present.
     assert "TASK=mask_distill_attack" in log
+    assert "ATTACK_LIST_FILE=" in log
     assert "NOTE=" in log and "Ataque white-box no aluno" in log
 
     manifest = (

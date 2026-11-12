@@ -109,7 +109,9 @@ def _class_rates(
 
 
 def _load_npz(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    data = np.load(path)
+    # The cache is produced by this package; older files may contain object
+    # arrays for the string labels, so allow pickle when reading it back.
+    data = np.load(path, allow_pickle=True)
     return data["x"], data["labels"].astype(str), data["indices"]
 
 
@@ -135,7 +137,13 @@ def load_sample(
         )
         if cache is not None:
             cache.parent.mkdir(parents=True, exist_ok=True)
-            np.savez_compressed(cache, x=x, labels=labels, indices=indices)
+            # Fixed-width strings keep the cache loadable without pickle.
+            np.savez_compressed(
+                cache,
+                x=x,
+                labels=np.asarray(labels, dtype="U"),
+                indices=indices,
+            )
 
     # Deterministic subsample of the cached (already random) sample.
     generator = np.random.default_rng(seed + 1)
@@ -405,7 +413,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-dir", default=str(REPO_ROOT / "data"))
     parser.add_argument("--model-dir", default=str(REPO_ROOT / "models" / "flw_model"))
-    parser.add_argument("--cache", default="/tmp/opencode/mask_exp/sample_flow.npz")
+    parser.add_argument("--cache", default="")
     parser.add_argument("--max-benign", type=int, default=5_000)
     parser.add_argument("--max-per-attack", type=int, default=300)
     parser.add_argument("--n-masks", default="5,10,20,25,50,100")

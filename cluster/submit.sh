@@ -507,6 +507,7 @@ task_mask_attack() {
   count="$(grep -cve '^[[:space:]]*$' "${list_file}")"
   local array_spec="0-$((count - 1))%${CONCURRENCY}"
   local extra="MASK_RESULTS=${RESULTS_ROOT}/mask_efficiency"
+  extra+=",ATTACK_LIST_FILE=${list_file}"
   if [[ -n "${MASK_PER_ATTACK:-}" ]]; then
     extra+=",MASK_PER_ATTACK=${MASK_PER_ATTACK}"
   fi

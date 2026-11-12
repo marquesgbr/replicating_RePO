@@ -245,7 +245,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-dir", default=str(REPO_ROOT / "data"))
     parser.add_argument("--model-dir", default=str(REPO_ROOT / "models" / "flw_model"))
-    parser.add_argument("--cache", default="/tmp/opencode/mask_exp/sample_flow.npz")
+    parser.add_argument("--cache", default="")
     parser.add_argument("--max-benign", type=int, default=5_000)
     parser.add_argument("--max-per-attack", type=int, default=300)
     parser.add_argument("--n-masks", type=int, default=100)
