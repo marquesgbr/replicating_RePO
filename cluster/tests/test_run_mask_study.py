@@ -12,7 +12,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / "cluster" / "run_mask_study.sh"
 STEPS = (
     "baseline",
-    "variance",
+    "variance_iid",
+    "variance_balanced",
+    "variance_covering",
+    "variance_merge",
     "adversarial",
     "cascade",
     "cascade_attack",
@@ -100,6 +103,11 @@ def test_smoke_chain_submits_all_steps_and_chains_dependencies(tmp_path):
     assert "TASK=mask_distill_attack" in log
     assert "ATTACK_LIST_FILE=" in log
     assert "NOTE=" in log and "Ataque white-box no aluno" in log
+    # Direction A is split per policy so each job fits the walltime.
+    for policy in ("iid", "balanced", "covering"):
+        assert f"MASK_POLICIES={policy}" in log
+        assert f"MASK_VARIANCE_TAG={policy}" in log
+    assert "TASK=mask_merge" in log
 
     manifest = (
         tmp_path / "results" / "mask_efficiency" / "chain_manifest.tsv"

@@ -284,6 +284,12 @@ case "${TASK}" in
     MASK_RESULTS="${MASK_RESULTS:-${RESULTS_ROOT}/mask_efficiency}"
     MASK_MODEL_DIR="${MASK_MODEL_DIR:-${REPO_ROOT}/models/flw_model}"
     mkdir -p "${MASK_RESULTS}"
+    # The curve is split by policy so each SLURM job fits the walltime; the
+    # merge step joins the per-policy documents back into variance_flow.json.
+    MASK_VARIANCE_SUFFIX=""
+    if [[ -n "${MASK_VARIANCE_TAG:-}" ]]; then
+      MASK_VARIANCE_SUFFIX="_${MASK_VARIANCE_TAG}"
+    fi
     MASK_ARGS=(
       --data-dir "${REPO_ROOT}/data"
       --model-dir "${MASK_MODEL_DIR}"
@@ -294,8 +300,8 @@ case "${TASK}" in
       --repeats "${MASK_REPEATS:-3}"
       --batch-size "${MASK_BATCH_SIZE:-1024}"
       --seed "${SEED}"
-      --out "${MASK_RESULTS}/variance_flow.json"
-      --csv "${MASK_RESULTS}/variance_flow.csv"
+      --out "${MASK_RESULTS}/variance_flow${MASK_VARIANCE_SUFFIX}.json"
+      --csv "${MASK_RESULTS}/variance_flow${MASK_VARIANCE_SUFFIX}.csv"
     )
     if [[ -n "${MASK_CACHE:-}" ]]; then
       MASK_ARGS+=(--cache "${MASK_CACHE}")
@@ -466,6 +472,10 @@ case "${TASK}" in
       --out "${MASK_RESULTS}/packet_normal.json"
     )
     exec "${PY}" -m mask_experiments.packet "${MASK_ARGS[@]}"
+    ;;
+  mask_merge)
+    MASK_RESULTS="${MASK_RESULTS:-${RESULTS_ROOT}/mask_efficiency}"
+    exec "${PY}" -m mask_experiments.merge --results-dir "${MASK_RESULTS}"
     ;;
   mask_aggregate)
     MASK_RESULTS="${MASK_RESULTS:-${RESULTS_ROOT}/mask_efficiency}"

@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from mask_experiments.cascade_attack import _decide
 from mask_experiments.merge import (
     merge_adversarial,
     merge_cascade_attack,
     merge_distill_attack,
+    merge_variance,
 )
 
 
@@ -85,6 +88,49 @@ def test_merge_distill_attack_combines_attacks(tmp_path):
     )
     assert set(merged["attacks"]) == {"A", "B"}
     assert merged["dataset"]["attacks"] == {"A": 4, "B": 4}
+
+
+def _variance(policy: str) -> dict:
+    return {
+        "schema_version": "mask_exp_v1",
+        "experiment": "variance",
+        "dataset": {"name": "cicids2017-flow", "n_samples": 10},
+        "scoring": {
+            "n_masks": [5, 25],
+            "policies": [policy],
+            "score_repeats": 2,
+        },
+        "results": {policy: {"5": {"cost": {"samples": 10}}}},
+        "runtime_seconds": 1.5,
+    }
+
+
+def test_merge_variance_combines_policy_partials(tmp_path):
+    for policy in ("iid", "balanced", "covering"):
+        _write(tmp_path / f"variance_flow_{policy}.json", _variance(policy))
+
+    merged = merge_variance(tmp_path)
+
+    assert set(merged["results"]) == {"iid", "balanced", "covering"}
+    assert sorted(merged["scoring"]["policies"]) == ["balanced", "covering", "iid"]
+    assert merged["runtime_seconds"] == 4.5
+    written = json.loads((tmp_path / "variance_flow.json").read_text())
+    assert set(written["results"]) == {"iid", "balanced", "covering"}
+
+
+def test_merge_variance_rejects_incompatible_partials(tmp_path):
+    _write(tmp_path / "variance_flow_iid.json", _variance("iid"))
+    other = _variance("balanced")
+    other["dataset"]["n_samples"] = 99
+    _write(tmp_path / "variance_flow_balanced.json", other)
+
+    with pytest.raises(ValueError):
+        merge_variance(tmp_path)
+
+
+def test_merge_variance_without_partials_raises(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        merge_variance(tmp_path)
 
 
 def test_cascade_decision_requires_both_stages():

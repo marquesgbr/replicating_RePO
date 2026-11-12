@@ -183,19 +183,39 @@ submit_step baseline \
   bash "${CLUSTER_DIR}/submit.sh" mask-exp baseline
 
 # ---------------------------------------------------------------------------
-# 2. Direcao A — curva de variancia normal (depende do baseline).
+# 2. Direcao A — curva de variancia normal, uma politica por job.
+#
+# A curva completa nao cabe no walltime de um unico job (o custo e
+# amostras x n_mascaras x repeticoes x politicas), entao cada politica roda
+# como um job separado e o passo variance_merge junta os documentos.
 # ---------------------------------------------------------------------------
-submit_step variance \
-  "Curva TPR normal x n_masks x politica (5 repeticoes) e custo; define o joelho e testa o Gate G2." \
-  "afterok:${JOB[baseline]}" \
-  bash "${CLUSTER_DIR}/submit.sh" mask-exp variance
+IFS=',' read -r -a VARIANCE_POLICIES <<< "${MASK_POLICIES}"
+VARIANCE_JOBS=""
+for policy in "${VARIANCE_POLICIES[@]}"; do
+  policy="${policy//[[:space:]]/}"
+  [[ -n "${policy}" ]] || continue
+  submit_step "variance_${policy}" \
+    "Curva TPR normal x n_masks da politica ${policy}; define o joelho e testa o Gate G2." \
+    "afterok:${JOB[baseline]}" \
+    bash "${CLUSTER_DIR}/submit.sh" mask-exp variance "${policy}"
+  if [[ -n "${VARIANCE_JOBS}" ]]; then
+    VARIANCE_JOBS+=":${JOB[variance_${policy}]}"
+  else
+    VARIANCE_JOBS="${JOB[variance_${policy}]}"
+  fi
+done
+
+submit_step variance_merge \
+  "Une os documentos por politica em variance_flow.json para o restante da cadeia." \
+  "afterok:${VARIANCE_JOBS}" \
+  bash "${CLUSTER_DIR}/submit.sh" mask-exp merge
 
 # ---------------------------------------------------------------------------
 # 3. Direcao A — ataque adaptativo em todas as variantes.
 # ---------------------------------------------------------------------------
 submit_step adversarial \
   "Ataque adaptativo por ataque (array de 11); mede TPR de vitima, queda condicional, fooled, no_change e custo do ataque." \
-  "afterok:${JOB[variance]}" \
+  "afterok:${JOB[variance_merge]}" \
   bash "${CLUSTER_DIR}/submit.sh" mask-exp adversarial all
 
 # ---------------------------------------------------------------------------
@@ -203,7 +223,7 @@ submit_step adversarial \
 # ---------------------------------------------------------------------------
 submit_step cascade \
   "Cascata prefixo + RePO sequencial; mede mascaras/amostra na mistura 99/1, benignos que pulam o ensemble e FN do estagio barato." \
-  "afterok:${JOB[variance]}" \
+  "afterok:${JOB[variance_merge]}" \
   bash "${CLUSTER_DIR}/submit.sh" mask-exp cascade
 
 # ---------------------------------------------------------------------------
@@ -219,7 +239,7 @@ submit_step cascade_attack \
 # ---------------------------------------------------------------------------
 submit_step distill \
   "Treina o aluno que imita o escore RePO+ e grava distillation_student.keras; mede TPR normal, Spearman, RMSE e custo." \
-  "afterok:${JOB[variance]}" \
+  "afterok:${JOB[variance_merge]}" \
   bash "${CLUSTER_DIR}/submit.sh" mask-exp distill
 
 # ---------------------------------------------------------------------------
@@ -242,7 +262,7 @@ submit_step packet \
 # 9. Merge dos arrays + Markdown consolidado.
 # ---------------------------------------------------------------------------
 if [[ "${SKIP_AGGREGATE}" -eq 0 ]]; then
-  AGG_DEP="afterok:${JOB[baseline]}:${JOB[variance]}:${JOB[adversarial]}:${JOB[cascade]}:${JOB[cascade_attack]}:${JOB[distill]}:${JOB[distill_attack]}:${JOB[packet]}"
+  AGG_DEP="afterok:${JOB[baseline]}:${JOB[variance_merge]}:${JOB[adversarial]}:${JOB[cascade]}:${JOB[cascade_attack]}:${JOB[distill]}:${JOB[distill_attack]}:${JOB[packet]}"
   submit_step aggregate \
     "Faz o merge dos arrays e gera MASK_EFFICIENCY_RESULTS.md com as metricas por direcao." \
     "${AGG_DEP}" \
@@ -251,12 +271,11 @@ fi
 
 echo
 echo "[chain] cadeia submetida (${MODE})"
-printf '[chain] %-16s %-10s %s\n' "etapa" "job" "descricao"
-for step in baseline variance adversarial cascade cascade_attack distill distill_attack packet aggregate; do
-  if [[ -n "${JOB[${step}]:-}" ]]; then
-    printf '[chain] %-16s %-10s\n' "${step}" "${JOB[${step}]}"
-  fi
-done
+printf '[chain] %-18s %-10s %s\n' "etapa" "job" "descricao"
+while IFS=$'\t' read -r step job_id dep note; do
+  [[ "${step}" == "step" ]] && continue
+  printf '[chain] %-18s %-10s\n' "${step}" "${job_id}"
+done < "${MANIFEST}"
 echo "[chain] manifesto: ${MANIFEST}"
 echo "[chain] acompanhe: squeue -u \"\$USER\""
 echo "[chain] logs:      ${RESULTS_ROOT}/logs/"

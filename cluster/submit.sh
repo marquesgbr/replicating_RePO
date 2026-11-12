@@ -63,13 +63,14 @@ WALLTIME_ADV="${WALLTIME_ADV:-1-23:00:00}"
 WALLTIME_NEW_DATA_NORMAL="${WALLTIME_NEW_DATA_NORMAL:-02:00:00}"
 WALLTIME_NEW_DATA_ADV="${WALLTIME_NEW_DATA_ADV:-1-23:00:00}"
 WALLTIME_NEW_DATA_TRAIN="${WALLTIME_NEW_DATA_TRAIN:-1-00:00:00}"
-WALLTIME_MASK_BASELINE="${WALLTIME_MASK_BASELINE:-02:00:00}"
-WALLTIME_MASK_VARIANCE="${WALLTIME_MASK_VARIANCE:-06:00:00}"
+WALLTIME_MASK_BASELINE="${WALLTIME_MASK_BASELINE:-04:00:00}"
+WALLTIME_MASK_VARIANCE="${WALLTIME_MASK_VARIANCE:-1-23:00:00}"
 WALLTIME_MASK_ADV="${WALLTIME_MASK_ADV:-1-23:00:00}"
 WALLTIME_MASK_CASCADE="${WALLTIME_MASK_CASCADE:-06:00:00}"
 WALLTIME_MASK_DISTILL="${WALLTIME_MASK_DISTILL:-06:00:00}"
 WALLTIME_MASK_PACKET="${WALLTIME_MASK_PACKET:-06:00:00}"
 WALLTIME_MASK_AGGREGATE="${WALLTIME_MASK_AGGREGATE:-00:30:00}"
+WALLTIME_MASK_MERGE="${WALLTIME_MASK_MERGE:-00:30:00}"
 
 export_args() {
   local task="$1"
@@ -474,6 +475,28 @@ task_mask_single() {
   echo "[submit] mask-exp ${kind}: ${job_id}"
 }
 
+task_mask_variance() {
+  local policy="${1:-}"
+  local walltime="${WALLTIME_MASK_VARIANCE}"
+  local extra="MASK_RESULTS=${RESULTS_ROOT}/mask_efficiency"
+  local job_name="repo-mask-variance"
+  if [[ -n "${policy}" ]]; then
+    extra+=",MASK_POLICIES=${policy},MASK_VARIANCE_TAG=${policy}"
+    job_name+="-${policy}"
+  fi
+  local job_id
+  job_id="$(submit_gpu_job "${job_name}" "${walltime}" \
+    "$(export_args mask_variance flow "${extra}")")"
+  echo "[submit] mask-exp variance: ${job_id}"
+}
+
+task_mask_merge() {
+  local job_id
+  job_id="$(submit_cpu_job "repo-mask-merge" "${WALLTIME_MASK_MERGE}" \
+    "$(export_args mask_merge flow "MASK_RESULTS=${RESULTS_ROOT}/mask_efficiency")")"
+  echo "[submit] mask-exp merge: ${job_id}"
+}
+
 task_mask_attack() {
   local kind="$1"
   local attack="$2"
@@ -563,13 +586,14 @@ Novo dataset:
 
 Máscaras (eficiência do RePO):
   mask-exp baseline
-  mask-exp variance
+  mask-exp variance [politica]
   mask-exp adversarial <ataque|all>
   mask-exp cascade
   mask-exp cascade-attack <ataque|all>
   mask-exp distill
   mask-exp distill-attack <ataque|all>
   mask-exp packet
+  mask-exp merge
   mask-exp aggregate
 
 Variáveis: PARTITION, CPUS_PER_TASK, MEM, GRES, CONCURRENCY,
@@ -625,10 +649,11 @@ case "${command}" in
     shift || true
     case "${subcommand}" in
       baseline) task_mask_single baseline ;;
-      variance) task_mask_single variance ;;
+      variance) task_mask_variance "${1:-}" ;;
       cascade) task_mask_single cascade ;;
       distill) task_mask_single distill ;;
       packet) task_mask_single packet ;;
+      merge) task_mask_merge ;;
       adversarial)
         [[ $# -ge 1 ]] || { usage; exit 2; }
         task_mask_attack adversarial "$1"
