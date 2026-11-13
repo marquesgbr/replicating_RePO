@@ -2,8 +2,8 @@
 
 Este documento descreve o fluxo alternativo para executar o projeto diretamente
 na interface web do Google Colab. Para trabalhar pelo VS Code, consulte a seção
-de Colab no [README.md](./README.md) e o documento de compatibilidade em
-[gpu_tensorflow_compatibility.md](./gpu_tensorflow_compatibility.md).
+de Colab no [README.md](../README.md) e o documento de compatibilidade em
+[GPU_TENSORFLOW_COMPATIBILITY.md](./GPU_TENSORFLOW_COMPATIBILITY.md).
 
 ## 1. Criar um runtime com GPU
 
@@ -48,7 +48,7 @@ Se o repositório já existir na sessão:
 
 ## 3. Preparar o ambiente
 
-Abra [code/Colab_Setup.ipynb](./code/Colab_Setup.ipynb) no Colab e execute as
+Abra [code/Colab_Setup.ipynb](../code/Colab_Setup.ipynb) no Colab e execute as
 células em ordem. O roteiro verifica a GPU, configura a pasta `code`, importa
 `load_model_compat` e testa os modelos salvos.
 
@@ -96,4 +96,4 @@ Runtime → Restart session
 ```
 
 Depois do reinício, execute novamente o roteiro
-[Colab_Setup.ipynb](./code/Colab_Setup.ipynb) desde o início.
+[Colab_Setup.ipynb](../code/Colab_Setup.ipynb) desde o início.
