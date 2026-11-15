@@ -444,6 +444,12 @@ task_new_data_export_job() {
 
 mask_attack_set() {
   local set="${1:-pilot}"
+  # Permite passar um arquivo com um ataque por linha (usado para retomar um
+  # array que perdeu algumas tarefas por time limit).
+  if [[ -f "${set}" ]]; then
+    cat "${set}"
+    return 0
+  fi
   PYTHONPATH="${REPO_ROOT}/code" "${VENV}/bin/python" - "${set}" <<'PY'
 import sys
 
