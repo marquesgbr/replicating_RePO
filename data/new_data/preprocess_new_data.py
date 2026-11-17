@@ -1,11 +1,17 @@
-import pandas as pd
-import numpy as np
-from tqdm import tqdm
+"""Legacy preprocessing script for splitting the raw CIC-ToN-IoT CSV into train/test splits.
+
+Note: This script is kept for historical reference only; the canonical evaluation
+uses ``data/new_data/New-dataset-split-clean.zip`` directly.
+"""
+
 import os
 import subprocess
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 from sklearn.model_selection import train_test_split
+from tqdm import tqdm
 
 repo_dir = Path("/content/replicating_RePO")
 os.chdir(repo_dir)

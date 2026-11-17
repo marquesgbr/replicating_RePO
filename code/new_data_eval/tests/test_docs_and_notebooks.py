@@ -27,7 +27,8 @@ def test_new_dataset_doc_has_required_sections():
 
 def test_new_dataset_doc_documents_source_split_and_features():
     text = (REPO_ROOT / "docs" / "NEW_DATASET.md").read_text(encoding="utf-8")
-    assert "pendente" in text.lower()
+    assert "sarhan" in text.lower()
+    assert "100359" in text
     assert "New-dataset-split-clean.zip" in text
     assert "new_train.csv" in text
     assert "new_test.csv" in text
