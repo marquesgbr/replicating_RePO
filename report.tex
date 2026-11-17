@@ -59,9 +59,9 @@ discented@cin.ufpe.br}
 A evolução contínua em volume, diversidade e sofisticação dos ataques cibernéticos exige o desenvolvimento de Sistemas de Detecção de Intrusão em Redes capazes de identificar ameaças inéditas sob baixas taxas de falsos alertas.
 Diante da incapacidade dos sistemas tradicionais baseados em assinaturas para detectar ataques de dia zero, detectores de anomalias não supervisionados fundamentados em redes neurais profundas têm sido amplamente investigados.
 Entretanto, estudos recentes demonstram que tais modelos sofrem tanto de supergeneralização na reconstrução de tráfego quanto de severa vulnerabilidade a exemplos adversariais, nos quais um atacante perturba atributos de tráfego de modo a evadir a detecção sem violar a semântica dos protocolos de rede.
-Este trabalho realiza a reprodução experimental, a auditoria metodológica e a avaliação de generalização do método de Reconstrução a partir de Observação Parcial e de sua variante aprimorada com agregação por soma de mínimos grupais, propostos originalmente para elevar a robustez de detectores de anomalias baseados em autoencoders de remoção de ruído.
+Este trabalho realiza a reprodução experimental, a auditoria metodológica e a avaliação de generalização do método de Reconstrução a partir de Observação Parcial e de sua variante aprimorada com agregação por soma de mínimos por grupo, propostos originalmente para elevar a robustez de detectores de anomalias baseados em autoencoders de remoção de ruído.
 Os experimentos conduzidos sobre o conjunto de dados de referência nas granularidades de fluxos e de pacotes confirmam a alta fidelidade da reprodução em cenário normal, atingindo taxas médias de detecção de 25,25\% em fluxos e de 34,72\% em pacotes sob taxa de falsos positivos de 1\%, além de preservar a detecção acima da taxa de falsos positivos de 10\% em 9 de 11 ataques de fluxo e em 10 de 11 ataques de pacotes no cenário adversarial.
-Paralelamente, a investigação crítica do protocolo original revela limitações metodológicas importantes ligadas ao viés de amostragem temporal e à variância da reavaliação estocástica com máscara única.
+Paralelamente, a investigação do protocolo original revela limitações metodológicas importantes ligadas ao viés de amostragem temporal e à variância da reavaliação estocástica com máscara única.
 Por fim, a aplicação da metodologia a um conjunto adicional de fluxos de Internet das Coisas evidencia que o ganho proporcionado pela agregação de observações parciais se mantém fora do domínio original, mas que a eficácia da evasão adversarial é fortemente dependente das características estatísticas do conjunto de dados.
 \end{abstract}
 
@@ -77,11 +77,11 @@ Todavia, os NIDS tradicionais baseados em assinaturas mostram-se insuficientes f
 Para superar a rigidez das assinaturas, a literatura recente passou a empregar técnicas de aprendizado de máquina e aprendizado profundo na construção de NIDS baseados em detecção de anomalias \cite{alqatf2018, yu2017, yin2018, malaiya2018, mirsky2018, zong2018, zenati2018, chalapathy2019}.
 Esses sistemas são treinados de forma não supervisionada exclusivamente sobre tráfego benigno, aprendendo um perfil de normalidade da rede.
 Na fase de inferência, cada pacote ou fluxo observado recebe um escore de dissimilaridade em relação ao perfil aprendido; caso esse escore ultrapasse um limiar de decisão predefinido, o tráfego é classificado como malicioso.
-Para que um detector de anomalias seja operacionalmente viável em redes reais de alto volume, esse limiar deve ser calibrado de modo a garantir uma taxa de falsos positivos extremamente reduzida.
+Para que um detector de anomalias seja operacionalmente viável em redes reais de alto volume, esse limiar deve ser calibrado de modo a garantir uma taxa de falsos positivos ($\text{FPR}$, do inglês \textit{False Positive Rate}) extremamente reduzida.
 Caso contrário, em virtude da falácia da taxa base (\textit{base-rate fallacy}) \cite{axelsson2000}, o volume absoluto de alertas falsos gerados pelo tráfego legítimo inviabiliza a triagem humana por especialistas de segurança.
 
 Apesar do potencial dos NIDS baseados em aprendizado profundo, investigações recentes demonstraram que sua capacidade de detecção apresenta duas fragilidades estruturais graves \cite{hashemi2019, aiken2019, hashemi2020}.
-A primeira reside no problema de supergeneralização (\textit{over-generalization}) em modelos reconstrutivos convencionais, como \textit{autoencoders} treinados com observação completa dos atributos de entrada \cite{mirsky2018}: devido à elevada capacidade representacional das redes neurais, o modelo aprende transformações próximas à identidade e passa a reconstruir amostras anômalas — nunca vistas no treinamento — com erro tão baixo quanto o de amostras benignas, degradando drasticamente a taxa de detecção sob baixas taxas de falsos alertas.
+A primeira reside no problema de supergeneralização (\textit{over-generalization}) em modelos reconstrutivos convencionais, como \textit{autoencoders} treinados com observação completa dos atributos de entrada \cite{mirsky2018}: devido à elevada capacidade representacional das redes neurais, o modelo aprende transformações próximas à identidade e passa a reconstruir amostras anômalas — nunca vistas no treinamento — com erro tão baixo quanto o de amostras benignas, degradando drasticamente a taxa de detecção ($\text{TPR}$, do inglês \textit{True Positive Rate}, ou taxa de verdadeiros positivos) sob baixas taxas de falsos alertas.
 A segunda fragilidade decorre da natureza determinística desses modelos durante a inferência, o que os torna altamente suscetíveis a ataques de evasão por exemplos adversariais \cite{biggio2013, szegedy2013, hashemi2019}.
 Nesses ataques, o adversário manipula sutilmente o tráfego malicioso — por exemplo, alterando intervalos entre pacotes, fragmentando cargas úteis ou injetando pacotes sintéticos — para reduzir o escore de anomalia abaixo do limiar de detecção sem comprometer a funcionalidade do ataque nem violar os protocolos de comunicação subjacentes.
 
@@ -91,13 +91,13 @@ Ao exigir que a rede neural gere os atributos ausentes a partir de uma visão pa
 Adicionalmente, na inferência do RePO+, cada amostra é avaliada paralelamente sob $100$ máscaras aleatórias distintas divididas em $5$ grupos, somando-se os erros mínimos de cada grupo.
 Essa estratégia atenua o impacto de máscaras que ocultem atributos essenciais em amostras legítimas e introduz não-determinismo na inferência, dificultando a transferência de exemplos adversariais gerados em cópias locais do modelo pelo atacante.
 
-Neste contexto, o presente trabalho investiga a reprodutibilidade científica, a validade metodológica e a capacidade de generalização do sistema RePO/RePO+ em diferentes representações e domínios de tráfego de rede.
+Sob essa ótica, este trabalho investiga a reprodutibilidade científica, a validade metodológica e a capacidade de generalização do sistema RePO/RePO+ em diferentes representações e domínios de tráfego de rede.
 As principais contribuições deste trabalho são:
 
 \begin{itemize}
     \item Reproduzir integralmente e validar empiricamente os experimentos do artigo de referência \cite{hashemi2020} para detecção de intrusão baseada em fluxos e em pacotes sobre o conjunto de dados CICIDS2017 \cite{sharafaldin2018}, avaliando os modos RePO e RePO+ tanto no cenário normal ($\text{FPR} = 0{,}01$) quanto sob ataques adversariais ($\text{FPR} = 0{,}10$);
     \item Realizar uma auditoria metodológica e estatística rigorosa do protocolo experimental de referência, identificando e quantificando o impacto do viés de amostragem temporal na seleção sequencial de instâncias de ataque, da variância estocástica associada à reavaliação por máscara única e da desproporção amostral em classes minoritárias;
-    \item Estender a avaliação do método RePO/RePO+ e do ataque adversarial de fluxo para um novo conjunto de dados de tráfego de Internet das Coisas (CIC-ToN-IoT), demonstrando que a vantagem da agregação por mínimos grupais se mantém em um novo domínio, ao passo que a transferibilidade e o sucesso do ataque adversarial dependem fortemente da distribuição dos atributos e da escala dos escores de reconstrução.
+    \item Estender a avaliação do método RePO/RePO+ e do ataque adversarial de fluxo para um novo conjunto de dados de tráfego de Internet das Coisas (CIC-ToN-IoT), demonstrando que a vantagem da agregação por mínimos por grupo se mantém em um novo domínio, ao passo que a transferibilidade e o sucesso do ataque adversarial dependem fortemente da distribuição dos atributos e da escala dos escores de reconstrução.
 \end{itemize}
 
 \section{Trabalhos relacionados}
@@ -116,12 +116,12 @@ O Kitsune opera de maneira online extraindo estatísticas incrementais de fluxo 
 Embora apresente baixa sobrecarga computacional, o Kitsune reconstrói cada vetor a partir da observação integral de seus atributos.
 Consequentemente, a rede tende a sofrer de supergeneralização, produzindo erros de reconstrução reduzidos mesmo para pacotes maliciosos e resultando em baixa sensibilidade quando o limiar operacional é restrito a uma taxa de falsos positivos de $1\%$ \cite{hashemi2020}.
 
-No contexto de detecção baseada em fluxos, Zong et al. \cite{zong2018} introduziram o \textit{Deep Autoencoding Gaussian Mixture Model} (DAGMM), que acopla um \textit{autoencoder} profundo de compressão a uma sub-rede de estimação de mistura gaussiana treinada conjuntamente fim a fim.
+No contexto de detecção baseada em fluxos, Zong et al. \cite{zong2018} introduziram o \textit{Deep Autoencoding Gaussian Mixture Model} (DAGMM), que acopla um \textit{undercomplete autoencoder} profundo a uma sub-rede de mistura gaussiana -- que faz a estimativa -- treinada conjuntamente fim a fim.
 O modelo concatena a representação latente de baixa dimensão com métricas de erro de reconstrução para calcular a energia amostral de cada fluxo, classificando como anômalas as instâncias de alta energia.
-Apesar de mitigar ótimos locais decorrentes do desacoplamento entre redução de dimensionalidade e estimação de densidade, o DAGMM permanece determinístico e apresenta capacidade limitada para separar ataques complexos de fluxos benignos sob baixas taxas de falsos alertas.
+Apesar de mitigar ótimos locais decorrentes do desacoplamento entre redução de dimensionalidade e estimativa de densidade, o DAGMM permanece determinístico e apresenta capacidade limitada para separar ataques complexos de fluxos benignos sob baixas taxas de falsos alertas.
 
 Outra abordagem de destaque para dados tabulares e fluxos de rede é o detector baseado em Redes Adversariais Generativas Bidirecionais (BiGAN), proposto por Zenati et al. \cite{zenati2018}.
-Diferentemente de GANs convencionais que exigem otimização iterativa custosa para mapear uma amostra ao espaço latente, a arquitetura BiGAN treina simultaneamente um codificador e um gerador, definindo o escore de anomalia como uma combinação convexa entre o erro de reconstrução das características e o erro de discriminação conjunta.
+Diferentemente de GANs convencionais que exigem otimização iterativa custosa para mapear uma amostra ao espaço latente, a arquitetura BiGAN treina simultaneamente um codificador e um gerador, definindo o escore de anomalia como uma soma ponderada entre o erro de reconstrução das características e o erro de discriminação conjunta.
 Ainda que alcance inferência rápida e desempenho superior ao DAGMM em cenários normais de fluxo, a arquitetura BiGAN compartilha a vulnerabilidade estrutural de modelos determinísticos frente a perturbações adversariais direcionadas \cite{hashemi2019, hashemi2020}.
 
 \subsection{Exemplos Adversariais contra Sistemas de Detecção de Intrusão}
@@ -151,7 +151,7 @@ A Tabela~\ref{tab:trabalhos-relacionados} sintetiza os principais trabalhos rela
 \midrule
 Mirsky et al. (Kitsune) \cite{mirsky2018} & Conjunto (\textit{ensemble}) de \textit{autoencoders} (ou GMM) sobre estatísticas incrementais de pacotes. & Processamento online leve sem necessidade de supervisão; extração automática de agrupamentos de atributos. & Supergeneralização por observação completa da entrada; baixa detecção em $\text{FPR}=0{,}01$; altamente vulnerável a evasão adversarial determinística. \\
 \addlinespace
-Zong et al. (DAGMM) \cite{zong2018} & \textit{Autoencoder} profundo acoplado fim a fim a uma rede de estimação de Mistura Gaussiana. & Otimização conjunta do espaço latente e da densidade; evita ótimos locais na compressão de atributos de fluxo. & Inferência determinística; baixa sensibilidade sob limiares estritos de falsos alertas; suscetível a ataques adversariais em fluxos. \\
+Zong et al. (DAGMM) \cite{zong2018} & \textit{Autoencoder} profundo acoplado fim a fim a uma rede estimadora de Mistura Gaussiana. & Otimização conjunta do espaço latente e da densidade; evita ótimos locais na compressão de atributos de fluxo. & Inferência determinística; baixa sensibilidade sob limiares estritos de falsos alertas; suscetível a ataques adversariais em fluxos. \\
 \addlinespace
 Zenati et al. (BiGAN) \cite{zenati2018} & Rede Adversarial Generativa Bidirecional com codificador e gerador conjuntos. & Inferência rápida no espaço latente; combina erro de reconstrução e discriminação para detecção em fluxos. & Instabilidade de treinamento inerente a arquiteturas GAN; comportamento determinístico facilita evasão adversarial por gradiente. \\
 \addlinespace
@@ -159,7 +159,7 @@ Aiken e Scott-Hayward \cite{aiken2019} & Manipulação heurística de atributos 
 \addlinespace
 Hashemi et al. \cite{hashemi2019} & Otimização adversarial restrita ao domínio em nível de fluxo e transformações válidas em pacotes. & Formulação sistemática de ataques adversariais que preservam a semântica de rede contra NIDS estado da arte. & Atua exclusivamente no diagnóstico ofensivo da vulnerabilidade; não propõe mecanismo de defesa para os detectores avaliados. \\
 \addlinespace
-Hashemi e Keller (RePO / RePO+) \cite{hashemi2020} & \textit{Denoising Autoencoders} com mascaramento aleatório parcial e agregação por mínimos grupais. & Mitiga a supergeneralização; estocasticidade de $100$ máscaras eleva a detecção normal e a robustez adversarial em fluxos e pacotes. & Custo computacional de inferência ampliado pelas múltiplas máscaras; avaliação original sujeita a viés de amostragem temporal e avaliada em único domínio. \\
+Hashemi e Keller (RePO / RePO+) \cite{hashemi2020} & \textit{Denoising Autoencoders} com mascaramento aleatório parcial e agregação por mínimos por grupo. & Mitiga a supergeneralização; estocasticidade de $100$ máscaras eleva a detecção normal e a robustez adversarial em fluxos e pacotes. & Custo computacional de inferência ampliado pelas múltiplas máscaras; avaliação original sujeita a viés de amostragem temporal e avaliada em único domínio. \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -172,7 +172,7 @@ Considera-se um ambiente de rede monitorado por um NIDS baseado em detecção de
 \subsection{Premissas de Conhecimento, Capacidades e Restrições do Atacante}
 
 Assume-se um adversário com conhecimento em regime de caixa-branca (\textit{white-box}) acerca dos componentes estáticos do detector: o atacante conhece o conjunto de atributos monitorados, os vetores de normalização mínimo ($\mathbf{x}_{\min}$) e máximo ($\mathbf{x}_{\max}$) extraídos do conjunto de treinamento, a arquitetura e os parâmetros treinados $\theta$ da rede neural reconstrutiva $f_{\theta}$, bem como o limiar operacional de detecção $\tau$ calibrado para uma taxa de falsos positivos predefinida ($\text{FPR} = 0{,}10$ no cenário adversarial).
-Contudo, quando o detector vítima emprega inferência estocástica com mascaramento aleatório, o atacante não possui acesso à semente pseudoaleatória nem às realizações exatas das máscaras binárias sorteadas pelo detector no instante em que o tráfego atravessa a rede.
+Contudo, quando o detector vítima emprega inferência estocástica com mascaramento aleatório, o atacante não possui acesso à \textit{seed} pseudoaleatória nem às realizações exatas das máscaras binárias sorteadas pelo detector no instante em que o tráfego atravessa a rede.
 Dessa forma, o adversário precisa otimizar as perturbações utilizando uma cópia local do detector (com sua própria amostragem independente de máscaras) e transmitir o tráfego resultante para avaliação pelo NIDS vítima.
 
 O escopo de ameaças abrange múltiplas famílias de ataques de rede: negação de serviço na camada de aplicação e transporte (\textit{DoS Hulk}, \textit{DoS GoldenEye}, \textit{DoS Slowloris} e \textit{DoS Slowhttptest}), negação de serviço distribuída (\textit{DDoS}), reconhecimento por varredura de portas (\textit{PortScan}), força bruta em serviços de transferência e administração remota (\textit{FTP-Patator} e \textit{SSH-Patator}), comunicação de comando e controle (\textit{Botnet}), exploração de vulnerabilidades e exfiltração (\textit{Heartbleed} e \textit{Infiltration}), além de vetores modernos em ambientes de Internet das Coisas (\textit{cross-site scripting}, injeção, \textit{ransomware}, \textit{backdoor} e interceptação \textit{man-in-the-middle}).
@@ -181,7 +181,7 @@ Diferentemente de domínios contínuos como imagens, o atacante está submetido 
 \begin{enumerate}
     \item \textbf{Preservação funcional do ataque:} a carga maliciosa e a semântica da exploração não podem ser removidas ou corrompidas;
     \item \textbf{Controlabilidade unilateral:} o atacante controla apenas os pacotes que transmite (sentido \textit{forward}), não podendo alterar diretamente os pacotes de resposta gerados pelo hospedeiro vítima (sentido \textit{backward});
-    \item \textbf{Consistência protocolar e matemática:} cabeçalhos de pacotes devem permanecer sintaticamente válidos e todas as relações determinísticas entre atributos primários, agregados e derivados devem ser preservadas na representação final observada pelo NIDS.
+    \item \textbf{Consistência matemática e de protocolo:} cabeçalhos de pacotes devem permanecer sintaticamente válidos e todas as relações determinísticas entre atributos primários, agregados e derivados devem ser preservadas na representação final observada pelo NIDS.
 \end{enumerate}
 
 \subsection{Ataque Adversarial Baseado em Fluxos}
@@ -293,7 +293,7 @@ S_{\text{RePO}}(\tilde{\mathbf{x}}) = \frac{1}{M} \sum_{i=1}^{M} e_i(\tilde{\mat
 
 Embora a Eq.~\eqref{eq:score_repo} reduza a variância amostral, Hashemi e Keller \cite{hashemi2020} observaram que a média simples permanece sensível a subconjuntos de atributos difíceis de reconstruir em amostras benignas legítimas: quando uma máscara oculta simultaneamente um grupo crítico de atributos correlacionados, o erro $e_i(\tilde{\mathbf{x}})$ resultante assume um valor elevado que contamina a média $S_{\text{RePO}}(\tilde{\mathbf{x}})$, forçando a adoção de um limiar $\tau$ mais alto para respeitar a restrição de falsos positivos.
 
-Para solucionar essa limitação, a variante \textbf{RePO+} divide o conjunto de $M = 100$ máscaras em $G = 5$ grupos disjuntos $\mathcal{G}_1, \mathcal{G}_2, \dots, \mathcal{G}_G$, cada qual contendo $K = M / G = 20$ máscaras:
+Para solucionar essa limitação, a variante \textbf{RePO+} divide o conjunto de $M = 100$ máscaras em $G = 5$ grupos disjuntos $\mathcal{G}_1, \mathcal{G}_2, \dots, \mathcal{G}_G$, cada um contendo $K = M / G = 20$ máscaras:
 \begin{equation}
 \mathcal{G}_g = \left\{ (g-1)K + 1,\, \dots,\, gK \right\}, \quad g \in \{1, \dots, G\}.
 \label{eq:grupos_repo_plus}
@@ -304,7 +304,7 @@ S_{\text{RePO+}}(\tilde{\mathbf{x}}) = \sum_{g=1}^{G} \min_{i \in \mathcal{G}_g}
 \label{eq:score_repo_plus}
 \end{equation}
 
-A agregação por soma de mínimos grupais na Eq.~\eqref{eq:score_repo_plus} atua em duas frentes complementares.
+A agregação por soma de mínimos por grupo na Eq.~\eqref{eq:score_repo_plus} atua em duas frentes complementares.
 Primeiro, para uma amostra benigna, a probabilidade de que todas as $K = 20$ máscaras de um mesmo grupo ocultem simultaneamente os atributos essenciais à reconstrução é reduzida a $p_{\text{falha}}^{K}$; basta que uma única máscara por grupo preserve pistas suficientes para que $\min_{i \in \mathcal{G}_g} e_i(\tilde{\mathbf{x}})$ seja pequeno, comprimindo a distribuição de escores benignos próxima de zero.
 Segundo, para uma amostra maliciosa ou adversarial que possua aparência majoritariamente benigna exceto em poucos atributos de ataque, a avaliação de $K = 20$ máscaras por grupo garante alta probabilidade de que os atributos maliciosos sejam expostos e penalizados ao longo dos $G = 5$ grupos, além de impedir que o atacante preveja quais combinações de atributos determinarão o mínimo de cada grupo na inferência real.
 O Alg.~\ref{alg:repo_inferencia} formaliza o processo completo de pontuação e decisão dos modos RePO e RePO+.
@@ -338,7 +338,148 @@ O Alg.~\ref{alg:repo_inferencia} formaliza o processo completo de pontuação e 
 \end{algorithm}
 
 \section{Metodologia}
-Seção em elaboração para a próxima etapa do relatório.
+
+A metodologia experimental deste trabalho foi estruturada em duas frentes complementares.
+A primeira consiste na reprodução fiel e na auditoria metodológica dos experimentos de detecção normal e de robustez adversarial originalmente propostos por Hashemi e Keller \cite{hashemi2020} nas granularidades de fluxos e de pacotes.
+A segunda consiste na extensão desse protocolo experimental para um novo domínio de tráfego de rede voltado à Internet das Coisas, mantendo inalteradas a arquitetura do detector e a mecânica de geração de exemplos adversariais a fim de isolar o efeito da mudança de domínio sobre a eficácia do método.
+
+\subsection{Dados usados pelo artigo de referência}
+
+O artigo de referência \cite{hashemi2020} fundamenta sua validação experimental no conjunto de dados público CICIDS2017 \cite{sharafaldin2018}, elaborado pelo \textit{Canadian Institute for Cybersecurity}.
+A escolha do CICIDS2017 justifica-se por superar limitações históricas de bases de dados legadas de detecção de intrusão — tais como a ausência de protocolos modernos, a falta de diversidade de vetores de ataque e a anonimização destrutiva de cargas úteis — ao fornecer capturas realistas de cinco dias consecutivos de tráfego (Segunda a Sexta-feira) em uma infraestrutura de rede completa com tráfego benigno (HTTP, HTTPS, FTP, SSH e correio eletrônico) e múltiplos cenários contemporâneos de intrusão.
+
+Seguindo a formulação não supervisionada de detecção de anomalias, todo o tráfego capturado na Segunda-feira — composto exclusivamente por atividades benignas legítimas — é reservado para o treinamento dos modelos e para o cálculo dos vetores de normalização $\mathbf{x}_{\min}$ e $\mathbf{x}_{\max}$.
+Os registros capturados de Terça a Sexta-feira, contendo tanto tráfego benigno inédito quanto ataques de diversas naturezas, compõem integralmente o conjunto de teste.
+O conjunto CICIDS2017 é processado e avaliado sob duas representações distintas:
+
+\begin{itemize}
+    \item \textbf{Representação Baseada em Fluxos ($D = 77$ atributos):} gerada pela agregação bidirecional de pacotes por meio da ferramenta CICFlowMeter \cite{sharafaldin2018}, na qual cada conexão é descrita pela porta de destino concatenada a $76$ estatísticas de sessão (duração do fluxo, totais de pacotes e bytes nas direções \textit{forward} e \textit{backward}, comprimentos mínimos, máximos, médios e desvios-padrão de pacotes, taxas de bytes e pacotes por segundo, intervalos temporais inter-chegada, contadores de \textit{flags} TCP, comprimentos de cabeçalhos, estatísticas de subfluxo e tempos de atividade e ociosidade).
+    Na etapa de saneamento, registros contendo valores ausentes ou infinitos são descartados, resultando em $529.481$ instâncias benignas válidas de treinamento (de um total bruto de $529.918$ fluxos na Segunda-feira, com $437$ descartes) e $2.298.431$ instâncias válidas de teste (de um total bruto de $2.300.861$ fluxos de Terça a Sexta-feira, com $2.430$ descartes).
+    O conjunto de teste válido compreende $1.741.803$ fluxos benignos, $554.447$ fluxos pertencentes às $11$ classes de ataque avaliadas pelo artigo de referência, $2.179$ fluxos de ataques Web (não incluídos no protocolo comparativo de referência) e $2$ registros espúrios de rotulagem.
+    A auditoria estrutural desse espaço de atributos evidencia que quatro variáveis de subfluxo duplicam exatamente as contagens totais de pacotes e bytes nas direções \textit{forward} e \textit{backward}, o tamanho médio de segmento \textit{forward} replica o comprimento médio de pacote \textit{forward}, e $50$ dos $77$ atributos assumem apenas valores inteiros no conjunto de teste — dependências que são estritamente impostas pelo operador de projeção $\Pi_{\mathcal{V}}$ durante a geração adversarial.
+    \item \textbf{Representação Baseada em Pacotes ($T = 20 \times D = 29$ atributos):} construída diretamente a partir das capturas de pacotes brutos, agrupando sequencialmente janelas contíguas de $T = 20$ pacotes consecutivos.
+    Cada pacote é representado por $D = 29$ atributos extraídos exclusivamente dos cabeçalhos das camadas de rede e de transporte (IP, TCP, UDP e ICMP) e da cronologia de captura, abrangendo o intervalo de tempo desde o pacote anterior ($\Delta t$), comprimentos de quadro e de cabeçalho IP, tempo de vida (TTL), flags de fragmentação e de controle TCP, tamanhos de janela, números de sequência e confirmação, portas e indicador de sentido do pacote.
+    Ataques Web são excluídos dessa avaliação porque sua assinatura reside na carga útil da camada de aplicação, a qual não é representada nos $29$ atributos de cabeçalho.
+    O conjunto de treinamento da Segunda-feira totaliza $12.696.652$ pacotes benignos ($\approx 634.833$ janelas de $20$ pacotes), ao passo que o conjunto de teste de Terça a Sexta-feira contém $2.216.623$ janelas válidas de $20$ pacotes, divididas em $1.988.539$ janelas benignas e $228.084$ janelas maliciosas distribuídas nas $11$ classes de ataque (atribuindo-se a cada janela o rótulo do seu vigésimo pacote).
+\end{itemize}
+
+No cenário adversarial sobre o CICIDS2017, o protocolo do artigo de referência seleciona sequencialmente até $5.000$ instâncias por classe de ataque na modalidade de fluxos (totalizando $47.003$ fluxos atacados, visto que as classes \textit{Bot}, \textit{Infiltration} e \textit{Heartbleed} possuem menos de $5.000$ amostras) e os primeiros $25.000$ pacotes (janelas deslizantes) por classe na modalidade de pacotes ($9.890$ no caso de \textit{Botnet}, totalizando $259.890$ instâncias atacadas).
+A Tabela~\ref{tab:cicids2017_dist} detalha a distribuição quantitativa completa do conjunto de dados CICIDS2017 nas duas representações.
+
+\begin{table}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\caption{Distribuição de instâncias válidas no conjunto de dados de referência (CICIDS2017) para as representações de fluxos e de pacotes.}
+\label{tab:cicids2017_dist}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.3cm}rrrr@{}}
+\toprule
+\textbf{Classe / Conjunto} & \textbf{Fluxos} & \textbf{Adv. Fluxo} & \textbf{Janelas Pac.} & \textbf{Adv. Pac.} \\
+\midrule
+Treino (Benigno) & $529.481$ & --- & $634.833$ & --- \\
+Teste (Benigno) & $1.741.803$ & --- & $1.988.539$ & --- \\
+\midrule
+DoS Hulk & $230.124$ & $5.000$ & $112.276$ & $25.000$ \\
+PortScan & $158.839$ & $5.000$ & $16.203$ & $25.000$ \\
+DDoS & $128.025$ & $5.000$ & $64.030$ & $25.000$ \\
+DoS GoldenEye & $10.293$ & $5.000$ & $5.309$ & $25.000$ \\
+FTP-Patator & $7.935$ & $5.000$ & $5.537$ & $25.000$ \\
+SSH-Patator & $5.897$ & $5.000$ & $6.931$ & $25.000$ \\
+DoS Slowloris & $5.796$ & $5.000$ & $2.380$ & $25.000$ \\
+DoS Slowhttptest & $5.499$ & $5.000$ & $1.963$ & $25.000$ \\
+Bot / Botnet & $1.956$ & $1.956$ & $494$ & $9.890$ \\
+Infiltration & $36$ & $36$ & $10.496$ & $25.000$ \\
+Heartbleed & $11$ & $11$ & $2.465$ & $25.000$ \\
+\midrule
+\textbf{Total (11 Ataques)} & $\mathbf{554.447}$ & $\mathbf{47.003}$ & $\mathbf{228.084}$ & $\mathbf{259.890}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Novo conjunto de dados escolhido}
+
+Para investigar a capacidade de generalização do método RePO/RePO+ e o comportamento do ataque adversarial fora do ambiente corporativo tradicional do CICIDS2017, selecionou-se o conjunto de dados \textbf{CIC-ToN-IoT}, gerado e disponibilizado por Sarhan et al. \cite{sarhan2022cictoniot}.
+Esse conjunto foi construído mediante o processamento das capturas de pacotes brutos (\textit{pcap}) do conjunto de dados original \textit{ToN-IoT} \cite{moustafa2019toniot} pela ferramenta CICFlowMeter-v4, totalizando originalmente $5.351.760$ fluxos rotulados ($2.515.236$ benignos e $2.836.524$ maliciosos) representativos de ambientes heterogêneos de Internet das Coisas (IoT) e Internet Industrial das Coisas (IIoT).
+
+A escolha do CIC-ToN-IoT fundamenta-se em dois critérios metodológicos principais alinhados à proposta de avaliação entre múltiplos domínios com conjunto padronizado de atributos \cite{sarhan2022cictoniot}.
+O primeiro é a \textbf{compatibilidade estrutural exata} do espaço de atributos: após a remoção de identificadores exclusivos de sessão e endereçamento, os fluxos são descritos pelas mesmas $D = 77$ variáveis estatísticas e protocolares na mesma ordenação canônica do modelo de referência (porta de destino seguida pelas $76$ métricas de fluxo do CICFlowMeter), permitindo aplicar diretamente a mesma arquitetura de \textit{Denoising Autoencoder}, o mesmo esquema de mascaramento parcial ($p_{\text{mask}} = 0{,}75$, $M = 100$ máscaras em $G = 5$ grupos) e as mesmas equações de projeção de domínio $\Pi_{\mathcal{V}}$ sem adaptações heurísticas.
+O segundo critério é a \textbf{diversidade de domínio e de ameaças}: o tráfego abrange padrões de telemetria de sensores e dispositivos inteligentes submetidos a nove famílias distintas de ataques cibernéticos (\textit{xss}, \textit{password}, \textit{injection}, \textit{scanning}, \textit{backdoor}, \textit{ransomware}, \textit{mitm}, \textit{ddos} e \textit{dos}), permitindo testar se a vantagem da agregação por soma de mínimos por grupo se sustenta sob distribuições estatísticas substancialmente diferentes.
+
+Para a formação dos subconjuntos experimentais, aplicou-se uma partição estratificada sobre a classe benigna com \textit{seed} pseudoaleatória fixa: $70\%$ de todas as instâncias benignas foram alocadas ao conjunto de treinamento, totalizando $1.759.850$ fluxos exclusivamente benignos usados para treinar o modelo reconstrutivo e estabelecer os parâmetros de normalização $(\mathbf{x}_{\min}, \mathbf{x}_{\max})$.
+Os $30\%$ restantes dos fluxos benignos foram combinados à integralidade das amostras das nove classes maliciosas e embaralhados com \textit{seed} fixa para formar o conjunto de teste.
+Após o descarte de $362$ registros contendo valores inválidos ou infinitos (de um total bruto de $3.591.095$ linhas), o conjunto de teste consolidou $3.590.733$ fluxos válidos, compostos por $754.209$ instâncias benignas (empregadas na calibração dos limiares de $\text{FPR} = 0{,}01$ e $\text{FPR} = 0{,}10$) e $2.836.524$ instâncias de ataque.
+
+Uma análise estatística dos parâmetros de normalização do CIC-ToN-IoT revela uma característica estrutural importante: oito dos $77$ atributos apresentam variância estritamente nula no conjunto de treinamento benigno ($x_{\max, j} = x_{\min, j}$), correspondendo aos contadores de \textit{flags} de urgência (\textit{forward}, \textit{backward} e total) e de \textit{push} no sentido reverso, às médias de bytes, pacotes e taxa de blocos no sentido \textit{forward}, e à contagem de pacotes em subfluxo reverso.
+Conforme a Eq.~\eqref{eq:norm_fluxo}, o denominador de normalização para esses oito atributos reduz-se à constante de estabilização $\epsilon = 10^{-6}$; consequentemente, qualquer amostra de teste que exiba valores positivos nessas coordenadas gera entradas normalizadas de elevada magnitude, produzindo erros quadráticos de reconstrução acentuados quando tais atributos são mascarados.
+
+Na avaliação adversarial sobre o CIC-ToN-IoT, a fim de eliminar o viés de seleção sequencial observado no protocolo original, amostraram-se aleatoriamente (com \textit{seed} fixa reprodutível) até $5.000$ fluxos por classe de ataque — ou a totalidade das instâncias disponíveis nas três classes com suporte inferior a $5.000$ amostras (\textit{mitm}, \textit{ddos} e \textit{dos}) —, perfazendo $30.864$ fluxos submetidos ao ataque adversarial.
+A Tabela~\ref{tab:cic_ton_iot_dist} sumariza a composição quantitativa do conjunto CIC-ToN-IoT.
+
+\begin{table}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Distribuição de instâncias válidas no novo conjunto de dados (CIC-ToN-IoT) e amostras selecionadas para avaliação adversarial.}
+\label{tab:cic_ton_iot_dist}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.8cm}rrr@{}}
+\toprule
+\textbf{Classe / Conjunto} & \textbf{Fluxos Válidos} & \textbf{Prop. Teste} & \textbf{Adv. Fluxo} \\
+\midrule
+Treino (Benigno — $70\%$) & $1.759.850$ & --- & --- \\
+Teste (Benigno — $30\%$) & $754.209$ & $21{,}00\%$ & --- \\
+\midrule
+xss & $2.149.308$ & $59{,}86\%$ & $5.000$ \\
+password & $340.208$ & $9{,}47\%$ & $5.000$ \\
+injection & $277.696$ & $7{,}73\%$ & $5.000$ \\
+scanning & $36.205$ & $1{,}01\%$ & $5.000$ \\
+backdoor & $27.145$ & $0{,}76\%$ & $5.000$ \\
+ransomware & $5.098$ & $0{,}14\%$ & $5.000$ \\
+mitm & $517$ & $0{,}01\%$ & $517$ \\
+ddos & $202$ & $0{,}01\%$ & $202$ \\
+dos & $145$ & $<0{,}01\%$ & $145$ \\
+\midrule
+\textbf{Total Malicioso (9 Ataques)} & $\mathbf{2.836.524}$ & $\mathbf{79{,}00\%}$ & $\mathbf{30.864}$ \\
+\textbf{Total Geral de Teste} & $\mathbf{3.590.733}$ & $\mathbf{100{,}00\%}$ & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Métricas de avaliação}
+
+A avaliação de detectores de anomalias não supervisionados em segurança de redes exige métricas que capturem simultaneamente o custo operacional de falsos alertas sobre o tráfego legítimo e a sensibilidade de detecção frente a ataques diversos e desbalanceados.
+Seja $\mathcal{B}_{\text{test}}$ o subconjunto de amostras benignas de teste e $S(\mathbf{x})$ o escore de anomalia atribuído pelo detector (no modo RePO ou RePO+).
+A \textbf{Taxa de Falsos Positivos} ($\text{FPR}$) para um limiar de decisão $\tau$ é definida formalmente como a fração de instâncias benignas de teste cujo escore ultrapassa $\tau$:
+\begin{equation}
+\text{FPR}(\tau) = \frac{1}{|\mathcal{B}_{\text{test}}|} \sum_{\mathbf{x} \in \mathcal{B}_{\text{test}}} \mathbb{I}\!\left(S(\mathbf{x}) > \tau\right).
+\label{eq:fpr_metric}
+\end{equation}
+Conforme o método de referência \cite{hashemi2020}, o limiar operacional $\tau$ é determinado empiricamente pelo quantil $(1 - \text{FPR}_{\text{alvo}})$ da distribuição de escores em $\mathcal{B}_{\text{test}}$: adota-se $\text{FPR}_{\text{alvo}} = 0{,}01$ ($1\%$) para a avaliação em cenário normal — refletindo a exigência prática de baixo volume de alarmes falsos — e $\text{FPR}_{\text{alvo}} = 0{,}10$ ($10\%$) para a avaliação em cenário adversarial, ponto de operação mais sensível estipulado pelo artigo original para comparar a degradação provocada pelos ataques de evasão.
+
+Fixado o limiar $\tau$, a capacidade de detecção sobre cada classe de ataque $c \in \{1, \dots, C\}$, representada pelo conjunto de amostras maliciosas $\mathcal{A}_c$ de cardinalidade $n_c = |\mathcal{A}_c|$, é medida pela \textbf{Taxa de Verdadeiros Positivos} ($\text{TPR}_c$, também conhecida como \textit{Recall}):
+\begin{equation}
+\text{TPR}_c(\tau) = \frac{1}{n_c} \sum_{\mathbf{x} \in \mathcal{A}_c} \mathbb{I}\!\left(S(\mathbf{x}) > \tau\right).
+\label{eq:tpr_class}
+\end{equation}
+
+Em virtude da acentuada assimetria no número de amostras entre diferentes classes de ataque (como observado nas Tabelas~\ref{tab:cicids2017_dist} e~\ref{tab:cic_ton_iot_dist}), o desempenho global do sistema sobre as $C$ classes maliciosas é consolidado por duas métricas agregadas complementares: a \textbf{média macro} ($\text{TPR}_{\text{macro}}$), que atribui peso uniforme a todas as categorias de ataque independentemente de sua frequência, e a \textbf{média ponderada} ($\text{TPR}_{\text{pond}}$), que pondera a taxa de detecção de cada classe pela sua participação relativa no volume total de ataques:
+\begin{equation}
+\begin{aligned}
+\text{TPR}_{\text{macro}} &= \frac{1}{C} \sum_{c=1}^{C} \text{TPR}_c(\tau), \\
+\text{TPR}_{\text{pond}} &= \frac{\sum_{c=1}^{C} n_c \, \text{TPR}_c(\tau)}{\sum_{c=1}^{C} n_c}.
+\end{aligned}
+\label{eq:tpr_aggregates}
+\end{equation}
+Adicionalmente, nos conjuntos em que existem classes minoritárias com menos de $100$ instâncias (como \textit{Infiltration} e \textit{Heartbleed} em fluxos do CICIDS2017), calcula-se também a média macro restrita às classes com $n_c \ge 100$ para evitar que variações discretas em poucas amostras dominem a estimativa global.
+
+No cenário adversarial, seja $\text{TPR}_{\text{normal}, c}$ a taxa de detecção obtida sobre as amostras originais da classe $c$ sob o limiar $\tau_{0{,}10}$ e seja $\text{TPR}_{\text{vítima}, c}$ a taxa de detecção obtida pelo NIDS vítima (com um novo sorteio independente de $M = 100$ máscaras) após a aplicação do ataque adversarial.
+A perda bruta de sensibilidade é expressa pela variação absoluta $\Delta\text{TPR}_c = \text{TPR}_{\text{vítima}, c} - \text{TPR}_{\text{normal}, c}$, medida em pontos percentuais (p.p.).
+Entretanto, avaliar a eficácia ofensiva apenas pelo complemento $1 - \text{TPR}_{\text{vítima}, c}$ é insuficiente, pois essa grandeza soma as evasões reais causadas pelo atacante aos falsos negativos que já ocorriam naturalmente antes de qualquer perturbação (particularmente em classes onde $\text{TPR}_{\text{normal}, c}$ já é reduzida).
+Para isolar estritamente a fração de detecções legítimas que foi suprimida pela perturbação adversarial, emprega-se a \textbf{Queda Condicional de Detecção} ($\text{QC}_c$), definida para toda classe com $\text{TPR}_{\text{normal}, c} > 0$ como:
+\begin{equation}
+\text{QC}_c = 1 - \frac{\text{TPR}_{\text{vítima}, c}}{\text{TPR}_{\text{normal}, c}} = \frac{\text{TPR}_{\text{normal}, c} - \text{TPR}_{\text{vítima}, c}}{\text{TPR}_{\text{normal}, c}}.
+\label{eq:queda_condicional}
+\end{equation}
+Por construção, $\text{QC}_c \in (-\infty, 1]$ quantifica a proporção relativa de ataques originalmente detectados que passaram a evadir o NIDS após a manipulação adversarial: valores próximos de $0\%$ atestam alta resiliência do detector contra o ataque, enquanto valores próximos de $100\%$ indicam evasão quase completa das amostras previamente detectadas.
 
 \section{Resultados e discussões}
 Seção em elaboração para a próxima etapa do relatório.
@@ -425,6 +566,12 @@ I.~Sharafaldin, A.~H. Lashkari, and A.~A. Ghorbani, ``Toward generating a new in
 
 \bibitem{axelsson2000}
 S.~Axelsson, ``The base-rate fallacy and the difficulty of intrusion detection,'' \emph{ACM Transactions on Information and System Security (TISSEC)}, vol.~3, no.~3, pp. 186--205, 2000.
+
+\bibitem{sarhan2022cictoniot}
+M.~Sarhan, S.~Layeghy, and M.~Portmann, ``Evaluating standard feature sets towards increased generalisability and explainability of ML-based network intrusion detection,'' \emph{Big Data Research}, vol.~30, p. 100359, 2022.
+
+\bibitem{moustafa2019toniot}
+N.~Moustafa, ``ToN-IoT datasets,'' \emph{IEEE DataPort}, 2019, doi: 10.21227/fesz-dm97.
 
 \end{thebibliography}
 
