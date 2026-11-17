@@ -10,7 +10,6 @@ nas linhas correspondentes.
 - [x] Organizar a documentação em `docs/`.
   - [x] Documentar compatibilidade do TensorFlow com GPU.
   - [x] Documentar execução no Colab pelo VS Code.
-  - [x] Documentar execução no Colab pelo navegador.
   - [x] Documentar os requisitos do relatório.
 - [x] Definir o ambiente oficial de execução do grupo.
   - [x] Escolher entre Linux/WSL2 com GPU, CPU local ou Colab.
@@ -77,19 +76,19 @@ Execute os notebooks normais antes dos adversariais.
   - Evidência (cluster Apuana, 02/11/2026): RePO TPR médio 0,3185;
     RePO+ 0,3472 (artigo: 0,2765 e 0,3477); FPR 0,0100 nos dois;
     FPR no threshold adversarial do artigo 0,0997 (RePO+).
-- [ ] Executar `code/Packet_based_RePO_Adversarial.ipynb` nos ataques do artigo usando RePO+.
+- [x] Executar `code/Packet_based_RePO_Adversarial.ipynb` nos ataques do artigo usando RePO+.
     - [x] FTP-Patator
   - [x] SSH-Patator
   - [x] DoS Slowloris
   - [x] DoS Slowhttptest
-  - [ ] DoS Hulk
-  - [ ] DoS GoldenEye
-  - [ ] Heartbleed
-  - [ ] Infiltration
-  - [ ] Botnet
-  - [ ] PortScan
-  - [ ] DDoS
-- [ ] Salvar os resultados relevantes do teste adversarial.
+  - [x] DoS Hulk
+  - [x] DoS GoldenEye
+  - [x] Heartbleed
+  - [x] Infiltration
+  - [x] Botnet
+  - [x] PortScan
+  - [x] DDoS
+- [x] Salvar os resultados relevantes do teste adversarial.
 
 ### 3.3 Execução no cluster Apuana
 
@@ -115,18 +114,20 @@ Execute os notebooks normais antes dos adversariais.
 - [x] Registrar o notebook executado.
 - [x] Registrar o kernel e o interpretador Python.
 - [x] Registrar as versões das bibliotecas.
-- [ ] Preservar ou exportar as saídas necessárias para o relatório.
+- [x] Preservar ou exportar as saídas necessárias para o relatório.
+  - Evidência: JSONs em `results/`, análises em `docs/REPLICATION_ANALYSIS.md`
+    e `docs/NEW_DATASET_ANALYSIS.md`, e figuras em `images/`.
 
 ## 4. Análise dos resultados de referência
 
-- [ ] Consolidar as métricas dos testes normais.
-- [ ] Consolidar as métricas dos testes adversariais.
-- [ ] Verificar os limiares utilizados pelos notebooks.
-- [ ] Gerar tabelas comparando fluxo e pacotes.
-- [ ] Gerar gráficos necessários para o relatório.
-- [ ] Explicar diferenças entre os resultados reproduzidos e os resultados
+- [x] Consolidar as métricas dos testes normais.
+- [x] Consolidar as métricas dos testes adversariais.
+- [x] Verificar os limiares utilizados pelos notebooks.
+- [x] Gerar tabelas comparando fluxo e pacotes.
+- [x] Gerar gráficos necessários para o relatório.
+- [x] Explicar diferenças entre os resultados reproduzidos e os resultados
       reportados no artigo de referência.
-- [ ] Registrar limitações, variações e falhas observadas durante a reprodução.
+- [x] Registrar limitações, variações e falhas observadas durante a reprodução.
 
 ## 5. Dataset adicional
 
@@ -134,15 +135,16 @@ Esta seção deve ser concluída caso o escopo do projeto inclua outro conjunto 
 dados além dos dados usados pelo artigo de referência.
 
 - [x] Escolher o dataset adicional.
-  - Evidência: CIC-ToN-IoT processado em `data/new_data/` (citação oficial
-    ainda pendente de confirmação).
-- [ ] Justificar a escolha.
-  - Pendente: a justificativa formal depende da confirmação da fonte oficial
-    (seção “Fonte e citação” de `docs/NEW_DATASET.md`, marcada como pendente).
-- [ ] Documentar origem, características e classes.
-  - Pendente: as características e classes estão descritas em
-    `docs/NEW_DATASET.md`, mas a origem/citação oficial ainda precisa ser
-    confirmada.
+  - Evidência: CIC-ToN-IoT processado em `data/new_data/` (Sarhan, Layeghy &
+    Portmann, *Big Data Research*, vol. 30, p. 100359, 2022; derivado do
+    *ToN-IoT* de Moustafa, *IEEE DataPort*, 2019).
+- [x] Justificar a escolha.
+  - Evidência: avaliação de generalização em domínio IoT/IIoT mantendo o mesmo
+    esquema padronizado de 77 atributos de fluxo do CICFlowMeter-v4
+    (Sarhan et al., 2022), documentada em `report.tex` (seção 6.2).
+- [x] Documentar origem, características e classes.
+  - Evidência: origem, citação bibliográfica, split, features e classes
+    documentados em `docs/NEW_DATASET.md` e `report.tex`.
 - [x] Preparar os dados.
   - Evidência: `extract_new_data.sh` e extração local do ZIP LFS com
     `validate` aprovado.
@@ -186,42 +188,42 @@ Os requisitos detalhados estão em
 
 ### Abstract/Resumo
 
-- [ ] Contextualizar o problema.
-- [ ] Apresentar a solução.
-- [ ] Resumir a metodologia.
-- [ ] Apresentar os principais resultados.
+- [x] Contextualizar o problema.
+- [x] Apresentar a solução.
+- [x] Resumir a metodologia.
+- [x] Apresentar os principais resultados.
 
 ### 1. Introdução
 
-- [ ] Explicar o problema investigado.
-- [ ] Justificar a relevância do problema.
-- [ ] Explicar a motivação do artigo de referência.
-- [ ] Apresentar soluções existentes e limitações.
-- [ ] Apresentar a solução proposta.
-- [ ] Listar as principais contribuições.
+- [x] Explicar o problema investigado.
+- [x] Justificar a relevância do problema.
+- [x] Explicar a motivação do artigo de referência.
+- [x] Apresentar soluções existentes e limitações.
+- [x] Apresentar a solução proposta.
+- [x] Listar as principais contribuições.
 
 ### 2. Trabalhos relacionados
 
-- [ ] Selecionar trabalhos relacionados.
-- [ ] Descrever contribuições e limitações.
-- [ ] Comparar os trabalhos com o artigo de referência.
+- [x] Selecionar trabalhos relacionados.
+- [x] Descrever contribuições e limitações.
+- [x] Comparar os trabalhos com o artigo de referência.
 
 ### 3. Modelo de ameaça
 
-- [ ] Descrever os ataques considerados.
-- [ ] Documentar as premissas dos ataques.
-- [ ] Incluir figuras, algoritmos ou equações quando necessário.
+- [x] Descrever os ataques considerados.
+- [x] Documentar as premissas dos ataques.
+- [x] Incluir figuras, algoritmos ou equações quando necessário.
 
 ### 4. Sistema proposto pelo artigo de referência
 
-- [ ] Descrever a arquitetura.
-- [ ] Descrever componentes, entradas e saídas.
-- [ ] Explicar o funcionamento do sistema.
-- [ ] Explicar os métodos e algoritmos utilizados.
+- [x] Descrever a arquitetura.
+- [x] Descrever componentes, entradas e saídas.
+- [x] Explicar o funcionamento do sistema.
+- [x] Explicar os métodos e algoritmos utilizados.
 
 ### 5. Solução proposta pela equipe
 
-- [ ] Descrever o que será melhorado.
+- [ ] Descrever o que será melhorado. *(Não aplicável: escopo focado na reprodução fiel, auditoria metodológica e avaliação no CIC-ToN-IoT.)*
 - [ ] Descrever a arquitetura da melhoria.
 - [ ] Descrever componentes, entradas e saídas.
 - [ ] Explicar métodos e algoritmos.
@@ -229,47 +231,47 @@ Os requisitos detalhados estão em
 
 ### 6. Metodologia
 
-- [ ] Descrever os dados do artigo de referência.
-- [ ] Descrever treino, validação e teste.
-- [ ] Informar quantidades por classe.
-- [ ] Descrever o dataset adicional, se houver.
-- [ ] Descrever métricas e experimentos.
-- [ ] Registrar ambientes e condições de execução.
+- [x] Descrever os dados do artigo de referência.
+- [x] Descrever treino, validação e teste.
+- [x] Informar quantidades por classe.
+- [x] Descrever o dataset adicional, se houver.
+- [x] Descrever métricas e experimentos.
+- [x] Registrar ambientes e condições de execução.
 
 ### 7. Resultados e discussões
 
-- [ ] Apresentar resultados da solução de referência.
-- [ ] Apresentar resultados no dataset adicional, se houver.
-- [ ] Apresentar resultados da melhoria da equipe, se houver.
-- [ ] Comparar resultados com outros trabalhos.
-- [ ] Incluir tabelas e gráficos.
-- [ ] Interpretar os resultados, sem apenas descrevê-los.
+- [x] Apresentar resultados da solução de referência.
+- [x] Apresentar resultados no dataset adicional, se houver.
+- [ ] Apresentar resultados da melhoria da equipe, se houver. *(Não aplicável)*
+- [x] Comparar resultados com outros trabalhos.
+- [x] Incluir tabelas e gráficos.
+- [x] Interpretar os resultados, sem apenas descrevê-los.
 
 ### 8. Conclusão e trabalhos futuros
 
-- [ ] Resumir os principais resultados.
-- [ ] Descrever limitações.
-- [ ] Discutir problemas da solução de referência.
-- [ ] Discutir problemas da melhoria, se houver.
-- [ ] Propor trabalhos futuros.
+- [x] Resumir os principais resultados.
+- [x] Descrever limitações.
+- [x] Discutir problemas da solução de referência.
+- [ ] Discutir problemas da melhoria, se houver. *(Não aplicável)*
+- [x] Propor trabalhos futuros.
 
 ### 9. Referências
 
-- [ ] Revisar todas as citações.
-- [ ] Ajustar as referências ao formato IEEE.
-- [ ] Confirmar que toda referência citada aparece na bibliografia.
+- [x] Revisar todas as citações.
+- [x] Ajustar as referências ao formato IEEE.
+- [x] Confirmar que toda referência citada aparece na bibliografia.
 
 ## 8. Revisão e entrega
 
-- [ ] Revisar código, notebooks e documentação.
+- [x] Revisar código, notebooks e documentação.
 - [ ] Remover saídas, caches e arquivos temporários que não devam ser
       versionados.
-- [ ] Confirmar que datasets grandes não estão no commit.
-- [ ] Verificar links relativos da documentação.
+- [x] Confirmar que datasets grandes não estão no commit.
+- [x] Verificar links relativos da documentação.
 - [ ] Executar `git diff --check`.
 - [ ] Revisar o histórico e a ordem dos commits.
-- [ ] Confirmar que o README descreve o procedimento atual.
-- [ ] Confirmar que o relatório compila.
+- [x] Confirmar que o README descreve o procedimento atual.
+- [x] Confirmar que o relatório compila.
 - [ ] Fazer revisão final por outro membro do grupo.
 - [ ] Criar o commit final.
 - [ ] Fazer push para o repositório remoto.

@@ -55,7 +55,7 @@ cd "$HOME/Projects"
 
 git clone git@github.com:marquesgbr/replicating_RePO.git
 cd replicating_RePO
-git switch feat/apuana-cluster
+git switch main
 git log --oneline -1
 ```
 
@@ -64,7 +64,7 @@ Se o repositório já existir:
 ```bash
 cd "$HOME/Projects/replicating_RePO"
 git fetch origin
-git switch feat/apuana-cluster
+git switch main
 git pull --ff-only
 ```
 
@@ -455,52 +455,6 @@ squeue -u "$USER"
 ls -1 "$SCRATCH/replicating-repo-results/logs/"repo-adv-*_*.out
 ```
 
-### 10.1 Estudo de eficiência das máscaras (`mask-exp`)
-
-A matriz completa de runs (status, escala, custo e métricas afetadas) está em
-[`MASK_EFFICIENCY_RUNS.md`](MASK_EFFICIENCY_RUNS.md).
-
-O namespace `mask-exp` reaproveita o harness de `code/mask_experiments/` e
-roda as três direções com métricas adversariais por direção.  A cadeia
-completa, com dependências `afterok` e manifesto dos jobs, é um comando:
-
-```bash
-bash cluster/run_mask_study.sh            # matriz completa
-bash cluster/run_mask_study.sh --smoke    # valida todas as etapas
-bash cluster/run_mask_study.sh --dry-run  # só imprime o plano
-```
-
-Cada job recebe `MASK_STEP_NOTE` e o log começa com `[step] <descrição>`.
-Para rodar uma etapa isolada:
-
-```bash
-bash cluster/submit.sh mask-exp baseline
-bash cluster/submit.sh mask-exp variance
-bash cluster/submit.sh mask-exp adversarial all      # Direção A
-bash cluster/submit.sh mask-exp cascade              # Direção B (normal)
-bash cluster/submit.sh mask-exp cascade-attack all   # Direção B (ataque)
-bash cluster/submit.sh mask-exp distill              # Direção C (treina o aluno)
-bash cluster/submit.sh mask-exp distill-attack all   # Direção C (ataque)
-bash cluster/submit.sh mask-exp packet
-bash cluster/submit.sh mask-exp aggregate            # merge + Markdown
-```
-
-`distill-attack` só pode rodar depois do `distill` (o aluno fica em
-`$RESULTS_ROOT/mask_efficiency/distillation_student.keras`); a cadeia já usa
-`afterok`.  Para encadear manualmente:
-
-```bash
-DISTILL_JOB=$(bash cluster/submit.sh mask-exp distill | awk 'NR==1{print $NF}')
-DEPENDENCY="afterok:${DISTILL_JOB}" \
-  bash cluster/submit.sh mask-exp distill-attack all
-```
-
-Os defaults são de produção (100 k benignos, 5 k por ataque, 11 ataques).
-Para um smoke, reduza `MASK_MAX_BENIGN`, `MASK_MAX_PER_ATTACK`,
-`MASK_PER_ATTACK` e use `MASK_ATTACK_SET=pilot` (4 ataques).  As métricas
-adversariais e as saídas estão descritas em
-[`../cluster/README.md`](../cluster/README.md), seção 17.
-
 ## 11. Se um job for interrompido
 
 Reenvie o mesmo ataque:
@@ -637,7 +591,7 @@ os metadados de `data/new_data/x_train_meta/` precisam ser regenerados.
 
 ## 14. Checklist final
 
-- [ ] branch `feat/apuana-cluster` no cluster;
+- [ ] branch `main` atualizada no cluster;
 - [ ] `cluster/setup_env.sh` concluído;
 - [ ] smoke de fluxo e pacotes concluído;
 - [ ] `normal flow` e `normal packet` concluídos;
