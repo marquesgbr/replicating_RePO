@@ -1,399 +1,71 @@
 # replicating_RePO
 
-Reprodução de experimentos sobre melhoria da robustez contra exemplos
-adversariais em sistemas de detecção de intrusão de rede usando autoencoders.
+Reprodução e extensão dos experimentos de robustez contra exemplos adversariais em Sistemas de Detecção de Intrusão de Rede (NIDS) baseados em autoencoders (*RePO* e *RePO+*), incluindo avaliação em um conjunto de dados adicional (CIC-ToN-IoT).
 
-- Artigo original: [Enhancing Robustness Against Adversarial Examples in
-  Network Intrusion Detection Systems](https://arxiv.org/abs/2008.03677)
-- Repositório original: [s-mohammad-hashemi/repo](https://github.com/s-mohammad-hashemi/repo)
+- **Artigo original:** [Enhancing Robustness Against Adversarial Examples in Network Intrusion Detection Systems](https://arxiv.org/abs/2008.03677)
+- **Repositório original:** [s-mohammad-hashemi/repo](https://github.com/s-mohammad-hashemi/repo)
 
-## Estrutura relevante
+---
 
-- `code/`: notebooks de avaliação e scripts de treinamento.
-- `cluster/`: tooling para executar treino, avaliação normal/adversarial e
-  agregação no cluster Apuana, com checkpoints e retomada. Veja o
-  [runbook do cluster](./cluster/README.md).
-- `docs/`: documentação de compatibilidade, execução no Colab e requisitos do
-  relatório, além do [checklist do projeto](./docs/PROJECT_TASKS.md).
-- `data/flow_based/` e `data/packet_based/`: arquivos compactados, dados
-  extraídos e metadados de normalização.
-- `models/flw_model/` e `models/pkt_model/`: modelos já treinados usados pelos
-  notebooks.
-- `extract_flow_data.sh` e `extract_packet_data.sh`: scripts de preparação dos
-  dados.
-- `report.tex`: relatório em LaTeX.
+## Visão Geral e Stack Tecnológica
 
-## Requisitos
+O projeto reproduz o protocolo *RePO/RePO+* nos cenários baseados em **fluxos** e **pacotes** do CICIDS2017 e estende a avaliação para o dataset **CIC-ToN-IoT** (`data/new_data/`).
 
-O TensorFlow pode exigir uma versão específica do Python e do sistema
-operacional. Para os procedimentos de compatibilidade com GPU, consulte
-[GPU_TENSORFLOW_COMPATIBILITY.md](./docs/GPU_TENSORFLOW_COMPATIBILITY.md).
+| Componente | Especificação |
+| --- | --- |
+| **Python (Local)** | `3.12.3` (WSL2 com GPU) / `3.13.1` (Windows nativo CPU) |
+| **Python (VS Code Colab Extension)** | `3.13.16` (runtime remoto com GPU) |
+| **Python (Cluster Apuana)** | `3.10.12` (`/usr/bin/python3.10` nos nós de computação) |
+| **Deep Learning** | TensorFlow `2.21.0`; Keras `3.15.1` (Local/Colab) e `3.12.4` (Apuana) |
+| **Dados e Testes** | `numpy`, `pandas`, `pytest`, `jupyterlab`, `ipykernel` (`requirements.txt`) |
+| **Versionamento** | Git e Git LFS (usado em `data/new_data/New-dataset-split-clean.zip`) |
+| **Relatório** | LaTeX (`IEEEtran`), compilado via `latexmk` (`report.tex` / `report_template.tex`) |
+|      **IDE** | VSCode|
 
-Em resumo:
+---
 
-- **Linux/WSL2:** é a opção recomendada para usar uma GPU NVIDIA com versões
-  atuais do TensorFlow. No WSL2, confirme `nvidia-smi`, instale o TensorFlow
-  com `tensorflow[and-cuda]` e valide `tf.config.list_physical_devices("GPU")`.
-- **Windows nativo:** o TensorFlow oficial deixou de oferecer suporte CUDA
-  nativo a partir da versão 2.11. O TensorFlow 2.10 ainda pode ser usado com
-  CUDA/cuDNN compatíveis, mas exige um ambiente separado e uma versão de Python
-  suportada por essa versão antiga; não é compatível com o Python 3.12/3.13 usado
-  no ambiente atual do projeto.
-- **Google Colab no VS Code:** instale a extensão Google Colab, conecte o
-  notebook a um runtime Colab com GPU pelo seletor de kernel e execute
-  [code/Colab_Setup.ipynb](./code/Colab_Setup.ipynb). Evite substituir
-  automaticamente o TensorFlow pré-instalado executando
-  `pip install -r requirements.txt`.
-- **Google Colab no navegador:** quando não houver GPU local, use o menu
-  `Runtime > Change runtime type > GPU`, confirme a GPU com `nvidia-smi` e
-  siga o guia [COLAB_BROWSER.md](./docs/COLAB_BROWSER.md).
+## Os 3 Pipelines Oficiais (Setup e Execução)
 
-Se o TensorFlow for executado apenas na CPU, escolha uma versão de Python
-compatível com a versão instalada e verifique se o kernel do notebook aponta
-para o mesmo ambiente virtual. O documento de compatibilidade também explica
-como configurar as bibliotecas CUDA/cuDNN e como diagnosticar kernels que não
-herdam o ambiente correto.
+O projeto suporta três ambientes oficiais de execução:
 
-### Stack do projeto
+| Pipeline | Python | Aceleração | Uso Indicado | Guia Detalhado |
+| --- | --- | --- | --- | --- |
+| **1. Execução Local** | `3.12.3` (WSL2) / `3.13.1` (Win) | GPU (WSL2) ou CPU | Desenvolvimento, testes unitários, *smoke tests* e avaliações locais | [GPU_TENSORFLOW_COMPATIBILITY.md](./docs/GPU_TENSORFLOW_COMPATIBILITY.md) |
+| **2. Colab no VS Code** | `3.13.16` | GPU (Colab) | Execução de notebooks com GPU sem configurar CUDA localmente | [Colab_Setup.ipynb](./code/Colab_Setup.ipynb) |
+| **3. Cluster Apuana** | `3.10.12` | GPU A100 80 GB | Rodadas completas (normal e adversarial) via jobs SLURM | [APUANA_RUNBOOK.md](./docs/APUANA_RUNBOOK.md) · [cluster/README.md](./cluster/README.md) |
 
-#### Software e bibliotecas
-
-- Python:
-  - Python 3.13.1 no ambiente nativo Windows usado durante o diagnóstico;
-  - Python 3.12.3 no ambiente WSL2 usado com GPU;
-  - use a versão compatível com o TensorFlow escolhido no ambiente.
-- TensorFlow 2.21.0 e Keras 3.15.1 no ambiente de referência atual;
-- NumPy e pandas para manipulação dos dados;
-- JupyterLab e `ipykernel` para execução dos notebooks;
-- Git para versionamento e clonagem do repositório;
-- LaTeX, `latexmk` e os pacotes do template para compilação do relatório.
-
-As versões instaladas no ambiente podem ser conferidas com:
-
-```bash
-python --version
-python -m pip freeze
-```
-
-No WSL2 com GPU, o TensorFlow utiliza as bibliotecas NVIDIA instaladas com
-`tensorflow[and-cuda]`. O driver NVIDIA do Windows precisa estar instalado e
-`nvidia-smi` deve funcionar dentro do WSL2.
-
-#### IDE
-
-VSCode
-
-#### Extensões do VS Code
-
-As extensões abaixo cobrem os fluxos de desenvolvimento, notebooks, WSL2,
-Colab e relatório:
-
-| Extensão | Identificador | Uso |
-| --- | --- | --- |
-| Python | `ms-python.python` | Interpretador, ambientes virtuais e execução Python |
-| Jupyter | `ms-toolsai.jupyter` | Execução e seleção de kernels nos notebooks |
-| WSL | `ms-vscode-remote.remote-wsl` | Abrir o projeto no Linux do WSL2 com `code .` |
-| Colab | `google.colab` | Abrir e executar notebooks no fluxo do Colab |
-| LaTeX Workshop | `james-yu.latex-workshop` | Compilar e visualizar `report.tex` |
-
-Instale Python e Jupyter para trabalhar com os notebooks localmente. A
-extensão WSL é necessária apenas para o fluxo Windows + WSL2. A extensão
-Google Colab é opcional quando os notebooks forem executados diretamente na
-interface web do Colab. LaTeX Workshop é necessária apenas para editar e
-compilar o relatório.
-
-Extensões de Git, como GitLens ou GitHub Pull Requests and Issues, podem ser
-úteis para colaboração, mas não são necessárias para executar ou reproduzir
-os experimentos.
-
-### Ambiente Python
-
-Se já possuir um ambiente Python que atenda à `requirements.txt`, pode pular
-esta parte, ativá-lo e seguir para a seção de execução. Para GPU no Windows,
-use o fluxo WSL2 descrito em
-[GPU_TENSORFLOW_COMPATIBILITY.md](./docs/GPU_TENSORFLOW_COMPATIBILITY.md), em vez
-de instalar o TensorFlow atual no Python nativo do Windows.
+### 1. Execução Local (GPU via WSL2 ou CPU)
 
 Na raiz do repositório:
 
 ```bash
 python -m venv .venv
-```
-
-
-Ative o ambiente:
-
-```bash
-# Linux, macOS, Git Bash ou WSL
+# Linux / macOS / WSL2 / Git Bash:
 source .venv/bin/activate
+# Windows PowerShell:
+# .venv\Scripts\Activate.ps1
 
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
-```
-
-Instale as dependências:
-
-```bash
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python -m ipykernel install --user --name replicating-repo --display-name "Python (replicating_RePO)"
 ```
 
-Em um ambiente local comum, os notebooks usam o kernel
-`Python (replicating_RePO)`. No WSL2 com GPU, siga a instalação específica do
-documento de compatibilidade e use o kernel `Python (replicating_RePO - GPU)`.
-As versões instaladas podem ser registradas para diagnóstico com:
+> **GPU no Windows:** o TensorFlow oficial (`>= 2.11`) não oferece suporte CUDA nativo no Windows. Para usar GPU localmente no Windows, utilize **WSL2** com `tensorflow[and-cuda]` e o kernel `Python (replicating_RePO - GPU)`, conforme descrito em [GPU_TENSORFLOW_COMPATIBILITY.md](./docs/GPU_TENSORFLOW_COMPATIBILITY.md).
 
-```bash
-python -m pip freeze
-```
+### 2. Execução via Extensão do Colab no VS Code (GPU)
 
-## Preparação dos dados
+1. Instale as extensões **Python** (`ms-python.python`), **Jupyter** (`ms-toolsai.jupyter`) e **Google Colab** (`google.colab`) no VS Code.
+2. Conecte um notebook a um runtime Colab com GPU pelo seletor de kernel (ou *Command Palette*: `Colab: Connect to Colab Runtime`).
+3. Abra e execute [code/Colab_Setup.ipynb](./code/Colab_Setup.ipynb) em ordem para validar a GPU, clonar/atualizar o repositório, extrair os dados e testar o carregamento dos modelos.
+4. Não execute `pip install -r requirements.txt` no Colab para não sobrescrever o TensorFlow pré-instalado do runtime.
 
-Os scripts `.sh` devem ser executados a partir da raiz do repositório, pois
-usam caminhos relativos. Em Linux ou macOS:
+### 3. Execução no Cluster Apuana (GPU A100)
 
-```bash
-bash extract_flow_data.sh
-bash extract_packet_data.sh
-```
-
-No Windows, execute os mesmos comandos pelo Git Bash ou pelo WSL. O WSL é a
-opção mais previsível para `bash`, `cat` e `unzip`; nesse caso, abra a pasta do
-repositório pelo caminho montado em `/mnt/<unidade>/...`. Não execute os
-scripts em `code/`, pois os caminhos relativos deixariam de apontar para os
-dados.
-
-Os scripts extraem os arquivos de fluxo e remontam as partes dos arquivos de
-pacotes antes de extraí-los. Essa etapa só precisa ser repetida quando os
-dados extraídos forem removidos ou quando os arquivos compactados forem
-substituídos. Confirme antes que as pastas de dados correspondentes foram
-criadas e que contêm os arquivos esperados. Os arquivos `.npy` em
-`data/*/x_train_meta/` são metadados já versionados e são usados na
-normalização durante a avaliação.
-
-## Novo dataset (`data/new_data/`)
-
-O dataset adicional (CIC-ToN-IoT, citação pendente de confirmação oficial) tem
-um fluxo próprio, documentado em
-[docs/NEW_DATASET.md](./docs/NEW_DATASET.md). O ZIP
-`data/new_data/New-dataset-split-clean.zip` é versionado via Git LFS e contém
-`new_train.csv` e `new_test.csv` já processados. O script
-`data/new_data/preprocess_new_data.py` é legado e não é necessário para a
-avaliação.
-
-Execute os comandos a partir da raiz, com o ambiente virtual ativo:
-
-```bash
-# Baixar o ZIP LFS, extrair e conferir os CSVs
-bash extract_new_data.sh
-
-# Validar cabeçalho, rótulos, metadados e modelo
-PYTHONPATH=code python -m new_data_eval validate
-
-# Avaliação normal completa (RePO e RePO+)
-PYTHONPATH=code python -m new_data_eval normal --modes repo,repo_plus
-
-# Avaliação adversarial (uma classe ou todas)
-PYTHONPATH=code python -m new_data_eval adversarial --attack ddos --variant primary
-PYTHONPATH=code python -m new_data_eval adversarial --attack all --variant primary
-
-# Smoke rápido: validação + normal + um ataque em results/new_data/smoke/
-PYTHONPATH=code python -m new_data_eval smoke
-```
-
-Para inspeção rápida, `--max-samples` e `--n-masks` reduzem o custo; use
-`--n-masks` múltiplo de 5 por causa do RePO+ e um `--results-dir` de smoke
-(`results/new_data/notebook_smoke`) para não sobrescrever os resultados
-canônicos:
-
-```bash
-PYTHONPATH=code python -m new_data_eval normal \
-  --results-dir results/new_data/notebook_smoke \
-  --modes repo,repo_plus --max-samples 20 --n-masks 5 --batch-size 2
-PYTHONPATH=code python -m new_data_eval adversarial \
-  --results-dir results/new_data/notebook_smoke \
-  --attack ddos --max-samples 5 --n-masks 5 --variant smoke
-```
-
-Rode o normal de smoke antes do adversarial: ele lê o threshold de FPR 10% do
-`repo_plus.json` gravado no mesmo `--results-dir`. Como esse normal é truncado
-(`--max-samples`), use `--variant smoke`; `--variant primary` exige um normal
-completo e falha antes de escrever qualquer resultado. A avaliação completa do novo
-dataset (normal com ~3,59 milhões de linhas e adversarial nos 9 ataques) ainda
-está pendente e deve rodar em GPU/Apuana; os smoke tests não produzem
-resultados finais.
-
-Os notebooks `code/new_data_RePO_Normal_Test.ipynb` e
-`code/new_data_RePO_Adversarial.ipynb` são wrappers finos dessa CLI: não
-reimplementam escores, thresholds nem o ataque. Rode o normal antes do
-adversarial para que o threshold de FPR 10% seja lido do resultado normal.
-
-Para retreinar o autoencoder de forma reproduzível:
-
-```bash
-python code/train_new_data_model.py \
-  --train-csv data/new_data/new_train.csv \
-  --output-dir models/new_data_model \
-  --seed 2019 --epochs 5 --batch-size 256
-```
-
-O treino aceita apenas rótulos `BENIGN` e grava `training_manifest.json` com o
-hash do CSV, seed, versões, epochs, loss final e shape. Os resultados JSON ficam
-em `results/new_data/normal/` e `results/new_data/adversarial/<variant>/`; os
-arquivos `.npz` de scores/checkpoints são locais e ignorados pelo Git.
-
-## Reprodução com os modelos já treinados
-
-O procedimento abaixo avalia os modelos presentes em `models/`; não é
-necessário treinar novamente. Os caminhos usados pelos notebooks são
-relativos à pasta `code/`.
-
-### Execução local no Linux, macOS ou Git Bash
-
-Ative o ambiente e inicie o Jupyter a partir de `code/`:
-
-```bash
-source .venv/bin/activate
-cd code
-python -m jupyter lab
-```
-
-No VS Code, abra um notebook em `code/` e selecione o kernel
-`Python (replicating_RePO)`. Execute as células em ordem, começando pelo
-início, depois de reiniciar o kernel. Evite executar células de otimização
-repetidamente no mesmo kernel, pois elas podem alterar variáveis e resultados
-intermediários.
-
-No Windows nativo, ative o ambiente pelo PowerShell antes de iniciar o
-Jupyter:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-Set-Location code
-python -m jupyter lab
-```
-
-Esse fluxo é adequado para CPU. Para GPU, use WSL2.
-
-### Execução no Windows com WSL2 e GPU
-
-Com o ambiente `.venv` configurado dentro do WSL2:
-
-```bash
-cd replicating_RePO
-source .venv/bin/activate
-code .
-```
-
-Na janela do VS Code conectada ao WSL2, abra o notebook e selecione
-`Python (replicating_RePO - GPU)`. Esse fluxo mostra o kernel diretamente e
-evita copiar a URL de um servidor Jupyter. Os detalhes de CUDA, cuDNN,
-`LD_LIBRARY_PATH` e a alternativa de conexão por servidor estão em
-[GPU_TENSORFLOW_COMPATIBILITY.md](./docs/GPU_TENSORFLOW_COMPATIBILITY.md).
-
-### Execução no Google Colab pelo VS Code
-
-Instale as extensões Python, Jupyter e Google Colab. Abra o notebook no VS
-Code, use o seletor de kernel para conectar a um runtime hospedado pelo Colab
-e escolha um runtime com GPU. O nome exato dos comandos pode variar conforme
-a versão da extensão; procure por comandos como **Colab: Connect to Colab
-Runtime** na Command Palette.
-
-Depois de conectar:
-
-1. abra [code/Colab_Setup.ipynb](./code/Colab_Setup.ipynb);
-2. execute as células em ordem;
-3. confirme que `tf.config.list_physical_devices("GPU")` retorna uma GPU;
-4. execute os notebooks de avaliação no mesmo runtime.
-
-Nesse fluxo, os comandos Python são executados remotamente no Colab, e não no
-Python local nem no WSL2. A extensão Google Colab gerencia a conexão; não é
-necessário iniciar `jupyter lab`, copiar URL ou configurar `LD_LIBRARY_PATH`.
-Consulte [GPU_TENSORFLOW_COMPATIBILITY.md](./docs/GPU_TENSORFLOW_COMPATIBILITY.md)
-para detalhes de diagnóstico.
-
-### Execução no Google Colab pelo navegador
-
-Para usar a interface web, siga [COLAB_BROWSER.md](./docs/COLAB_BROWSER.md). Esse
-fluxo usa os menus `Runtime` do Colab, que não fazem parte do fluxo conectado
-ao VS Code.
-
-### Ordem recomendada
-
-Execute os notebooks `Normal` antes dos `Adversarial`, tanto para o fluxo
-baseado em pacotes quanto para o baseado em fluxos. Os notebooks normais
-estabelecem a referência da avaliação; os notebooks adversariais produzem os
-resultados para comparação.
-
-Preserve as saídas geradas pela execução se elas forem necessárias para o
-relatório, mas registre no relatório o notebook, o kernel, a data e o commit
-usados. A execução pode consumir bastante memória e tempo, especialmente no
-cenário adversarial; feche kernels que não estiverem em uso.
-
-Os diretórios em `models/` estão no formato SavedModel legado do TensorFlow.
-Como o Keras 3 não aceita esse formato diretamente em `load_model()`, os
-notebooks usam `code/load_model_compat.py`. Esse adaptador também converte a
-saída única da assinatura `serving_default` para um tensor, mantendo o cálculo
-de gradientes necessário nos notebooks adversariais. Execute os notebooks a
-partir de `code/` para que o módulo seja encontrado.
-
-### Persistência dos resultados adversariais
-
-O módulo [`code/experiment_results.py`](./code/experiment_results.py) salva o
-melhor threshold, os TPRs da vítima e do atacante e o tempo total de execução
-em segundos. Os notebooks adversariais exportam arrays JSON independentes,
-um arquivo por notebook, e acumulam resultados entre diferentes ataques:
-
-```python
-from experiment_results import ExperimentResult, save_result_json
-
-result = ExperimentResult(
-    best_threshold=thr,
-    victim_tpr=np.sum(mal_scores >= thr) / len(mal_scores),
-    attacker_tpr=cons_as_mal / len(x_test_mal),
-    total_runtime_seconds=time.time() - st,
-    attack_type=attack_type,
-    model_type="flow",
-    normal_tpr=normal_tpr,
-
-)
-save_result_json(result, "../results/flow_based_adversarial_results.json")
-```
-
-Para ler os registros posteriormente:
-
-```python
-from experiment_results import load_results
-
-results = load_results("../results/flow_based_adversarial_results.json")
-```
-
-
-### Execução por linha de comando (opcional; Não recomendado)
-
-Para executar um notebook sem abrir a interface gráfica, a instalação de
-Jupyter inclui o `nbconvert`:
-
-```bash
-cd code
-python -m jupyter nbconvert --to notebook --execute \
-  --ExecutePreprocessor.timeout=-1 \
-  --output-dir=executed \
-  Flow_based_RePO_Normal_Test.ipynb
-```
-
-Repita trocando o nome do notebook. A pasta `code/executed/` é apenas uma
-pasta de saída local e não deve ser versionada sem necessidade.
-
-### Execução no cluster Apuana
-
-O diretório `cluster/` contém o fluxo recomendado para rodar a replicação no
-cluster do CIn, com um job SLURM por ataque, checkpoint e retomada:
+Nos nós de login do cluster Apuana (CIn/UFPE, com VPN ativa):
 
 ```bash
 cd "$HOME/Projects/replicating_RePO"
-git switch feat/apuana-cluster
+git switch main
 bash cluster/setup_env.sh
 bash cluster/submit.sh normal flow
 bash cluster/submit.sh adversarial flow "DoS Slowhttptest"
@@ -401,67 +73,177 @@ bash cluster/submit.sh adversarial packet all
 bash cluster/submit.sh export
 ```
 
-O runbook completo, incluindo partições, armazenamento, smoke test, retomada
-e coleta, está em [`cluster/README.md`](./cluster/README.md). O passo a passo
-linear, do login até a coleta, está em
-[`docs/APUANA_RUNBOOK.md`](./docs/APUANA_RUNBOOK.md).
+Consulte [docs/APUANA_RUNBOOK.md](./docs/APUANA_RUNBOOK.md) para o roteiro linear completo e [cluster/README.md](./cluster/README.md) para detalhes técnicos de partições, checkpoints e agregação.
 
-## Escrita e compilação do relatório
+---
 
-O arquivo a editar é `report.tex`; `report_template.tex` é uma referência.
-Os requisitos detalhados estão em
-[docs/REPORT_REQUIREMENTS.md](./docs/REPORT_REQUIREMENTS.md). Não há um
-`report.txt` neste repositório. Para editar e compilar pelo VS
-Code:
+## Ordem Recomendada de Execução
 
-1. Instale a extensão **LaTeX Workshop** (`James-Yu.latex-workshop`).
-2. Instale uma distribuição LaTeX:
-   - Windows: **MiKTeX** ou **TeX Live** (Recomendado);
-   - Linux: **TeX Live** com os pacotes extras necessários;
-   - macOS: **MacTeX**.
-3. Garanta que `latexmk` esteja disponível no `PATH`. No Windows, confirme
-   também que a distribuição escolhida instalou os executáveis auxiliares
-   necessários.
-4. Instale ou habilite os pacotes usados pelo documento: `IEEEtran`,
-   `graphicx`, `amsmath`, `algorithm` e `algpseudocode`. O `IEEEtran` e os
-   pacotes de algoritmo podem exigir instalação adicional em uma instalação
-   mínima. No MiKTeX, habilitar a instalação automática de pacotes é a opção
-   mais simples; no TeX Live, instale-os pelo `tlmgr` ou pelo gerenciador da
-   distribuição.
-5. Abra `report.tex` e use `Build LaTeX project` na barra do LaTeX Workshop
-   ou `Ctrl+Alt+B`. A receita padrão com `latexmk` normalmente é suficiente;
-   se houver referências BibTeX no futuro, use a receita que inclua BibTeX.
+Para compreender e reproduzir o fluxo completo do pipeline, siga esta sequência:
 
-[Guia Tutorial](https://github.com/James-Yu/LaTeX-Workshop/wiki/Install) para instalação de requerimentos do LaTeX Workshop
+1. **Preparação dos dados** (a partir da raiz do repositório):
+   ```bash
+   bash extract_flow_data.sh
+   bash extract_packet_data.sh
+   bash extract_new_data.sh
+   ```
+   *(No Windows, execute via Git Bash ou WSL2. Os metadados de normalização em `data/*/x_train_meta/` já estão versionados.)*
+2. **Setup do ambiente** (quando aplicável): `code/Colab_Setup.ipynb` (Colab VS Code) ou `cluster/setup_env.sh` (Apuana).
+3. **Treinamento** *(opcional — os modelos pré-treinados já estão em `models/`)*: `code/train_flow_based_model.py`, `code/train_packet_based_model.py`, `code/train_new_data_model.py` (ou `cluster/train.py`).
+4. **Avaliação Normal** *(sempre antes da Adversarial para estabelecer thresholds e referência)*:
+   - Fluxos: `code/Flow_based_RePO_Normal_Test.ipynb`
+   - Pacotes: `code/Packet_based_RePO_Normal_Test.ipynb`
+   - Novo dataset: `code/new_data_RePO_Normal_Test.ipynb` (ou `PYTHONPATH=code python -m new_data_eval normal`)
+5. **Avaliação Adversarial**:
+   - Fluxos: `code/Flow_based_RePO_Adversarial.ipynb`
+   - Pacotes: `code/Packet_based_RePO_Adversarial.ipynb`
+   - Novo dataset: `code/new_data_RePO_Adversarial.ipynb` (ou `PYTHONPATH=code python -m new_data_eval adversarial`)
+6. **Agregação e Figuras**: `cluster/aggregate_results.py`, `cluster/aggregate_new_data.py` e `code/generate_report_figures.py`.
 
-Uma compilação manual equivalente, a partir da raiz, é:
+---
+
+## Novo Dataset (`data/new_data/`)
+
+O dataset adicional (**CIC-ToN-IoT** — Sarhan et al., *Big Data Research*, vol. 30, p. 100359, 2022) avalia a generalização do protocolo *RePO/RePO+* em 77 features de fluxo. Os CSVs já processados (`new_train.csv` e `new_test.csv`) estão em `data/new_data/New-dataset-split-clean.zip` (Git LFS), com avaliação implementada no pacote `code/new_data_eval/` e nos notebooks *wrappers* `code/new_data_RePO_Normal_Test.ipynb` e `code/new_data_RePO_Adversarial.ipynb`.
+
+Com o ambiente configurado e os dados extraídos (`bash extract_new_data.sh`), valide a integridade com:
+
+```bash
+PYTHONPATH=code python -m new_data_eval validate
+```
+
+Para o passo a passo completo de **como executar os testes do novo dataset em cada um dos 3 ambientes** (Local, Colab no VS Code e Cluster Apuana), consulte [docs/NEW_DATASET.md](./docs/NEW_DATASET.md).
+
+---
+
+## Reprodução dos Modelos Treinados
+
+Os modelos já treinados estão em `models/flw_model/`, `models/pkt_model/` e `models/new_data_model/` no formato *SavedModel* legado do TensorFlow. Como o Keras 3 não carrega esse formato diretamente via `load_model()`, os notebooks e scripts utilizam o adaptador [`code/load_model_compat.py`](./code/load_model_compat.py), preservando os gradientes necessários aos ataques adversariais.
+
+Escolha o procedimento correspondente ao seu ambiente:
+
+### No Ambiente Local (GPU via WSL2 ou CPU)
+
+1. Ative o ambiente virtual (`.venv`) e abra o VS Code (na janela `WSL: Ubuntu` se estiver usando GPU) ou inicie o JupyterLab a partir de `code/`:
+   ```bash
+   source .venv/bin/activate
+   cd code
+   python -m jupyter lab
+   ```
+2. Selecione o kernel `Python (replicating_RePO - GPU)` (WSL2) ou `Python (replicating_RePO)` (CPU).
+3. Execute as células em ordem, iniciando pelos notebooks `Normal` antes dos `Adversarial`.
+
+### Na Extensão do Colab no VS Code (GPU)
+
+1. Conecte o VS Code a um runtime Colab com GPU.
+2. Execute [code/Colab_Setup.ipynb](./code/Colab_Setup.ipynb) até o fim (garante `/content/replicating_RePO/code` no `sys.path`, GPU ativa e dados extraídos).
+3. Abra e execute os notebooks de avaliação (`Normal` antes de `Adversarial`) no mesmo runtime.
+
+### No Cluster Apuana (GPU A100)
+
+1. No nó de login, após `bash cluster/setup_env.sh`, valide com um *smoke test* ou submeta os jobs SLURM diretamente:
+   ```bash
+   bash cluster/submit.sh normal flow
+   bash cluster/submit.sh normal packet
+   bash cluster/submit.sh adversarial flow all
+   bash cluster/submit.sh adversarial packet all
+   ```
+2. Para o novo dataset:
+   ```bash
+   bash cluster/submit.sh new-data normal
+   bash cluster/submit.sh new-data adversarial all primary
+   ```
+
+---
+
+## Resultados e Relatório
+
+Para consultar os **resultados consolidados, tabelas comparativas, análises estatísticas e discussões**, consulte primariamente o relatório final em LaTeX ([`report.tex`](./report.tex) / PDF compilado).
+
+Caso deseje inspecionar os **artefatos brutos** produzidos pelas execuções:
+
+- **Pasta `results/`:** contém os arquivos `.json` gerados pelas execuções locais e via extensão do **Colab no VS Code** (ex.: `flow_based_adversarial_results.json`, `packet_based_adversarial_results.json`).
+- **Documentos `*_ANALYSIS.md` em `docs/`:** consolidam os resultados completos executados no **Cluster Apuana** (cujos scripts de execução e agregação estão em `cluster/`):
+  - [`docs/REPLICATION_ANALYSIS.md`](./docs/REPLICATION_ANALYSIS.md) — replicação em fluxos e pacotes (CICIDS2017).
+  - [`docs/NEW_DATASET_ANALYSIS.md`](./docs/NEW_DATASET_ANALYSIS.md) — avaliação no novo dataset (CIC-ToN-IoT).
+
+---
+
+## Escrita e Compilação do Relatório
+
+O documento principal é [`report.tex`](./report.tex), estruturado a partir de [`report_template.tex`](./report_template.tex) e dos requisitos em [`docs/REPORT_REQUIREMENTS.md`](./docs/REPORT_REQUIREMENTS.md).
+
+### Compilação pelo VS Code
+
+1. Instale a extensão **LaTeX Workshop** (`james-yu.latex-workshop`).
+2. Instale uma distribuição LaTeX com `latexmk` no `PATH` (**TeX Live** recomendado no Linux/Windows, **MiKTeX** no Windows ou **MacTeX** no macOS) e os pacotes `IEEEtran`, `graphicx`, `amsmath`, `algorithm` e `algpseudocode`.
+3. Abra `report.tex` e execute `Build LaTeX project` (`Ctrl+Alt+B`).
+
+### Compilação manual via terminal
 
 ```bash
 latexmk -pdf -interaction=nonstopmode -halt-on-error report.tex
 ```
 
-Se o build falhar por pacote ausente, instale o pacote na distribuição LaTeX,
-em vez de copiar arquivos `.sty` para o repositório. Arquivos auxiliares
-(`.aux`, `.log`, `.fls`, `.fdb_latexmk`, `.out` e o PDF) são produtos locais
-da compilação e não devem ser incluídos no commit, salvo se o projeto decidir
-explicitamente versionar o PDF final.
+*(Arquivos auxiliares como `.aux`, `.log`, `.fls`, `.fdb_latexmk` e `.out` são produtos locais de compilação.)*
 
-## Boas práticas para colaborar
+---
 
-- Faça alterações pequenas e focadas; não reformate todo o `report.tex` ao
-  alterar uma seção.
-- Use finais de linha e codificação consistentes e evite alterar espaços,
-  indentação ou quebras de linha sem necessidade.
-- Prefira editar o `.tex` como texto e gere o PDF localmente. Não faça
-  commit dos arquivos auxiliares do LaTeX.
-- Antes de enviar mudanças, confira `git diff --check` e `git diff` e
-  confirme que apenas os arquivos pretendidos foram alterados.
-- Faça `git pull --rebase` antes de começar a escrever, e envie commits
-  pequenos com mensagens descritivas. Isso reduz conflitos e torna o
-  histórico do relatório mais fácil de revisar.
-- Ao adicionar resultados, identifique a origem (notebook, modelo, dados,
-  kernel e commit) e evite substituir resultados anteriores sem registrar a
-  mudança.
-- Não salve credenciais, caminhos absolutos da sua máquina ou grandes saídas
-  de notebook no repositório. Se uma saída for essencial, mantenha apenas a
-  saída mínima e reproduzível.
+## Estrutura do Repositório
+
+```text
+replicating_RePO/
+├── README.md
+├── requirements.txt
+├── extract_flow_data.sh
+├── extract_packet_data.sh
+├── extract_new_data.sh
+├── report.tex
+├── report_template.tex
+├── cluster/                            # Scripts SLURM, runner, treino e agregação no Apuana
+│   ├── README.md
+│   ├── requirements-cluster.txt
+│   ├── setup_env.sh
+│   ├── submit.sh
+│   ├── train.py
+│   ├── repo_runner.py
+│   ├── metrics.py
+│   ├── aggregate_results.py
+│   ├── aggregate_new_data.py
+│   ├── analyze_adversarial.py
+│   ├── analyze_sampling.py
+│   ├── lfs_fetch.py
+│   └── tests/
+├── code/                               # Notebooks, adaptadores, treino e pacote new_data_eval
+│   ├── Colab_Setup.ipynb
+│   ├── Flow_based_RePO_Normal_Test.ipynb
+│   ├── Flow_based_RePO_Adversarial.ipynb
+│   ├── Packet_based_RePO_Normal_Test.ipynb
+│   ├── Packet_based_RePO_Adversarial.ipynb
+│   ├── new_data_RePO_Normal_Test.ipynb
+│   ├── new_data_RePO_Adversarial.ipynb
+│   ├── load_model_compat.py
+│   ├── experiment_results.py
+│   ├── train_flow_based_model.py
+│   ├── train_packet_based_model.py
+│   ├── train_new_data_model.py
+│   ├── generate_report_figures.py
+│   └── new_data_eval/                  # Pacote de avaliação e testes do novo dataset
+├── data/
+│   ├── flow_based/                     # ZIPs CICIDS2017 (fluxo) e x_train_meta/
+│   ├── packet_based/                   # ZIPs CICIDS2017 (pacotes) e x_train_meta/
+│   └── new_data/                       # ZIP LFS (CIC-ToN-IoT) e x_train_meta/
+├── docs/
+│   ├── GPU_TENSORFLOW_COMPATIBILITY.md
+│   ├── APUANA_RUNBOOK.md
+│   ├── NEW_DATASET.md
+│   ├── REPLICATION_ANALYSIS.md
+│   ├── NEW_DATASET_ANALYSIS.md
+│   ├── PROJECT_TASKS.md
+│   └── REPORT_REQUIREMENTS.md
+├── models/
+│   ├── flw_model/
+│   ├── pkt_model/
+│   └── new_data_model/
+└── results/                            # JSONs das execuções locais e Colab VS Code
+```

@@ -13,11 +13,10 @@ RePO/RePO+ fora dos dados do artigo de referência. A fonte canônica é o ZIP
 
 ## Fonte e citação
 
-**PENDENTE DE CONFIRMAÇÃO OFICIAL.** O nome do ZIP, o script legado e o
-cabeçalho dos CSVs indicam o **CIC-ToN-IoT**. A origem oficial, a licença, a
-citação bibliográfica e a justificativa formal da escolha ainda precisam ser
-confirmadas com quem produziu o branch. Nenhuma referência é inventada aqui;
-esta seção deve ser atualizada antes da redação final do relatório.
+O conjunto de dados adicional é o **CIC-ToN-IoT**, gerado a partir da conversão dos registros originais do **ToN-IoT** pela ferramenta CICFlowMeter-v4 para o mesmo espaço padronizado de 77 atributos de fluxo:
+
+- **Citação do CIC-ToN-IoT:** M. Sarhan, S. Layeghy, and M. Portmann, *"Evaluating standard feature sets towards increased generalisability and explainability of ML-based network intrusion detection,"* *Big Data Research*, vol. 30, p. 100359, 2022.
+- **Citação do dataset original (ToN-IoT):** N. Moustafa, *"ToN-IoT datasets,"* *IEEE DataPort*, 2019, doi: 10.21227/fesz-dm97.
 
 - Arquivo canônico: `data/new_data/New-dataset-split-clean.zip` (Git LFS).
 - Conteúdo declarado: os CSVs já processados e divididos, **não** o dataset
@@ -333,10 +332,43 @@ O treino grava `training_manifest.json` no diretório de saída com o hash
 SHA-256 do CSV, seed, versões de Python/NumPy/pandas/TensorFlow/Keras, número
 de epochs, batch size, loss final e shape da matriz de treino.
 
-## Cluster Apuana
+## Execução nos 3 ambientes oficiais
 
-A branch `feat/apuana-cluster` expõe o novo dataset sem alterar o runner de
-fluxo/pacotes:
+### 1. Execução Local (GPU via WSL2 ou CPU)
+
+- **Python:** `3.12.3` (WSL2 com GPU) ou `3.13.1` (Windows nativo CPU).
+- **Preparação e validação:** com o `.venv` ativo na raiz do repositório:
+
+```bash
+bash extract_new_data.sh
+PYTHONPATH=code python -m new_data_eval validate
+```
+
+- **Execução via CLI (smoke ou completa):**
+
+```bash
+# Smoke rápido (validação + normal + 1 ataque)
+PYTHONPATH=code python -m new_data_eval smoke
+
+# Avaliação completa (recomendado em GPU)
+PYTHONPATH=code python -m new_data_eval normal --modes repo,repo_plus
+PYTHONPATH=code python -m new_data_eval adversarial --attack all --variant primary
+```
+
+- **Execução via notebooks:** abra `code/new_data_RePO_Normal_Test.ipynb` e depois `code/new_data_RePO_Adversarial.ipynb` no VS Code (kernel `Python (replicating_RePO - GPU)` no WSL2 ou `Python (replicating_RePO)` local).
+
+### 2. Execução via Extensão do Colab no VS Code (GPU)
+
+- **Python:** `3.13.16` (runtime remoto do Colab com TensorFlow `2.21.0`).
+- **Passos:**
+  1. Conecte o VS Code a um runtime Colab com GPU e execute [code/Colab_Setup.ipynb](../code/Colab_Setup.ipynb) em ordem.
+  2. No mesmo runtime (a partir de `/content/replicating_RePO`), extraia o novo dataset caso ainda não tenha sido extraído: `bash extract_new_data.sh` (ou execute `PYTHONPATH=code python -m new_data_eval validate` via célula/terminal).
+  3. Execute [code/new_data_RePO_Normal_Test.ipynb](../code/new_data_RePO_Normal_Test.ipynb) antes de [code/new_data_RePO_Adversarial.ipynb](../code/new_data_RePO_Adversarial.ipynb) (ou ajuste `MAX_SAMPLES`, `N_MASKS` e `VARIANT` conforme desejado).
+
+### 3. Execução no Cluster Apuana (GPU A100)
+
+- **Python:** `3.10.12` (`/usr/bin/python3.10`, TensorFlow `2.21.0`, Keras `3.12.4`).
+- A branch `main` integra o tooling do novo dataset sem alterar o runner de fluxo/pacotes:
 
 ```bash
 bash cluster/setup_env.sh                 # extrai em $DATA_ROOT/new_data
@@ -349,13 +381,11 @@ bash cluster/submit.sh new-data export
 O normal completo precisa terminar antes do adversarial; o job adversarial
 falha se `$RESULTS_ROOT/new_data/normal/repo_plus.json` não existir. As
 sensibilidades usam `sensitivity_first_n` e `sensitivity_paper_0.8`. O
-passo a passo detalhado está em `docs/APUANA_RUNBOOK.md` e
-`cluster/README.md`, seção 16.
+passo a passo detalhado está em [APUANA_RUNBOOK.md](./APUANA_RUNBOOK.md) e
+[cluster/README.md](../cluster/README.md), seção 16.
 
 ## Limitações
 
-- **Fonte e citação pendentes:** a atribuição oficial ao CIC-ToN-IoT depende de
-  confirmação externa (ver “Fonte e citação”).
 - **Calibração e medição no mesmo conjunto:** os thresholds normal e
   adversarial são calculados nos benignos de `new_test.csv` e o FPR é medido
   nesses mesmos benignos, como no protocolo do artigo. Isso é uma limitação

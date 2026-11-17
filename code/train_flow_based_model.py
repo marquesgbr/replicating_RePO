@@ -1,10 +1,13 @@
-import tensorflow as tf
-import numpy as np
+"""Train the flow-based RePO denoising autoencoder on CICIDS2017 Monday traffic."""
+
 import os
 import time
-from tensorflow.keras.layers import Dense, Flatten, Dropout
-from tensorflow.keras import Model
+
+import numpy as np
 import pandas as pd
+import tensorflow as tf
+from tensorflow.keras import Model
+from tensorflow.keras.layers import Dense, Dropout, Flatten
 
 # Access layers through the already imported TensorFlow module so static
 # analyzers do not try to resolve the bundled ``tensorflow.keras.layers``
@@ -14,8 +17,12 @@ import pandas as pd
 # Dropout = tf.keras.layers.Dropout
 # Model = tf.keras.Model
 
+
 class FlowModel(Model):
-    def __init__(self,input_size):
+    """Fully connected denoising autoencoder for 77-feature flow vectors."""
+
+    def __init__(self, input_size):
+        """Initialize encoder/decoder dense layers and dropout regularization."""
         super(FlowModel, self).__init__()
         self.flatten = Flatten()
         self.d1 = Dense(256, activation='relu')
@@ -31,98 +38,110 @@ class FlowModel(Model):
 
         # MUST preserve the order of implemented layers for building the model
         self._layers_to_build = [self.d1, self.d2, self.d3, self.drop1, self.d4, self.d5, self.drop2, self.d6, self.d7]
-        
+
     def build(self, input_shape):
+        """Build sublayers sequentially to infer weights before training/export."""
         current_shape = tf.TensorShape(input_shape)
         for layer in self._layers_to_build:
             layer.build(current_shape)
             current_shape = tf.TensorShape(layer.compute_output_shape(current_shape))
         super().build(input_shape)
 
-    def call(self, x,training=None):
+    def call(self, x, training=None):
+        """Forward pass reconstructing normalized flow features clipped to [0, 1]."""
         x = self.d1(x)
         x = self.d2(x)
         x = self.d3(x)
-        x = self.drop1(x,training=training)
+        x = self.drop1(x, training=training)
         x = self.d4(x)
         x = self.d5(x)
-        x = self.drop2(x,training=training)
+        x = self.drop2(x, training=training)
         x = self.d6(x)
         x = self.d7(x)
-        x = tf.clip_by_value(x,0.,1.)
+        x = tf.clip_by_value(x, 0., 1.)
         return x
-    
+
+
 def get_train_ds():
+    """Load Monday benign flow CSV, drop inf/nan rows, and apply min-max scaling."""
     url_data = 'data/flow_based/Monday-WH-generate-labeled.csv'
     df = pd.read_csv(url_data)
-    feats = df.iloc[:,8:]
-    ds_port = df.iloc[:,5]
-    df = pd.concat([ds_port,feats],axis=1)
+    # Concatenate Dst Port (col 5) with the 76 numeric flow features (cols 8:)
+    feats = df.iloc[:, 8:]
+    ds_port = df.iloc[:, 5]
+    df = pd.concat([ds_port, feats], axis=1)
     print(df.columns.values)
-    all_feats = df.iloc[:,:-1].astype(np.float32).values
-    known_data_IDs =(np.any(np.isinf(all_feats),axis=1) + np.any(np.isnan(all_feats),axis=1))==False
+    all_feats = df.iloc[:, :-1].astype(np.float32).values
+    known_data_IDs = (np.any(np.isinf(all_feats), axis=1) + np.any(np.isnan(all_feats), axis=1)) == False
     x_train = all_feats[known_data_IDs]
-    
-    y_train = df.iloc[:,-1].values
 
-    y_train[y_train=='BENIGN']='0.0'
+    y_train = df.iloc[:, -1].values
+    y_train[y_train == 'BENIGN'] = '0.0'
     y_train = y_train.astype(np.float32)
     y_train = y_train[known_data_IDs]
-    
-    print(x_train.shape,y_train.shape)
-    
-    train_min = np.min(x_train,axis=0)
-    train_max = np.max(x_train,axis=0)
-    
-    x_train  = (x_train - train_min)/(train_max - train_min + 1e-6)
-    
+
+    print(x_train.shape, y_train.shape)
+
+    # Min-max normalization using training statistics
+    train_min = np.min(x_train, axis=0)
+    train_max = np.max(x_train, axis=0)
+    x_train = (x_train - train_min) / (train_max - train_min + 1e-6)
+
     return x_train
 
-def make_partial(dset,masked_percent=0.75):
+
+def make_partial(dset, masked_percent=0.75):
+    """Apply an independent Bernoulli(1 - masked_percent) mask to input features."""
     partial = dset
     mask = np.random.random(partial.shape)
-    mask = (mask>masked_percent)*1.
+    mask = (mask > masked_percent) * 1.
     mask = mask.astype(np.float32)
-    partial = partial*mask
+    partial = partial * mask
     return partial
 
+
 @tf.function
-def repo_loss(rec_x,x):
-    MSE_loss = (rec_x - x)**2
+def repo_loss(rec_x, x):
+    """Compute mean squared reconstruction error between output and target."""
+    MSE_loss = (rec_x - x) ** 2
     MSE_loss = tf.reduce_mean(MSE_loss)
     return MSE_loss
 
+
 @tf.function
-def train_step(partial_x, x,optimizer):
+def train_step(partial_x, x, optimizer):
+    """Execute one gradient descent step and update the epoch loss metric."""
     with tf.GradientTape() as tape:
         rec_x = model(partial_x, training=True)
-        loss = repo_loss(rec_x=rec_x,x=x)
+        loss = repo_loss(rec_x=rec_x, x=x)
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
     train_loss(loss)
 
+
 def train_model(x_train):
+    """Train FlowModel for 5 epochs with Adam (lr=1e-3) and 75% feature masking."""
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
     nb_epochs = 5
     batch_size = 256
-    total_batch = len(x_train)//batch_size
-    if len(x_train) % batch_size!=0:
-        total_batch+=1
+    total_batch = len(x_train) // batch_size
+    if len(x_train) % batch_size != 0:
+        total_batch += 1
 
     start_time = time.time()
     for ep in range(nb_epochs):
         train_loss.reset_states()
-        x_train_partial = make_partial(x_train,0.75)
+        x_train_partial = make_partial(x_train, 0.75)
         inds = rng.permutation(x_train_partial.shape[0])
         x_train_partial_perm = x_train_partial[inds]
         x_train_perm = x_train[inds]
         for i in range(total_batch):
-            x_batch = x_train_partial_perm[i*batch_size:(i+1)*batch_size]
-            y_batch = x_train_perm[i*batch_size:(i+1)*batch_size]
-            train_step(x_batch,y_batch,optimizer)
-        print ('trained time',time.time() - start_time,ep,'loss:',train_loss.result().numpy())
-    print ('total time',time.time() - start_time)
+            x_batch = x_train_partial_perm[i * batch_size:(i + 1) * batch_size]
+            y_batch = x_train_perm[i * batch_size:(i + 1) * batch_size]
+            train_step(x_batch, y_batch, optimizer)
+        print('trained time', time.time() - start_time, ep, 'loss:', train_loss.result().numpy())
+    print('total time', time.time() - start_time)
 
 
 if __name__ == "__main__":

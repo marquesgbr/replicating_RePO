@@ -40,10 +40,11 @@
 ### 2.1 Dados
 
 O ZIP canônico é `data/new_data/New-dataset-split-clean.zip` (Git LFS), com os
-CSVs já processados e divididos. O dataset é atribuído ao **CIC-ToN-IoT** pelo
-nome do arquivo, pelo script legado e pelo cabeçalho dos CSVs; a citação
-oficial ainda está **pendente de confirmação** (`docs/NEW_DATASET.md`, seção
-“Fonte e citação”).
+CSVs já processados e divididos do conjunto **CIC-ToN-IoT** (M. Sarhan, S. Layeghy,
+and M. Portmann, *"Evaluating standard feature sets towards increased generalisability
+and explainability of ML-based network intrusion detection,"* *Big Data Research*,
+vol. 30, p. 100359, 2022; derivado do *ToN-IoT* de N. Moustafa, *IEEE DataPort*,
+2019, doi: 10.21227/fesz-dm97). Ver `docs/NEW_DATASET.md`, seção “Fonte e citação”.
 
 | Item | Valor |
 | --- | --- |
@@ -357,11 +358,9 @@ Duas ressalvas importantes:
    `train_max == train_min` e são normalizadas apenas pelo epsilon
    (`31`, `32`, `33`, `48`, `55`, `56`, `57`, `63`). O efeito delas nos escores
    não foi isolado.
-9. **Fonte e citação pendentes.** A atribuição oficial ao CIC-ToN-IoT depende
-   de confirmação externa.
-10. **Ataque otimiza RePO, sucesso medido por RePO+.** É o protocolo do artigo,
-    mas deixa em aberto se um atacante que otimizasse diretamente o RePO+
-    teria mais sucesso.
+9. **Ataque otimiza RePO, sucesso medido por RePO+.** É o protocolo do artigo,
+   mas deixa em aberto se um atacante que otimizasse diretamente o RePO+
+   teria mais sucesso.
 
 ## 8. Conclusões
 

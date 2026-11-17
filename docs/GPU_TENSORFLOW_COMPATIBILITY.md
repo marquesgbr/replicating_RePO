@@ -237,13 +237,6 @@ O caminho será um Python remoto do Colab, e não o `.venv` local. Isso é
 esperado. Como a sessão é temporária, salve resultados importantes fora do
 runtime antes de desconectar.
 
-## Uso do Google Colab no navegador
-
-Para o procedimento baseado na interface web, consulte
-[COLAB_BROWSER.md](./COLAB_BROWSER.md). Os menus `Runtime` e a instalação de
-GPU descritos nesse documento se aplicam ao navegador, não ao fluxo conectado
-ao VS Code.
-
 ## Carregamento dos modelos deste projeto
 
 Os modelos versionados em `models/` estão no formato SavedModel legado do
