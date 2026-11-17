@@ -124,10 +124,17 @@ O setup faz, em ordem:
 2. instala TensorFlow 2.21 + Keras 3.15.1 + CUDA via pip;
 3. extrai os CSVs de fluxo em `$SCRATCH/replicating-repo-data/flow_based`;
 4. extrai os `.npy` de pacotes em `$SCRATCH/replicating-repo-data/packet_based`;
-5. cria symlinks em `data/` apontando para os dados extraídos;
-6. valida modelos, dados e import do TensorFlow;
-7. grava o `pip freeze` em
+5. extrai o novo dataset em `$SCRATCH/replicating-repo-data/new_data`;
+6. cria symlinks em `data/` apontando para os dados extraídos;
+7. valida modelos, dados e import do TensorFlow;
+8. grava o `pip freeze` em
    `$SCRATCH/replicating-repo-results/env-lock.txt`.
+
+O novo dataset usa `git-lfs` quando disponível; se o login não tiver `git-lfs`,
+o extrator baixa o ZIP pela API do GitHub, verifica tamanho/SHA-256 e grava o
+arquivo real em `$SCRATCH/replicating-repo-data/new_data`, sem sobrescrever o
+ponteiro versionado. Se a rede bloquear, copie o ZIP para lá ou use
+`--skip-new-data`.
 
 Isso pode demorar dependendo da rede e do disco. Para repetir apenas a extração dos dados:
 
@@ -152,6 +159,13 @@ Para pular uma etapa já feita:
 ```bash
 bash cluster/setup_env.sh --skip-venv
 bash cluster/setup_env.sh --skip-data
+bash cluster/setup_env.sh --skip-new-data
+```
+
+Para reextrair só o novo dataset:
+
+```bash
+bash cluster/setup_env.sh --force-new-data
 ```
 
 ## 5. Verificações rápidas no login
@@ -262,6 +276,97 @@ PY
 O campo `fpr_at_paper_threshold` mostra qual FPR o threshold adversarial do
 artigo produz nos dados benignos. Ele deve ficar próximo de 0,10.
 
+## 7.1 Avaliação do novo dataset (`data/new_data`)
+
+O pacote `code/new_data_eval/` tem tasks próprias e não altera os resultados de
+fluxo/pacotes. O setup já extraiu os CSVs para
+`$SCRATCH/replicating-repo-data/new_data` e criou os symlinks em
+`data/new_data/`.
+
+Smoke primeiro, em diretório isolado:
+
+```bash
+SMOKE=1 bash cluster/submit.sh new-data smoke ddos
+```
+
+Ou interativo:
+
+```bash
+srun --partition=short-simple --nodelist=cluster-node6 \
+  --gres=gpu:1 -c 8 --mem=32G --time=00:30:00 --pty bash
+source "$SCRATCH/replicating-repo-venv/bin/activate"
+cd "$HOME/Projects/replicating_RePO"
+PYTHONPATH=code python -m new_data_eval smoke \
+  --data-dir data/new_data \
+  --model-dir models/new_data_model \
+  --meta-dir data/new_data/x_train_meta \
+  --results-dir "$SCRATCH/replicating-repo-results/new_data" \
+  --attack ddos
+```
+
+Depois da validação, rode o normal completo (um job):
+
+```bash
+bash cluster/submit.sh new-data normal
+```
+
+Ele grava:
+
+```text
+$SCRATCH/replicating-repo-results/new_data/normal/repo.json
+$SCRATCH/replicating-repo-results/new_data/normal/repo_plus.json
+```
+
+Só depois do normal terminar, submeta o adversarial. O array tem nove índices,
+um por ataque, com dois concorrentes:
+
+```bash
+bash cluster/submit.sh new-data adversarial all primary
+```
+
+Sensibilidades opcionais, em diretórios próprios:
+
+```bash
+bash cluster/submit.sh new-data adversarial all sensitivity_first_n
+bash cluster/submit.sh new-data adversarial all sensitivity_paper_0.8
+```
+
+Se `normal/repo_plus.json` não existir, o job adversarial falha antes de
+carregar o modelo. Para um piloto rápido **depois** que o normal terminar:
+
+```bash
+MAX_SAMPLES=200 BATCH_SIZE=256 \
+  bash cluster/submit.sh new-data adversarial ddos smoke
+```
+
+`smoke` grava em `adversarial/smoke/` e não bloqueia o checkpoint de
+`primary`; use `primary` apenas para a rodada canônica completa. Não altere
+`N_MASKS`, `SCORE_REPEATS` ou `PAIRED_SCORING` no adversarial canônico: o
+normal e o adversarial precisam usar os mesmos valores de scoring. Para
+inspecionar com 5 máscaras, use `new-data smoke`.
+
+Acompanhe com `squeue -u "$USER"` e
+`tail -f "$SCRATCH/replicating-repo-results/logs/"*.out`.
+
+### 7.1.1 Rodada autônoma com dependências
+
+Para deixar a cadeia rodando sem depender da sua máquina:
+
+```bash
+NORMAL_JOB=$(bash cluster/submit.sh new-data normal | awk 'NR==1{print $NF}')
+
+ARRAY_JOB=$(DEPENDENCY="afterok:${NORMAL_JOB}" \
+  bash cluster/submit.sh new-data adversarial all primary | awk 'NR==1{print $NF}')
+
+DEPENDENCY="afterok:${ARRAY_JOB}" \
+  bash cluster/submit.sh new-data export-job
+```
+
+O export roda em job CPU, sem GPU, e grava em
+`$SCRATCH/replicating-repo-results/new_data/export/`. Se o normal falhar, o
+adversarial não começa; se um ataque falhar, o export não roda. Os jobs já
+submetidos continuam mesmo se você desligar o computador.
+
 ## 8. Piloto adversarial de fluxo
 
 ```bash
@@ -350,6 +455,52 @@ squeue -u "$USER"
 ls -1 "$SCRATCH/replicating-repo-results/logs/"repo-adv-*_*.out
 ```
 
+### 10.1 Estudo de eficiência das máscaras (`mask-exp`)
+
+A matriz completa de runs (status, escala, custo e métricas afetadas) está em
+[`MASK_EFFICIENCY_RUNS.md`](MASK_EFFICIENCY_RUNS.md).
+
+O namespace `mask-exp` reaproveita o harness de `code/mask_experiments/` e
+roda as três direções com métricas adversariais por direção.  A cadeia
+completa, com dependências `afterok` e manifesto dos jobs, é um comando:
+
+```bash
+bash cluster/run_mask_study.sh            # matriz completa
+bash cluster/run_mask_study.sh --smoke    # valida todas as etapas
+bash cluster/run_mask_study.sh --dry-run  # só imprime o plano
+```
+
+Cada job recebe `MASK_STEP_NOTE` e o log começa com `[step] <descrição>`.
+Para rodar uma etapa isolada:
+
+```bash
+bash cluster/submit.sh mask-exp baseline
+bash cluster/submit.sh mask-exp variance
+bash cluster/submit.sh mask-exp adversarial all      # Direção A
+bash cluster/submit.sh mask-exp cascade              # Direção B (normal)
+bash cluster/submit.sh mask-exp cascade-attack all   # Direção B (ataque)
+bash cluster/submit.sh mask-exp distill              # Direção C (treina o aluno)
+bash cluster/submit.sh mask-exp distill-attack all   # Direção C (ataque)
+bash cluster/submit.sh mask-exp packet
+bash cluster/submit.sh mask-exp aggregate            # merge + Markdown
+```
+
+`distill-attack` só pode rodar depois do `distill` (o aluno fica em
+`$RESULTS_ROOT/mask_efficiency/distillation_student.keras`); a cadeia já usa
+`afterok`.  Para encadear manualmente:
+
+```bash
+DISTILL_JOB=$(bash cluster/submit.sh mask-exp distill | awk 'NR==1{print $NF}')
+DEPENDENCY="afterok:${DISTILL_JOB}" \
+  bash cluster/submit.sh mask-exp distill-attack all
+```
+
+Os defaults são de produção (100 k benignos, 5 k por ataque, 11 ataques).
+Para um smoke, reduza `MASK_MAX_BENIGN`, `MASK_MAX_PER_ATTACK`,
+`MASK_PER_ATTACK` e use `MASK_ATTACK_SET=pilot` (4 ataques).  As métricas
+adversariais e as saídas estão descritas em
+[`../cluster/README.md`](../cluster/README.md), seção 17.
+
 ## 11. Se um job for interrompido
 
 Reenvie o mesmo ataque:
@@ -365,6 +516,16 @@ mudou (modelo, seed, threshold ou `max_samples`), ele recusa continuar. Use
 ```bash
 FORCE=1 bash cluster/submit.sh adversarial packet "FTP-Patator"
 ```
+
+O novo dataset usa o mesmo mecanismo (checkpoint a cada 50 amostras). Reenvie o
+mesmo comando para retomar:
+
+```bash
+bash cluster/submit.sh new-data adversarial all primary
+```
+
+`BATCH_SIZE` pode mudar numa retomada após OOM porque não entra no hash do
+checkpoint; modelo, dados, seed, thresholds, sampling e variante não podem.
 
 Para cancelar um job:
 
@@ -392,6 +553,16 @@ Leia o resumo:
 ```bash
 sed -n '1,160p' results/cluster/summary.md
 ```
+
+Para o novo dataset, o resumo é separado:
+
+```bash
+bash cluster/submit.sh new-data export
+sed -n '1,200p' results/cluster/new_data/summary.md
+```
+
+Ele grava `summary.csv`, `summary.md` e `summary.json`, ignora `smoke/` e lista
+os ataques/variantes ausentes.
 
 Guarde os resultados brutos antes da limpeza de 90 dias do `$SCRATCH`:
 
@@ -443,6 +614,27 @@ MODEL_SOURCE=retrained bash cluster/submit.sh adversarial packet all
 
 O treino não tem checkpoint; se for interrompido, reenvie o job.
 
+Para o novo dataset:
+
+```bash
+bash cluster/submit.sh new-data train
+```
+
+O modelo vai para `models/retrained/new_data_model`. A task recusa gravar em
+`models/new_data_model` (modelo dos autores), inclusive com caminhos relativos
+ou subdiretórios. Rodar `code/train_new_data_model.py` localmente sem
+`--output-dir` grava no default `models/new_data_model` e sobrescreve o
+baseline versionado; use `--output-dir models/retrained/new_data_model`.
+Para avaliar o modelo retreinado:
+
+```bash
+MODEL_SOURCE=retrained bash cluster/submit.sh new-data normal
+MODEL_SOURCE=retrained bash cluster/submit.sh new-data adversarial all primary
+```
+
+Atenção: o script de treino não grava `x_train_meta`; se o CSV de treino mudar,
+os metadados de `data/new_data/x_train_meta/` precisam ser regenerados.
+
 ## 14. Checklist final
 
 - [ ] branch `feat/apuana-cluster` no cluster;
@@ -453,7 +645,11 @@ O treino não tem checkpoint; se for interrompido, reenvie o job.
 - [ ] piloto adversarial de pacotes concluído;
 - [ ] `adversarial flow all` concluído;
 - [ ] `adversarial packet all` concluído;
-- [ ] `summary.md` revisado;
+- [ ] `new-data smoke ddos` concluído;
+- [ ] `new-data normal` concluído;
+- [ ] `new-data adversarial all primary` concluído;
+- [ ] sensibilidades do novo dataset (opcional) concluídas;
+- [ ] `summary.md` e `new_data/summary.md` revisados;
 - [ ] resultados arquivados/copiados;
 - [ ] `docs/PROJECT_TASKS.md` e `report.tex` atualizados.
 

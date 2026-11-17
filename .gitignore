@@ -18,6 +18,17 @@ wednesday.zip
 ## Flow Based
 *.csv
 
+## New dataset evaluation artifacts
+results/new_data/**/*.npz
+
+# Tex related files 
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

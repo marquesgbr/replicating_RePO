@@ -133,14 +133,35 @@ Execute os notebooks normais antes dos adversariais.
 Esta seção deve ser concluída caso o escopo do projeto inclua outro conjunto de
 dados além dos dados usados pelo artigo de referência.
 
-- [ ] Escolher o dataset adicional.
+- [x] Escolher o dataset adicional.
+  - Evidência: CIC-ToN-IoT processado em `data/new_data/` (citação oficial
+    ainda pendente de confirmação).
 - [ ] Justificar a escolha.
+  - Pendente: a justificativa formal depende da confirmação da fonte oficial
+    (seção “Fonte e citação” de `docs/NEW_DATASET.md`, marcada como pendente).
 - [ ] Documentar origem, características e classes.
-- [ ] Preparar os dados.
-- [ ] Definir treino, validação e teste.
-- [ ] Registrar quantidades por classe.
-- [ ] Executar a avaliação da solução de referência no dataset adicional.
-- [ ] Consolidar os resultados para comparação.
+  - Pendente: as características e classes estão descritas em
+    `docs/NEW_DATASET.md`, mas a origem/citação oficial ainda precisa ser
+    confirmada.
+- [x] Preparar os dados.
+  - Evidência: `extract_new_data.sh` e extração local do ZIP LFS com
+    `validate` aprovado.
+- [x] Definir treino, validação e teste.
+  - Evidência: 70% dos benignos para treino, 30% dos benignos mais todos os
+    maliciosos para teste; não há split de validação separado.
+- [x] Registrar quantidades por classe.
+  - Evidência: 3.590.733 linhas válidas no teste e contagens por classe em
+    `docs/NEW_DATASET.md` (obtidas de `validate`).
+- [x] Executar a avaliação da solução de referência no dataset adicional.
+  - Evidência: normal completo (3.590.733 amostras, 45,8 min) e array
+    adversarial `29541` com os 9 ataques (30.864 amostras), no Apuana, commit
+    `cdc39d6`. Resultados em `$HOME/replicating-repo-results/new_data/`.
+  - Tooling: `cluster/submit.sh new-data smoke|normal|adversarial|train|export`
+    (ver `docs/APUANA_RUNBOOK.md`, seção 7.1).
+- [x] Consolidar os resultados para comparação.
+  - Evidência: `docs/NEW_DATASET_ANALYSIS.md` (normal, adversarial, comparação
+    com fluxo e pacotes, limitações e conclusões). Export agregado em
+    `$HOME/replicating-repo-results/new_data/export/`.
 
 ## 6. Melhoria proposta pela equipe
 

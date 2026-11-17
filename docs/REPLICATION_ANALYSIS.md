@@ -2,7 +2,8 @@
 
 > Documento gerado durante a execução no cluster Apuana (CIn/UFPE).
 > Avaliações normais e rodadas adversariais completas, executadas no cluster
-> Apuana (CIn/UFPE).
+> Apuana (CIn/UFPE). Os resultados do dataset adicional (CIC-ToN-IoT) estão em
+> `docs/NEW_DATASET_ANALYSIS.md`.
 
 ## 1. Resumo executivo
 

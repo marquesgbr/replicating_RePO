@@ -1,649 +1,578 @@
-%% bare_conf.tex
-%% V1.4b
-%% 2015/08/26
-%% by Michael Shell
-%% See:
-%% http://www.michaelshell.org/
-%% for current contact information.
-%%
-%% This is a skeleton file demonstrating the use of IEEEtran.cls
-%% (requires IEEEtran.cls version 1.8b or later) with an IEEE
-%% conference paper.
-%%
-%% Support sites:
-%% http://www.michaelshell.org/tex/ieeetran/
-%% http://www.ctan.org/pkg/ieeetran
-%% and
-%% http://www.ieee.org/
-
-%%*************************************************************************
-%% Legal Notice:
-%% This code is offered as-is without any warranty either expressed or
-%% implied; without even the implied warranty of MERCHANTABILITY or
-%% FITNESS FOR A PARTICULAR PURPOSE! 
-%% User assumes all risk.
-%% In no event shall the IEEE or any contributor to this code be liable for
-%% any damages or losses, including, but not limited to, incidental,
-%% consequential, or any other damages, resulting from the use or misuse
-%% of any information contained here.
-%%
-%% All comments are the opinions of their respective authors and are not
-%% necessarily endorsed by the IEEE.
-%%
-%% This work is distributed under the LaTeX Project Public License (LPPL)
-%% ( http://www.latex-project.org/ ) version 1.3, and may be freely used,
-%% distributed and modified. A copy of the LPPL, version 1.3, is included
-%% in the base LaTeX documentation of all distributions of LaTeX released
-%% 2003/12/01 or later.
-%% Retain all contribution notices and credits.
-%% ** Modified files should be clearly indicated as such, including  **
-%% ** renaming them and changing author support contact information. **
-%%*************************************************************************
-
-
-% *** Authors should verify (and, if needed, correct) their LaTeX system  ***
-% *** with the testflow diagnostic prior to trusting their LaTeX platform ***
-% *** with production work. The IEEE's font choices and paper sizes can   ***
-% *** trigger bugs that do not appear when using other class files.       ***                          ***
-% The testflow support page is at:
-% http://www.michaelshell.org/tex/testflow/
-
-
-
 \documentclass[conference]{IEEEtran}
-% Some Computer Society conferences also require the compsoc mode option,
-% but others use the standard conference format.
-%
-% If IEEEtran.cls has not been installed into the LaTeX system files,
-% manually specify the path to it like:
-% \documentclass[conference]{../sty/IEEEtran}
 
-
-
-
-
-% Some very useful LaTeX packages include:
-% (uncomment the ones you want to load)
-
-
-% *** MISC UTILITY PACKAGES ***
-%
-%\usepackage{ifpdf}
-% Heiko Oberdiek's ifpdf.sty is very useful if you need conditional
-% compilation based on whether the output is pdf or dvi.
-% usage:
-% \ifpdf
-%   % pdf code
-% \else
-%   % dvi code
-% \fi
-% The latest version of ifpdf.sty can be obtained from:
-% http://www.ctan.org/pkg/ifpdf
-% Also, note that IEEEtran.cls V1.7 and later provides a builtin
-% \ifCLASSINFOpdf conditional that works the same way.
-% When switching from latex to pdflatex and vice-versa, the compiler may
-% have to be run twice to clear warning/error messages.
-
-
-
-
-
-
-% *** CITATION PACKAGES ***
-%
-%\usepackage{cite}
-% cite.sty was written by Donald Arseneau
-% V1.6 and later of IEEEtran pre-defines the format of the cite.sty package
-% \cite{} output to follow that of the IEEE. Loading the cite package will
-% result in citation numbers being automatically sorted and properly
-% "compressed/ranged". e.g., [1], [9], [2], [7], [5], [6] without using
-% cite.sty will become [1], [2], [5]--[7], [9] using cite.sty. cite.sty's
-% \cite will automatically add leading space, if needed. Use cite.sty's
-% noadjust option (cite.sty V3.8 and later) if you want to turn this off
-% such as if a citation ever needs to be enclosed in parenthesis.
-% cite.sty is already installed on most LaTeX systems. Be sure and use
-% version 5.0 (2009-03-20) and later if using hyperref.sty.
-% The latest version can be obtained at:
-% http://www.ctan.org/pkg/cite
-% The documentation is contained in the cite.sty file itself.
-
-
-
-
-
-
-% *** GRAPHICS RELATED PACKAGES ***
-%
-\ifCLASSINFOpdf
-  % \usepackage[pdftex]{graphicx}
-  % declare the path(s) where your graphic files are
-  % \graphicspath{{../pdf/}{../jpeg/}}
-  % and their extensions so you won't have to specify these with
-  % every instance of \includegraphics
-  % \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
-\else
-  % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
-  % will default to the driver specified in the system graphics.cfg if no
-  % driver is specified.
-  % \usepackage[dvips]{graphicx}
-  % declare the path(s) where your graphic files are
-  % \graphicspath{{../eps/}}
-  % and their extensions so you won't have to specify these with
-  % every instance of \includegraphics
-  % \DeclareGraphicsExtensions{.eps}
-\fi
-% graphicx was written by David Carlisle and Sebastian Rahtz. It is
-% required if you want graphics, photos, etc. graphicx.sty is already
-% installed on most LaTeX systems. The latest version and documentation
-% can be obtained at: 
-% http://www.ctan.org/pkg/graphicx
-% Another good source of documentation is "Using Imported Graphics in
-% LaTeX2e" by Keith Reckdahl which can be found at:
-% http://www.ctan.org/pkg/epslatex
-%
-% latex, and pdflatex in dvi mode, support graphics in encapsulated
-% postscript (.eps) format. pdflatex in pdf mode supports graphics
-% in .pdf, .jpeg, .png and .mps (metapost) formats. Users should ensure
-% that all non-photo figures use a vector format (.eps, .pdf, .mps) and
-% not a bitmapped formats (.jpeg, .png). The IEEE frowns on bitmapped formats
-% which can result in "jaggedy"/blurry rendering of lines and letters as
-% well as large increases in file sizes.
-%
-% You can find documentation about the pdfTeX application at:
-% http://www.tug.org/applications/pdftex
-
-
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazilian]{babel}
+\usepackage{cite}
 \usepackage{graphicx}
-
-% *** MATH PACKAGES ***
-%
 \usepackage{amsmath}
-% A popular package from the American Mathematical Society that provides
-% many useful and powerful commands for dealing with mathematics.
-%
-% Note that the amsmath package sets \interdisplaylinepenalty to 10000
-% thus preventing page breaks from occurring within multiline equations. Use:
-%\interdisplaylinepenalty=2500
-% after loading amsmath to restore such page breaks as IEEEtran.cls normally
-% does. amsmath.sty is already installed on most LaTeX systems. The latest
-% version and documentation can be obtained at:
-% http://www.ctan.org/pkg/amsmath
-
-\renewcommand\refname{Referências}
-
+\usepackage{amssymb}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
-% *** SPECIALIZED LIST PACKAGES ***
-%
-% \usepackage{algorithmic}
-% algorithmic.sty was written by Peter Williams and Rogerio Brito.
-% This package provides an algorithmic environment fo describing algorithms.
-% You can use the algorithmic environment in-text or within a figure
-% environment to provide for a floating algorithm. Do NOT use the algorithm
-% floating environment provided by algorithm.sty (by the same authors) or
-% algorithm2e.sty (by Christophe Fiorio) as the IEEE does not use dedicated
-% algorithm float types and packages that provide these will not provide
-% correct IEEE style captions. The latest version and documentation of
-% algorithmic.sty can be obtained at:
-% http://www.ctan.org/pkg/algorithms
-% Also of interest may be the (relatively newer and more customizable)
-% algorithmicx.sty package by Szasz Janos:
-% http://www.ctan.org/pkg/algorithmicx
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{url}
 
+\addto\captionsbrazilian{%
+  \renewcommand\refname{Referências}%
+  \renewcommand{\abstractname}{Resumo}%
+  \renewcommand{\tablename}{Tabela}%
+  \renewcommand{\figurename}{Figura}%
+}
+\makeatletter
+\renewcommand{\fnum@figure}{\figurename~\thefigure}
+\renewcommand{\fnum@table}{\tablename~\thetable}
+\makeatother
+\floatname{algorithm}{Algoritmo}
 
-
-
-% *** ALIGNMENT PACKAGES ***
-%
-%\usepackage{array}
-% Frank Mittelbach's and David Carlisle's array.sty patches and improves
-% the standard LaTeX2e array and tabular environments to provide better
-% appearance and additional user controls. As the default LaTeX2e table
-% generation code is lacking to the point of almost being broken with
-% respect to the quality of the end results, all users are strongly
-% advised to use an enhanced (at the very least that provided by array.sty)
-% set of table tools. array.sty is already installed on most systems. The
-% latest version and documentation can be obtained at:
-% http://www.ctan.org/pkg/array
-
-
-% IEEEtran contains the IEEEeqnarray family of commands that can be used to
-% generate multiline equations as well as matrices, tables, etc., of high
-% quality.
-
-
-
-
-% *** SUBFIGURE PACKAGES ***
-%\ifCLASSOPTIONcompsoc
-%  \usepackage[caption=false,font=normalsize,labelfont=sf,textfont=sf]{subfig}
-%\else
-%  \usepackage[caption=false,font=footnotesize]{subfig}
-%\fi
-% subfig.sty, written by Steven Douglas Cochran, is the modern replacement
-% for subfigure.sty, the latter of which is no longer maintained and is
-% incompatible with some LaTeX packages including fixltx2e. However,
-% subfig.sty requires and automatically loads Axel Sommerfeldt's caption.sty
-% which will override IEEEtran.cls' handling of captions and this will result
-% in non-IEEE style figure/table captions. To prevent this problem, be sure
-% and invoke subfig.sty's "caption=false" package option (available since
-% subfig.sty version 1.3, 2005/06/28) as this is will preserve IEEEtran.cls
-% handling of captions.
-% Note that the Computer Society format requires a larger sans serif font
-% than the serif footnote size font used in traditional IEEE formatting
-% and thus the need to invoke different subfig.sty package options depending
-% on whether compsoc mode has been enabled.
-%
-% The latest version and documentation of subfig.sty can be obtained at:
-% http://www.ctan.org/pkg/subfig
-
-
-
-
-% *** FLOAT PACKAGES ***
-%
-%\usepackage{fixltx2e}
-% fixltx2e, the successor to the earlier fix2col.sty, was written by
-% Frank Mittelbach and David Carlisle. This package corrects a few problems
-% in the LaTeX2e kernel, the most notable of which is that in current
-% LaTeX2e releases, the ordering of single and double column floats is not
-% guaranteed to be preserved. Thus, an unpatched LaTeX2e can allow a
-% single column figure to be placed prior to an earlier double column
-% figure.
-% Be aware that LaTeX2e kernels dated 2015 and later have fixltx2e.sty's
-% corrections already built into the system in which case a warning will
-% be issued if an attempt is made to load fixltx2e.sty as it is no longer
-% needed.
-% The latest version and documentation can be found at:
-% http://www.ctan.org/pkg/fixltx2e
-
-
-%\usepackage{stfloats}
-% stfloats.sty was written by Sigitas Tolusis. This package gives LaTeX2e
-% the ability to do double column floats at the bottom of the page as well
-% as the top. (e.g., "\begin{figure*}[!b]" is not normally possible in
-% LaTeX2e). It also provides a command:
-%\fnbelowfloat
-% to enable the placement of footnotes below bottom floats (the standard
-% LaTeX2e kernel puts them above bottom floats). This is an invasive package
-% which rewrites many portions of the LaTeX2e float routines. It may not work
-% with other packages that modify the LaTeX2e float routines. The latest
-% version and documentation can be obtained at:
-% http://www.ctan.org/pkg/stfloats
-% Do not use the stfloats baselinefloat ability as the IEEE does not allow
-% \baselineskip to stretch. Authors submitting work to the IEEE should note
-% that the IEEE rarely uses double column equations and that authors should try
-% to avoid such use. Do not be tempted to use the cuted.sty or midfloat.sty
-% packages (also by Sigitas Tolusis) as the IEEE does not format its papers in
-% such ways.
-% Do not attempt to use stfloats with fixltx2e as they are incompatible.
-% Instead, use Morten Hogholm'a dblfloatfix which combines the features
-% of both fixltx2e and stfloats:
-%
-% \usepackage{dblfloatfix}
-% The latest version can be found at:
-% http://www.ctan.org/pkg/dblfloatfix
-
-
-
-
-% *** PDF, URL AND HYPERLINK PACKAGES ***
-%
-%\usepackage{url}
-% url.sty was written by Donald Arseneau. It provides better support for
-% handling and breaking URLs. url.sty is already installed on most LaTeX
-% systems. The latest version and documentation can be obtained at:
-% http://www.ctan.org/pkg/url
-% Basically, \url{my_url_here}.
-
-
-
-
-% *** Do not adjust lengths that control margins, column widths, etc. ***
-% *** Do not use packages that alter fonts (such as pslatex).         ***
-% There should be no need to do such things with IEEEtran.cls V1.6 and later.
-% (Unless specifically asked to do so by the journal or conference you plan
-% to submit to, of course. )
-
-
-% correct bad hyphenation here
-\hyphenation{op-tical net-works semi-conduc-tor}
-
+\hyphenation{op-tical net-works semi-conduc-tor auto-en-cod-er auto-en-cod-ers ad-ver-sa-ri-al}
 
 \begin{document}
-%
-% paper title
-% Titles are generally capitalized except for words such as a, an, and, as,
-% at, but, by, for, in, nor, of, on, or, the, to and up, which are usually
-% not capitalized unless they are the first or last word of the title.
-% Linebreaks \\ can be used within to get better formatting as desired.
-% Do not put math or special symbols in the title.
-\title{IF848 Detecção de Intrusão\\ Template para relatório de projeto (SUBSTITUIR PELO TÍTULO DO PROJETO)}
 
+\title{Reprodução e Análise de Robustez de Denoising Autoencoders contra Exemplos Adversariais em Sistemas de Detecção de Intrusão em Redes}
 
-% author names and affiliations
-% use a multiple column layout for up to three different
-% affiliations
-\author{\IEEEauthorblockN{1\textsuperscript{st} Discente A}
+\author{\IEEEauthorblockN{1\textsuperscript{st} Gabriel Marques de Albuquerque}
 \IEEEauthorblockA{\textit{Centro de Informática - UFPE} \\
-%\textit{}\\
-Recife, Brazil \\
-discentea@cin.ufpe.br}
+Recife, Brasil \\
+gma5@cin.ufpe.br}
 \and
 \IEEEauthorblockN{2\textsuperscript{nd} Discente B}
 \IEEEauthorblockA{\textit{Centro de Informática - UFPE} \\
-%\textit{name of organization (of Aff.)}\\
-Recife, Brazil \\
+Recife, Brasil \\
 discenteb@cin.ufpe.br}
 \and
 \IEEEauthorblockN{3\textsuperscript{rd} Discente C}
 \IEEEauthorblockA{\textit{Centro de Informática - UFPE} \\
-%\textit{name of organization (of Aff.)}\\
-Recife, Brazil \\
+Recife, Brasil \\
 discentec@cin.ufpe.br}
+\and
+\IEEEauthorblockN{4\textsuperscript{th} Discente D}
+\IEEEauthorblockA{\textit{Centro de Informática - UFPE} \\
+Recife, Brasil \\
+discented@cin.ufpe.br}
 }
 
-% conference papers do not typically use \thanks and this command
-% is locked out in conference mode. If really needed, such as for
-% the acknowledgment of grants, issue a \IEEEoverridecommandlockouts
-% after \documentclass
-
-% for over three affiliations, or if they all won't fit within the width
-% of the page, use this alternative format:
-% 
-%\author{\IEEEauthorblockN{Michael Shell\IEEEauthorrefmark{1},
-%Homer Simpson\IEEEauthorrefmark{2},
-%James Kirk\IEEEauthorrefmark{3}, 
-%Montgomery Scott\IEEEauthorrefmark{3} and
-%Eldon Tyrell\IEEEauthorrefmark{4}}
-%\IEEEauthorblockA{\IEEEauthorrefmark{1}School of Electrical and Computer Engineering\\
-%Georgia Institute of Technology,
-%Atlanta, Georgia 30332--0250\\ Email: see http://www.michaelshell.org/contact.html}
-%\IEEEauthorblockA{\IEEEauthorrefmark{2}Twentieth Century Fox, Springfield, USA\\
-%Email: homer@thesimpsons.com}
-%\IEEEauthorblockA{\IEEEauthorrefmark{3}Starfleet Academy, San Francisco, California 96678-2391\\
-%Telephone: (800) 555--1212, Fax: (888) 555--1212}
-%\IEEEauthorblockA{\IEEEauthorrefmark{4}Tyrell Inc., 123 Replicant Street, Los Angeles, California 90210--4321}}
-
-
-
-
-% use for special paper notices
-%\IEEEspecialpapernotice{(Invited Paper)}
-
-
-
-
-% make the title area
 \maketitle
 
-% As a general rule, do not put math, special symbols or citations
-% in the abstract
 \begin{abstract}
-Breve apresentação do contexto do trabalho, problema a ser abordado, soluções existentes, método proposto e resultados obtidos.
+A evolução contínua em volume, diversidade e sofisticação dos ataques cibernéticos exige o desenvolvimento de Sistemas de Detecção de Intrusão em Redes capazes de identificar ameaças inéditas sob baixas taxas de falsos alertas.
+Diante da incapacidade dos sistemas tradicionais baseados em assinaturas para detectar ataques de dia zero, detectores de anomalias não supervisionados fundamentados em redes neurais profundas têm sido amplamente investigados.
+Entretanto, estudos recentes demonstram que tais modelos sofrem tanto de supergeneralização na reconstrução de tráfego quanto de severa vulnerabilidade a exemplos adversariais, nos quais um atacante perturba atributos de tráfego de modo a evadir a detecção sem violar a semântica dos protocolos de rede.
+Este trabalho realiza a reprodução experimental, a auditoria metodológica e a avaliação de generalização do método de Reconstrução a partir de Observação Parcial e de sua variante aprimorada com agregação por soma de mínimos por grupo, propostos originalmente para elevar a robustez de detectores de anomalias baseados em autoencoders de remoção de ruído.
+Os experimentos conduzidos sobre o conjunto de dados de referência nas granularidades de fluxos e de pacotes confirmam a alta fidelidade da reprodução em cenário normal, atingindo taxas médias de detecção de 25,25\% em fluxos e de 34,72\% em pacotes sob taxa de falsos positivos de 1\%, além de preservar a detecção acima da taxa de falsos positivos de 10\% em 9 de 11 ataques de fluxo e em 10 de 11 ataques de pacotes no cenário adversarial.
+Paralelamente, a investigação do protocolo original revela limitações metodológicas importantes ligadas ao viés de amostragem temporal e à variância da reavaliação estocástica com máscara única.
+Por fim, a aplicação da metodologia a um conjunto adicional de fluxos de Internet das Coisas evidencia que o ganho proporcionado pela agregação de observações parciais se mantém fora do domínio original, mas que a eficácia da evasão adversarial é fortemente dependente das características estatísticas do conjunto de dados.
 \end{abstract}
 
-% no keywords
-
-
-
-
-% For peer review papers, you can put extra information on the cover
-% page as needed:
-% \ifCLASSOPTIONpeerreview
-% \begin{center} \bfseries EDICS Category: 3-BBND \end{center}
-% \fi
-%
-% For peerreview papers, this IEEEtran command inserts a page break and
-% creates the second title. It will be ignored for other modes.
 \IEEEpeerreviewmaketitle
 
 \section{Introdução}
 
-Deverá abordar a motivação, justificativa e principais contribuições do trabalho em questão. Alguns pontos que devem ser abordados de forma \textbf{breve}, são:
+O crescimento contínuo das ameaças cibernéticas em escala, diversidade e complexidade tem provocado impactos severos a indivíduos, organizações e infraestruturas críticas, abrangendo desde perdas financeiras bilionárias até interrupções em sistemas de distribuição de energia \cite{symantec2019, icscert2016, kumar2017}.
+Nesse cenário, os Sistemas de Detecção de Intrusão em Redes (NIDS, do inglês \textit{Network Intrusion Detection Systems}) constituem um elemento essencial na linha de defesa para monitorar e identificar atividades maliciosas.
+Com o avanço de paradigmas como Redes Definidas por Software (SDN), Virtualização de Funções de Rede (NFV), serviços de segurança nativos em nuvem e telemetria programável no plano de dados, tornou-se viável inspecionar de maneira centralizada o tráfego que atravessa os pontos de entrada e comutação da rede \cite{ahmad2015, lee2017}.
+Todavia, os NIDS tradicionais baseados em assinaturas mostram-se insuficientes frente ao panorama atual de ameaças, pois dependem de padrões previamente conhecidos e são incapazes de detectar ataques de dia zero (\textit{zero-day attacks}) ou variantes polimórficas de intrusão \cite{khraisat2019}.
+
+Para superar a rigidez das assinaturas, a literatura recente passou a empregar técnicas de aprendizado de máquina e aprendizado profundo na construção de NIDS baseados em detecção de anomalias \cite{alqatf2018, yu2017, yin2018, malaiya2018, mirsky2018, zong2018, zenati2018, chalapathy2019}.
+Esses sistemas são treinados de forma não supervisionada exclusivamente sobre tráfego benigno, aprendendo um perfil de normalidade da rede.
+Na fase de inferência, cada pacote ou fluxo observado recebe um escore de dissimilaridade em relação ao perfil aprendido; caso esse escore ultrapasse um limiar de decisão predefinido, o tráfego é classificado como malicioso.
+Para que um detector de anomalias seja operacionalmente viável em redes reais de alto volume, esse limiar deve ser calibrado de modo a garantir uma taxa de falsos positivos ($\text{FPR}$, do inglês \textit{False Positive Rate}) extremamente reduzida.
+Caso contrário, em virtude da falácia da taxa base (\textit{base-rate fallacy}) \cite{axelsson2000}, o volume absoluto de alertas falsos gerados pelo tráfego legítimo inviabiliza a triagem humana por especialistas de segurança.
+
+Apesar do potencial dos NIDS baseados em aprendizado profundo, investigações recentes demonstraram que sua capacidade de detecção apresenta duas fragilidades estruturais graves \cite{hashemi2019, aiken2019, hashemi2020}.
+A primeira reside no problema de supergeneralização (\textit{over-generalization}) em modelos reconstrutivos convencionais, como \textit{autoencoders} treinados com observação completa dos atributos de entrada \cite{mirsky2018}: devido à elevada capacidade representacional das redes neurais, o modelo aprende transformações próximas à identidade e passa a reconstruir amostras anômalas — nunca vistas no treinamento — com erro tão baixo quanto o de amostras benignas, degradando drasticamente a taxa de detecção ($\text{TPR}$, do inglês \textit{True Positive Rate}, ou taxa de verdadeiros positivos) sob baixas taxas de falsos alertas.
+A segunda fragilidade decorre da natureza determinística desses modelos durante a inferência, o que os torna altamente suscetíveis a ataques de evasão por exemplos adversariais \cite{biggio2013, szegedy2013, hashemi2019}.
+Nesses ataques, o adversário manipula sutilmente o tráfego malicioso — por exemplo, alterando intervalos entre pacotes, fragmentando cargas úteis ou injetando pacotes sintéticos — para reduzir o escore de anomalia abaixo do limiar de detecção sem comprometer a funcionalidade do ataque nem violar os protocolos de comunicação subjacentes.
+
+Diante dessas limitações, Hashemi e Keller \cite{hashemi2020} propuseram o mecanismo \textit{Reconstruction from Partial Observation} (RePO) e sua versão estendida RePO+ para a construção de NIDS não supervisionados mais precisos e resilientes a exemplos adversariais.
+A abordagem substitui a observação integral da entrada pelo treinamento de \textit{Denoising Autoencoders} (DAE) \cite{vincent2008} combinados com máscaras binárias aleatórias que ocultam a maior parte dos atributos de entrada.
+Ao exigir que a rede neural gere os atributos ausentes a partir de uma visão parcial da amostra, o método impede a supergeneralização e amplia a separação entre os erros de reconstrução de tráfego benigno e malicioso.
+Adicionalmente, na inferência do RePO+, cada amostra é avaliada paralelamente sob $100$ máscaras aleatórias distintas divididas em $5$ grupos, somando-se os erros mínimos de cada grupo.
+Essa estratégia atenua o impacto de máscaras que ocultem atributos essenciais em amostras legítimas e introduz não-determinismo na inferência, dificultando a transferência de exemplos adversariais gerados em cópias locais do modelo pelo atacante.
+
+Sob essa ótica, este trabalho investiga a reprodutibilidade científica, a validade metodológica e a capacidade de generalização do sistema RePO/RePO+ em diferentes representações e domínios de tráfego de rede.
+As principais contribuições deste trabalho são:
 
 \begin{itemize}
-    \item Qual o problema que está sendo investigado?
-    \item Por que ele é interessante?
-    \item Por que foi necessário que o artigo de referência propusesse tal solução?
-    \item Quais as soluções existentes e suas desvantangens?
-    \item O que está sendo proposto para resolver o problema em questão?
-    \item As principais contribuições do trabalho em formato de lista.
-\end{itemize}
-
-Exemplo: as principais contribuições deste template de relatório são:
-
-\begin{itemize}
-    \item Facilitar a escrita do relatório do projeto da disciplina de detecção de intrusão;
-    \item Explicar brevemente os conteúdos a serem abordados em cada seção do relatório.
+    \item Reproduzir integralmente e validar empiricamente os experimentos do artigo de referência \cite{hashemi2020} para detecção de intrusão baseada em fluxos e em pacotes sobre o conjunto de dados CICIDS2017 \cite{sharafaldin2018}, avaliando os modos RePO e RePO+ tanto no cenário normal ($\text{FPR} = 0{,}01$) quanto sob ataques adversariais ($\text{FPR} = 0{,}10$);
+    \item Realizar uma auditoria metodológica e estatística rigorosa do protocolo experimental de referência, identificando e quantificando o impacto do viés de amostragem temporal na seleção sequencial de instâncias de ataque, da variância estocástica associada à reavaliação por máscara única e da desproporção amostral em classes minoritárias;
+    \item Estender a avaliação do método RePO/RePO+ e do ataque adversarial de fluxo para um novo conjunto de dados de tráfego de Internet das Coisas (CIC-ToN-IoT), demonstrando que a vantagem da agregação por mínimos por grupo se mantém em um novo domínio, ao passo que a transferibilidade e o sucesso do ataque adversarial dependem fortemente da distribuição dos atributos e da escala dos escores de reconstrução.
 \end{itemize}
 
 \section{Trabalhos relacionados}
 
-Apresentar alguns dos artigos existentes na literatura sobre o team que está sendo trabalhado, suas \textbf{principais contribuições e limitações}.
+A literatura relacionada a este estudo divide-se em duas vertentes complementares: o projeto de detectores de anomalias não supervisionados baseados em aprendizado profundo para tráfego de rede e a formulação de ataques de evasão adversarial contra sistemas de detecção de intrusão.
 
-Este é um exemplo de citação \cite{IEEEhowto:kopka}.
+\subsection{Detecção de Anomalias em Redes com Aprendizado Profundo}
 
-É interessante apresentar uma tabela no final desta seção sumarizando os artigos citados anteriormente, suas vantagens, contribuições e desvantagens. Na Tabela \ref{tab:tabela-exemplo} é apresentado um exemplo de tabela.
+O uso de arquiteturas de aprendizado profundo para detecção de anomalias em redes busca contornar a dependência de dados rotulados de ataques e permitir a identificação de ameaças inéditas \cite{chalapathy2019, khraisat2019}.
+Em linhas iniciais de investigação, Yu et al. \cite{yu2017} propuseram o empilhamento de \textit{autoencoders} convolucionais dilatados para extrair representações hierárquicas de tráfego de forma não supervisionada, enquanto Al-Qatf et al. \cite{alqatf2018} combinaram \textit{autoencoders} esparsos para redução de dimensionalidade com classificadores baseados em Máquinas de Vetores de Suporte (SVM).
+De modo similar, Yin et al. \cite{yin2018} exploraram Redes Adversariais Generativas (GANs) para aprimorar a detecção de \textit{botnets}, e Malaiya et al. \cite{malaiya2018} avaliaram empiricamente arquiteturas variacionais e recorrentes na detecção de anomalias de rede.
+Contudo, grande parte dessas abordagens iniciais ainda depende de etapas supervisionadas para classificação final ou foi validada em conjuntos de dados legados que não refletem a diversidade do tráfego moderno.
 
-% ##################### DICA ########################
-% Tabelas em latex são ruins de serem manipuladas, para isso, existem ferramentas que ajudam a gerar o "código" da tabela com ajuda de uma interface gráfica
-% Exemplo: https://www.tablesgenerator.com/
-\begin{table}[h]
+Entre os detectores estritamente não supervisionados considerados estado da arte no nível de pacotes, destaca-se o Kitsune, proposto por Mirsky et al. \cite{mirsky2018}.
+O Kitsune opera de maneira online extraindo estatísticas incrementais de fluxo a partir de cabeçalhos de pacotes e distribuindo os atributos resultantes em um conjunto (\textit{ensemble}) de pequenos \textit{autoencoders} de três camadas, cujos erros de reconstrução alimentam um \textit{autoencoder} agregador final (variante Kitsune-AE) ou um estimador de densidade baseado em Modelo de Mistura Gaussiana (variante Kitsune-GMM).
+Embora apresente baixa sobrecarga computacional, o Kitsune reconstrói cada vetor a partir da observação integral de seus atributos.
+Consequentemente, a rede tende a sofrer de supergeneralização, produzindo erros de reconstrução reduzidos mesmo para pacotes maliciosos e resultando em baixa sensibilidade quando o limiar operacional é restrito a uma taxa de falsos positivos de $1\%$ \cite{hashemi2020}.
+
+No contexto de detecção baseada em fluxos, Zong et al. \cite{zong2018} introduziram o \textit{Deep Autoencoding Gaussian Mixture Model} (DAGMM), que acopla um \textit{undercomplete autoencoder} profundo a uma sub-rede de mistura gaussiana -- que faz a estimativa -- treinada conjuntamente fim a fim.
+O modelo concatena a representação latente de baixa dimensão com métricas de erro de reconstrução para calcular a energia amostral de cada fluxo, classificando como anômalas as instâncias de alta energia.
+Apesar de mitigar ótimos locais decorrentes do desacoplamento entre redução de dimensionalidade e estimativa de densidade, o DAGMM permanece determinístico e apresenta capacidade limitada para separar ataques complexos de fluxos benignos sob baixas taxas de falsos alertas.
+
+Outra abordagem de destaque para dados tabulares e fluxos de rede é o detector baseado em Redes Adversariais Generativas Bidirecionais (BiGAN), proposto por Zenati et al. \cite{zenati2018}.
+Diferentemente de GANs convencionais que exigem otimização iterativa custosa para mapear uma amostra ao espaço latente, a arquitetura BiGAN treina simultaneamente um codificador e um gerador, definindo o escore de anomalia como uma soma ponderada entre o erro de reconstrução das características e o erro de discriminação conjunta.
+Ainda que alcance inferência rápida e desempenho superior ao DAGMM em cenários normais de fluxo, a arquitetura BiGAN compartilha a vulnerabilidade estrutural de modelos determinísticos frente a perturbações adversariais direcionadas \cite{hashemi2019, hashemi2020}.
+
+\subsection{Exemplos Adversariais contra Sistemas de Detecção de Intrusão}
+
+A vulnerabilidade de modelos de aprendizado de máquina e redes neurais profundas a exemplos adversariais em tempo de teste foi inicialmente estabelecida por Biggio et al. \cite{biggio2013} e Szegedy et al. \cite{szegedy2013}, expandindo-se rapidamente para domínios como visão computacional \cite{sharif2016, eykholt2018}, reconhecimento de voz \cite{carlini2018} e detecção de \textit{malware} \cite{grosse2017}.
+Diferentemente do domínio de imagens — no qual cada pixel pode ser perturbado continuamente dentro de uma bola de norma limitada —, a geração de exemplos adversariais no tráfego de rede impõe restrições severas de domínio: as perturbações não podem corromper cabeçalhos de protocolo, violar correlações matemáticas entre atributos derivados (como médias, taxas de bytes por segundo e contadores de pacotes) nem anular a carga maliciosa do ataque.
+
+Aiken e Scott-Hayward \cite{aiken2019} investigaram ataques adversariais contra um NIDS implantado em ambiente SDN, demonstrando que um atacante pode evadir a detecção de ataques de negação de serviço distribuída (DDoS) mediante a combinação de aumento do tamanho de carga útil, redução da taxa de transmissão e injeção de fluxos simétricos forjados.
+Todavia, a metodologia proposta restringiu-se a ataques volumétricos específicos de DDoS e a classificadores supervisionados sob condições restritas de fluxo.
+
+Para estabelecer uma avaliação abrangente e realista, Hashemi et al. \cite{hashemi2019} formularam um modelo de ameaça geral para NIDS baseados em anomalias tanto na granularidade de fluxos quanto na de pacotes.
+No nível de fluxos, os autores categorizaram os atributos em grupos conforme sua mutabilidade física e semântica, projetando um algoritmo de otimização restrita que recalcula atributos dependentes a cada passo de gradiente.
+No nível de pacotes, demonstraram que a combinação de operações válidas de rede — atraso temporal entre pacotes (\textit{delay}), fragmentação de pacotes (\textit{splitting}) e injeção de pacotes sintéticos ignorados pelo hospedeiro vítima — reduz drasticamente a eficácia de detectores como Kitsune, DAGMM e BiGAN.
+Contudo, esse trabalho concentrou-se na construção do ataque e no diagnóstico da vulnerabilidade dos NIDS existentes, sem apresentar uma arquitetura defensiva robusta.
+
+Com base no alicerce teórico dos \textit{Denoising Autoencoders} de Vincent et al. \cite{vincent2008}, Hashemi e Keller \cite{hashemi2020} propuseram o método RePO/RePO+ (artigo de referência deste relatório).
+Ao combinar reconstrução a partir de observação parcial com agregação estocástica de múltiplas máscaras aleatórias na inferência, os autores demonstraram ganhos expressivos de detecção sobre Kitsune, DAGMM e BiGAN tanto em operação normal quanto sob o modelo de ameaça adversarial de Hashemi et al. \cite{hashemi2019}.
+A Tabela~\ref{tab:trabalhos-relacionados} sintetiza os principais trabalhos relacionados, destacando os métodos empregados, suas vantagens e suas limitações.
+
+\begin{table*}[!t]
 \centering
-\caption{Exemplo de tabela}
-\label{tab:tabela-exemplo}
-\begin{tabular}{llcc}
-\hline
-\multicolumn{1}{c}{\textbf{Trabalhos}} & \textbf{Método} & \textbf{Vantagens} & \textbf{Desvantagens} \\ \hline
-Trabalho A & Método X & A & D \\
-Trabalho B & Método Y & G & J
+\caption{Síntese comparativa dos principais trabalhos relacionados em detecção de intrusão por anomalias e robustez adversarial.}
+\label{tab:trabalhos-relacionados}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.8cm}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}p{5.2cm}@{}}
+\toprule
+\textbf{Trabalho} & \textbf{Método} & \textbf{Vantagens / Contribuições} & \textbf{Desvantagens / Limitações} \\
+\midrule
+Mirsky et al. (Kitsune) \cite{mirsky2018} & Conjunto (\textit{ensemble}) de \textit{autoencoders} (ou GMM) sobre estatísticas incrementais de pacotes. & Processamento online leve sem necessidade de supervisão; extração automática de agrupamentos de atributos. & Supergeneralização por observação completa da entrada; baixa detecção em $\text{FPR}=0{,}01$; altamente vulnerável a evasão adversarial determinística. \\
+\addlinespace
+Zong et al. (DAGMM) \cite{zong2018} & \textit{Autoencoder} profundo acoplado fim a fim a uma rede estimadora de Mistura Gaussiana. & Otimização conjunta do espaço latente e da densidade; evita ótimos locais na compressão de atributos de fluxo. & Inferência determinística; baixa sensibilidade sob limiares estritos de falsos alertas; suscetível a ataques adversariais em fluxos. \\
+\addlinespace
+Zenati et al. (BiGAN) \cite{zenati2018} & Rede Adversarial Generativa Bidirecional com codificador e gerador conjuntos. & Inferência rápida no espaço latente; combina erro de reconstrução e discriminação para detecção em fluxos. & Instabilidade de treinamento inerente a arquiteturas GAN; comportamento determinístico facilita evasão adversarial por gradiente. \\
+\addlinespace
+Aiken e Scott-Hayward \cite{aiken2019} & Manipulação heurística de atributos de tráfego (carga útil, taxa e simetria) em redes SDN. & Demonstra a viabilidade prática de evasão adversarial contra NIDS em ambientes definidos por software. & Escopo restrito a ataques DDoS específicos; não modela restrições gerais de múltiplos protocolos nem propõe defesa robusta. \\
+\addlinespace
+Hashemi et al. \cite{hashemi2019} & Otimização adversarial restrita ao domínio em nível de fluxo e transformações válidas em pacotes. & Formulação sistemática de ataques adversariais que preservam a semântica de rede contra NIDS estado da arte. & Atua exclusivamente no diagnóstico ofensivo da vulnerabilidade; não propõe mecanismo de defesa para os detectores avaliados. \\
+\addlinespace
+Hashemi e Keller (RePO / RePO+) \cite{hashemi2020} & \textit{Denoising Autoencoders} com mascaramento aleatório parcial e agregação por mínimos por grupo. & Mitiga a supergeneralização; estocasticidade de $100$ máscaras eleva a detecção normal e a robustez adversarial em fluxos e pacotes. & Custo computacional de inferência ampliado pelas múltiplas máscaras; avaliação original sujeita a viés de amostragem temporal e avaliada em único domínio. \\
+\bottomrule
 \end{tabular}
-\end{table}
-\section{Modelo de ameaça (SE APLICÁVEL)}
+\end{table*}
 
-Apresentar os ataques considerados para o trabalho. Utilizar figuras e/ou algoritmos e/ou equações para descrever os comportamentos dos ataques considerados. Também especificar as premissas consideradas para que a execução dos ataques seja possível.
+\section{Modelo de ameaça}
 
-% Utilize o comando "\eqref{}" para se referenciar a equações
-Na Eq. \eqref{equacao-da-reta} é apresentado um exemplo de equação com a equação de uma reta.
+O modelo de ameaça adotado neste trabalho segue a formulação de ataques de evasão em tempo de teste proposta por Hashemi et al. \cite{hashemi2019} e empregada na avaliação do sistema de referência \cite{hashemi2020}.
+Considera-se um ambiente de rede monitorado por um NIDS baseado em detecção de anomalias não supervisionada, posicionado em um ponto de agregação ou comutação para inspecionar o tráfego bidirecional (no nível de fluxos) ou unidirecional/sequencial (no nível de pacotes).
 
+\subsection{Premissas de Conhecimento, Capacidades e Restrições do Atacante}
+
+Assume-se um adversário com conhecimento em regime de caixa-branca (\textit{white-box}) acerca dos componentes estáticos do detector: o atacante conhece o conjunto de atributos monitorados, os vetores de normalização mínimo ($\mathbf{x}_{\min}$) e máximo ($\mathbf{x}_{\max}$) extraídos do conjunto de treinamento, a arquitetura e os parâmetros treinados $\theta$ da rede neural reconstrutiva $f_{\theta}$, bem como o limiar operacional de detecção $\tau$ calibrado para uma taxa de falsos positivos predefinida ($\text{FPR} = 0{,}10$ no cenário adversarial).
+Contudo, quando o detector vítima emprega inferência estocástica com mascaramento aleatório, o atacante não possui acesso à \textit{seed} pseudoaleatória nem às realizações exatas das máscaras binárias sorteadas pelo detector no instante em que o tráfego atravessa a rede.
+Dessa forma, o adversário precisa otimizar as perturbações utilizando uma cópia local do detector (com sua própria amostragem independente de máscaras) e transmitir o tráfego resultante para avaliação pelo NIDS vítima.
+
+O escopo de ameaças abrange múltiplas famílias de ataques de rede: negação de serviço na camada de aplicação e transporte (\textit{DoS Hulk}, \textit{DoS GoldenEye}, \textit{DoS Slowloris} e \textit{DoS Slowhttptest}), negação de serviço distribuída (\textit{DDoS}), reconhecimento por varredura de portas (\textit{PortScan}), força bruta em serviços de transferência e administração remota (\textit{FTP-Patator} e \textit{SSH-Patator}), comunicação de comando e controle (\textit{Botnet}), exploração de vulnerabilidades e exfiltração (\textit{Heartbleed} e \textit{Infiltration}), além de vetores modernos em ambientes de Internet das Coisas (\textit{cross-site scripting}, injeção, \textit{ransomware}, \textit{backdoor} e interceptação \textit{man-in-the-middle}).
+
+Diferentemente de domínios contínuos como imagens, o atacante está submetido a três restrições de domínio estritas ao manipular uma amostra maliciosa $\mathbf{x}$:
+\begin{enumerate}
+    \item \textbf{Preservação funcional do ataque:} a carga maliciosa e a semântica da exploração não podem ser removidas ou corrompidas;
+    \item \textbf{Controlabilidade unilateral:} o atacante controla apenas os pacotes que transmite (sentido \textit{forward}), não podendo alterar diretamente os pacotes de resposta gerados pelo hospedeiro vítima (sentido \textit{backward});
+    \item \textbf{Consistência matemática e de protocolo:} cabeçalhos de pacotes devem permanecer sintaticamente válidos e todas as relações determinísticas entre atributos primários, agregados e derivados devem ser preservadas na representação final observada pelo NIDS.
+\end{enumerate}
+
+\subsection{Ataque Adversarial Baseado em Fluxos}
+
+Na representação baseada em fluxos, cada conexão é sintetizada por um vetor $\mathbf{x} \in \mathbb{R}^{D}$ com $D = 77$ atributos estatísticos.
+Como o vetor de fluxo é computado pelo monitor de rede a partir da sequência de pacotes transmitidos, o atacante não pode perturbar livremente coordenadas arbitrárias de $\mathbf{x}$.
+Para garantir validade física e semântica, os $77$ atributos são particionados em quatro grupos funcionais \cite{hashemi2019, hashemi2020}:
+\begin{itemize}
+    \item \textbf{Atributos fixos (imutáveis):} características fora do controle direto do atacante ou cuja alteração invalidaria o serviço alvo, incluindo a porta de destino e estatísticas exclusivas do fluxo reverso (\textit{backward});
+    \item \textbf{Atributos diretamente otimizáveis em níveis hierárquicos:} variáveis controláveis pelo emissor no sentido \textit{forward} (como duração do fluxo, contagens de pacotes, comprimentos de carga útil e tempos inter-chegada), estruturadas em três máscaras binárias progressivas de mutabilidade $\mathbf{v}_1, \mathbf{v}_2, \mathbf{v}_3 \in \{0, 1\}^{D}$ ($\mathcal{M}_1 \subset \mathcal{M}_2 \subset \mathcal{M}_3$), nas quais $\mathbf{v}_1$ habilita apenas atributos primários essenciais, $\mathbf{v}_2$ adiciona estatísticas intermediárias de janelas e cabeçalhos, e $\mathbf{v}_3$ libera atributos agregados de atividade e ociosidade caso os níveis anteriores não alcancem evasão;
+    \item \textbf{Atributos restritos por monotonicidade e integridade:} variáveis que representam valores mínimos observados no fluxo (restritas ao intervalo $[0, x_j]$), valores máximos e contadores de \textit{flags} TCP (restritos a valores $\ge x_j$), e atributos discretos cujo domínio pertence a $\mathbb{Z}_{\ge 0}$;
+    \item \textbf{Atributos dependentes e duplicados:} $17$ grandezas compostas (taxas de bytes e pacotes por segundo, razões entre direções, médias de tamanhos de pacotes e de tempos inter-chegada, e comprimentos totais de cabeçalhos) e $4$ atributos de subfluxo que espelham contagens primárias, todos recalculados analiticamente após qualquer alteração nos atributos primários.
+\end{itemize}
+
+Seja $\tilde{\mathbf{x}}$ a representação normalizada de um fluxo malicioso $\mathbf{x}$ segundo os limites do conjunto de treinamento:
 \begin{equation}
-    y = ax + b
-    \label{equacao-da-reta}
+\tilde{\mathbf{x}} = \frac{\mathbf{x} - \mathbf{x}_{\min}}{\mathbf{x}_{\max} - \mathbf{x}_{\min} + \epsilon}, \quad \epsilon = 10^{-6}.
+\label{eq:norm_fluxo}
+\end{equation}
+Para uma máscara de mutabilidade $\mathbf{v} \in \{\mathbf{v}_1, \mathbf{v}_2, \mathbf{v}_3\}$, o atacante introduz um vetor modificador contínuo $\boldsymbol{\alpha} \in \mathbb{R}^{D}$ no espaço normalizado, produzindo a amostra candidata $\tilde{\mathbf{x}}_{\text{cand}}(\boldsymbol{\alpha}) = \tilde{\mathbf{x}} + \boldsymbol{\alpha} \odot \mathbf{v}$, onde $\odot$ denota o produto de Hadamard (elemento a elemento).
+Para contornar o mascaramento aleatório do detector, a cada passo de otimização o atacante sorteia $M = 100$ máscaras binárias independentes $\mathbf{m}_i \in \{0, 1\}^{D}$ e minimiza a função objetivo dada pela soma dos erros quadráticos médios de reconstrução em relação a $\boldsymbol{\alpha}$:
+\begin{equation}
+\mathcal{L}_{\text{adv}}^{\text{fluxo}}(\boldsymbol{\alpha}) = \sum_{i=1}^{M} \frac{1}{D} \left\| f_{\theta}\!\left(\tilde{\mathbf{x}}_{\text{cand}}(\boldsymbol{\alpha}) \odot \mathbf{m}_i\right) - \tilde{\mathbf{x}}_{\text{cand}}(\boldsymbol{\alpha}) \right\|_2^2.
+\label{eq:loss_adv_fluxo}
 \end{equation}
 
-Na Fig. \ref{fig: logo-cin} é apresentado um exemplo de figura com a logo do centro de informática.
+Após cada passo de atualização de $\boldsymbol{\alpha}$ por descida de gradiente adaptativa (Adam), o vetor candidato é desnormalizado para o domínio original e submetido a um operador de projeção determinístico $\mathbf{x}^{\text{adv}} = \Pi_{\mathcal{V}}(\mathbf{x}_{\text{cand}}(\boldsymbol{\alpha}), \mathbf{x})$.
+O operador $\Pi_{\mathcal{V}}$ executa sequencialmente: (i) a cópia exata dos atributos primários para seus atributos de subfluxo duplicados; (ii) o truncamento dos atributos mínimos em $[0, x_j]$ e dos atributos máximos e de \textit{flags} em $[x_j, +\infty)$, incrementando o total de pacotes \textit{forward} pelo maior acréscimo de \textit{flags}; (iii) o arredondamento ao inteiro mais próximo de todas as coordenadas discretas; e (iv) a recomputação exata das variáveis derivadas (taxas por segundo, médias de pacotes, médias de intervalos temporais e bytes de cabeçalho).
 
-\begin{figure}[ht]
-	\centering
-	\includegraphics[width=\linewidth]{imagens/logo_cin_ufpe.png}
-        \caption{Logo do centro de informática.}
-        \label{fig: logo-cin}
-\end{figure}
+A busca pelo exemplo adversarial percorre em cascata as máscaras $\mathbf{v}_1, \mathbf{v}_2, \mathbf{v}_3$ e, para cada máscara, quatro configurações de taxa de aprendizado $\eta \in \{0{,}001;\, 0{,}01;\, 0{,}1;\, 1{,}0\}$ com limites respectivos de $\{30, 40, 50, 60\}$ iterações.
+Como a avaliação final no NIDS vítima utiliza um novo sorteio estocástico de máscaras, o atacante adota um limiar alvo conservador $\tau_{\text{adv}} = 0{,}8\tau$: o procedimento encerra imediatamente quando o escore local RePO+ satisfaz $S_{\text{RePO+}}(\mathbf{x}^{\text{adv}}) < 0{,}8\tau$, mantendo como solução de contingência a primeira configuração que atingir $S_{\text{RePO+}}(\mathbf{x}^{\text{adv}}) < \tau$.
+
+\subsection{Ataque Adversarial Baseado em Pacotes}
+
+Na granularidade de pacotes, cada amostra de entrada do detector consiste em uma janela deslizante $\mathbf{X} = [\mathbf{x}_1, \mathbf{x}_2, \dots, \mathbf{x}_T]^{\top} \in \mathbb{R}^{T \times D}$ formada por $T = 20$ pacotes consecutivos e $D = 29$ atributos extraídos dos cabeçalhos IP, TCP, UDP e ICMP (incluindo intervalo temporal inter-pacotes $\Delta t$, comprimentos de quadro e de cabeçalho IP, flags, janelas e indicador de direção), na qual $\mathbf{x}_T$ representa o pacote atual sob inspeção.
+Como os pacotes $\mathbf{x}_1, \dots, \mathbf{x}_{T-1}$ já transitaram pela rede, eles não podem ser modificados retroativamente.
+O atacante dispõe de três transformações válidas de tráfego \cite{hashemi2019}:
+\begin{enumerate}
+    \item \textbf{Atraso temporal (\textit{Delay}):} adição de um retardo $\delta_{\text{delay}} \in [0, 15]$ segundos ao tempo inter-chegada do pacote atual $\mathbf{x}_T$;
+    \item \textbf{Fragmentação (\textit{Splitting}):} redução do comprimento total do pacote $\mathbf{x}_T$ (de tamanho original $L_T$) por uma quantidade $\delta_{\text{split}} \in [-(L_T - 61), 0]$ bytes — respeitando o tamanho mínimo de quadro de $60$ bytes — e transmissão da carga útil restante $\Delta L = L_T - L'_T$ em um pacote subsequente de comprimento $\Delta L + 60$ bytes e intervalo temporal $\Delta t = 0$, o qual é otimizado recursivamente pelo mesmo procedimento;
+    \item \textbf{Injeção de pacote sintético (\textit{Injection}):} criação e transmissão de um pacote forjado $\mathbf{p}_{\text{fake}} \in \mathbb{R}^{D}$ limitado ao hiper-retângulo de validade protocolar $[\mathbf{p}_{\min}, \mathbf{p}_{\max}]$ e filtrado por uma máscara binária de protocolo $\mathbf{u}_{\text{proto}} \in \{\mathbf{u}_{\text{TCP}}, \mathbf{u}_{\text{UDP}}\}$, mantendo o atributo de viabilidade nulo para que o pacote seja descartado pela pilha de rede do destino sem interferir na sessão.
+\end{enumerate}
+
+Quando o pacote atual $\mathbf{x}_T$ é emitido pelo atacante, aplica-se prioritariamente a otimização conjunta de atraso e fragmentação por até $300$ iterações ($\eta = 0{,}1$), minimizando a perda de reconstrução agregada sobre $M = 100$ máscaras análoga à Eq.~\eqref{eq:loss_adv_fluxo} e arredondando os campos de comprimento a cada passo.
+Caso a otimização conjunta não reduza o escore RePO+ abaixo de $\tau$ — ou quando o pacote $\mathbf{x}_T$ é um pacote de resposta emitido pelo servidor vítima, sobre o qual o atacante não pode impor atraso ou divisão —, executa-se a operação de injeção.
+Na injeção, o pacote sintético $\mathbf{p}_{\text{fake}}$ é inserido imediatamente antes de $\mathbf{x}_T$, dando origem a duas janelas consecutivas observadas pelo NIDS: $\mathbf{X}^{(1)} = [\mathbf{x}_1, \dots, \mathbf{x}_{19}, \mathbf{p}_{\text{fake}}]^{\top}$ e $\mathbf{X}^{(2)} = [\mathbf{x}_2, \dots, \mathbf{x}_{19}, \mathbf{p}_{\text{fake}}, \mathbf{x}_{20}]^{\top}$.
+O atacante otimiza $\mathbf{p}_{\text{fake}}$ por até $300$ iterações ($\eta = 0{,}1$) minimizando a soma conjunta dos erros de reconstrução de $\mathbf{X}^{(1)}$ e $\mathbf{X}^{(2)}$, considerando a evasão bem-sucedida somente se ambas as janelas atingirem simultaneamente escore RePO+ inferior ao limiar $\tau$.
 
 \section{Sistema proposto pelo artigo de referência}
 
-Apresentar o sistema proposto para detecção de intrusão OU ataque adversarial. Utilizar figuras e/ou algoritmos e/ou equações para descrever o sistema proposto.
+Para mitigar simultaneamente a supergeneralização de modelos reconstrutivos convencionais e a vulnerabilidade a exemplos adversariais, Hashemi e Keller \cite{hashemi2020} propuseram a arquitetura \textit{Reconstruction from Partial Observation} (RePO) e sua variante aprimorada RePO+.
+
+\subsection{Princípio de Reconstrução a partir de Observação Parcial}
+
+Em um \textit{autoencoder} padrão treinado para minimizar $\|f_{\theta}(\tilde{\mathbf{x}}) - \tilde{\mathbf{x}}\|_2^2$ a partir da observação completa de $\tilde{\mathbf{x}}$, a presença de todos os atributos na entrada permite que redes de alta capacidade aprendam mapeamentos próximos à identidade.
+Como consequência, mesmo amostras maliciosas situadas fora da variedade do tráfego benigno são reconstruídas com baixo erro.
+Além disso, como o mapeamento $\tilde{\mathbf{x}} \mapsto f_{\theta}(\tilde{\mathbf{x}})$ é inteiramente determinístico, um atacante em caixa-branca calcula gradientes exatos da superfície de decisão para construir exemplos adversariais com mínima perturbação.
+
+O sistema RePO reformula o detector como um \textit{Denoising Autoencoder} (DAE) \cite{vincent2008} submetido a um operador de mascaramento binário estocástico de alta intensidade.
+Dada uma amostra normalizada $\tilde{\mathbf{x}}$ — seja um vetor de fluxo em $\mathbb{R}^{D}$ ou uma janela temporal de pacotes em $\mathbb{R}^{T \times D}$ —, sorteia-se uma máscara aleatória $\mathbf{m}$ de mesmas dimensões cujas componentes são variáveis de Bernoulli independentes e identicamente distribuídas:
+\begin{equation}
+m_j = \mathbb{I}\!\left(u_j > p_{\text{mask}}\right), \quad u_j \sim \mathcal{U}(0, 1),
+\label{eq:bernoulli_mask}
+\end{equation}
+onde $\mathbb{I}(\cdot)$ é a função indicadora e $p_{\text{mask}} = 0{,}75$ representa a probabilidade de ocultação de cada atributo.
+Assim, apenas $1 - p_{\text{mask}} = 25\%$ dos atributos originais são preservados em média na observação parcial $\tilde{\mathbf{x}}_{\text{parcial}} = \tilde{\mathbf{x}} \odot \mathbf{m}$, enquanto os $75\%$ restantes são substituídos por zero.
+
+Durante o treinamento — realizado de maneira estritamente não supervisionada apenas sobre amostras de tráfego benigno $\mathcal{D}_{\text{train}}$ —, a rede neural recebe a observação parcial $\tilde{\mathbf{x}} \odot \mathbf{m}$, mas é penalizada pelo erro quadrático médio de reconstrução em relação à amostra completa $\tilde{\mathbf{x}}$ (incluindo os $75\%$ de atributos ocultados em média):
+\begin{equation}
+\mathcal{L}_{\text{DAE}}(\theta) = \mathbb{E}_{\tilde{\mathbf{x}} \sim \mathcal{D}_{\text{train}},\, \mathbf{m}}\!\left[ \frac{1}{d} \left\| f_{\theta}\!\left(\tilde{\mathbf{x}} \odot \mathbf{m}\right) - \tilde{\mathbf{x}} \right\|_2^2 \right],
+\label{eq:loss_dae}
+\end{equation}
+em que $d$ denota o número total de coordenadas da entrada ($d = D = 77$ para fluxos e $d = T \cdot D = 580$ para pacotes).
+Para minimizar a Eq.~\eqref{eq:loss_dae}, o modelo não pode simplesmente copiar a entrada; ele é forçado a aprender as dependências estatísticas e estruturais que governam os atributos do tráfego benigno, extrapolando os atributos ausentes a partir do subconjunto visível.
+Quando confrontado na inferência com uma amostra de ataque cujas correlações internas divergem do perfil normal, a extrapolação falha nos atributos ocultos, elevando acentuadamente o erro de reconstrução.
+
+\subsection{Arquitetura das Redes Neurais para Fluxos e Pacotes}
+
+O sistema de referência instancia duas arquiteturas distintas de DAEs conforme a granularidade de inspeção do tráfego:
 \begin{itemize}
-    \item Quais os componentes da solução? Quais suas entradas e saídas? O que eles fazem? Como eles o fazem?
-    \item Quais métodos ou algoritmos estão sendo propostos ou empregados e por que?
+    \item \textbf{Modelo Baseado em Fluxos ($D = 77$):} consiste em uma rede perceptrônica multicamadas totalmente conectada composta por sete camadas densas com função de ativação ReLU ($\text{ReLU}(z) = \max(0, z)$).
+    A entrada parcial $\tilde{\mathbf{x}} \odot \mathbf{m} \in \mathbb{R}^{77}$ atravessa seis camadas ocultas sucessivas de $256$ neurônios cada, intercaladas por duas camadas de regularização por \textit{Dropout} com probabilidade de descarte de $0{,}5$ após a terceira e a quinta camadas ocultas (ativas exclusivamente durante o treinamento).
+    A sétima camada densa projeta a representação latente de volta para a dimensão original $D = 77$ com ativação ReLU, sendo seguida por um operador de truncamento (\textit{clipping}) ao intervalo $[0, 1]$:
+    \begin{equation}
+    f_{\theta}(\tilde{\mathbf{x}} \odot \mathbf{m}) = \min\!\left(\max\!\left(h_{\theta}(\tilde{\mathbf{x}} \odot \mathbf{m}),\, \mathbf{0}\right),\, \mathbf{1}\right).
+    \label{eq:clip_output}
+    \end{equation}
+    O treinamento é conduzido por $5$ épocas com lotes de tamanho $256$ e otimizador Adam ($\eta = 10^{-3}$), regerando as máscaras aleatórias a cada época.
+    \item \textbf{Modelo Baseado em Pacotes ($T = 20, D = 29$):} recebe uma janela mascarada $\tilde{\mathbf{X}} \odot \mathbf{M} \in \mathbb{R}^{20 \times 29}$, que é inicialmente vetorizada por uma camada de achatamento (\textit{Flatten}) em um vetor de dimensão $d = 580$.
+    Esse vetor alimenta uma camada oculta densa de alta capacidade com $2048$ neurônios e ativação ReLU, seguida por uma camada densa de saída de $580$ unidades com ativação ReLU, truncamento ao intervalo $[0, 1]$ conforme a Eq.~\eqref{eq:clip_output} e remodelagem dimensional para $\mathbb{R}^{20 \times 29}$.
+    O treinamento emprega lotes de $512$ janelas amostradas aleatoriamente ao longo de três estágios de $10.000$ iterações com taxas de aprendizado decrescentes $\eta \in \{10^{-3},\, 10^{-4},\, 10^{-5}\}$.
 \end{itemize}
 
-No Alg. \ref{alg:cap} é apresentado um exemplo de algoritmo.
+\subsection{Inferência Estocástica e Agregação: RePO e RePO+}
 
-\begin{algorithm}
-\caption{Algoritmo com legenda}\label{alg:cap}
-\begin{algorithmic}
-\Require $n \geq 0$
-\Ensure $y = x^n$
-\State $y \gets 1$
-\State $X \gets x$
-\State $N \gets n$
-\While{$N \neq 0$}
-\If{$N$ is even}
-    \State $X \gets X \times X$
-    \State $N \gets \frac{N}{2}$  \Comment{Exemplo de comentário}
-\ElsIf{$N$ is odd}
-    \State $y \gets y \times X$
-    \State $N \gets N - 1$
+A utilização de uma única máscara aleatória durante a inferência produziria uma variância elevada no escore de anomalia, pois uma máscara isolada pode ocultar acidentalmente todos os atributos preditivos de uma amostra benigna (gerando um falso positivo) ou ocultar os únicos atributos anômalos de um ataque (gerando um falso negativo).
+Para estabilizar a decisão e ampliar a robustez adversarial, cada amostra de teste normalizada $\tilde{\mathbf{x}}$ é replicada e avaliada em paralelo sob $M = 100$ máscaras binárias independentes $\{\mathbf{m}_1, \mathbf{m}_2, \dots, \mathbf{m}_M\}$.
+Para cada realização $i \in \{1, \dots, M\}$, computa-se o erro de reconstrução individual:
+\begin{equation}
+e_i(\tilde{\mathbf{x}}) = \frac{1}{d} \left\| f_{\theta}\!\left(\tilde{\mathbf{x}} \odot \mathbf{m}_i\right) - \tilde{\mathbf{x}} \right\|_2^2.
+\label{eq:erro_individual}
+\end{equation}
+
+Na variante básica \textbf{RePO}, o escore de anomalia é obtido diretamente pela média aritmética (ou soma equivalente) dos $M$ erros de reconstrução:
+\begin{equation}
+S_{\text{RePO}}(\tilde{\mathbf{x}}) = \frac{1}{M} \sum_{i=1}^{M} e_i(\tilde{\mathbf{x}}).
+\label{eq:score_repo}
+\end{equation}
+
+Embora a Eq.~\eqref{eq:score_repo} reduza a variância amostral, Hashemi e Keller \cite{hashemi2020} observaram que a média simples permanece sensível a subconjuntos de atributos difíceis de reconstruir em amostras benignas legítimas: quando uma máscara oculta simultaneamente um grupo crítico de atributos correlacionados, o erro $e_i(\tilde{\mathbf{x}})$ resultante assume um valor elevado que contamina a média $S_{\text{RePO}}(\tilde{\mathbf{x}})$, forçando a adoção de um limiar $\tau$ mais alto para respeitar a restrição de falsos positivos.
+
+Para solucionar essa limitação, a variante \textbf{RePO+} divide o conjunto de $M = 100$ máscaras em $G = 5$ grupos disjuntos $\mathcal{G}_1, \mathcal{G}_2, \dots, \mathcal{G}_G$, cada um contendo $K = M / G = 20$ máscaras:
+\begin{equation}
+\mathcal{G}_g = \left\{ (g-1)K + 1,\, \dots,\, gK \right\}, \quad g \in \{1, \dots, G\}.
+\label{eq:grupos_repo_plus}
+\end{equation}
+O escore de anomalia do método RePO+ é então definido como a soma dos erros mínimos de reconstrução observados dentro de cada um dos $G$ grupos:
+\begin{equation}
+S_{\text{RePO+}}(\tilde{\mathbf{x}}) = \sum_{g=1}^{G} \min_{i \in \mathcal{G}_g} e_i(\tilde{\mathbf{x}}).
+\label{eq:score_repo_plus}
+\end{equation}
+
+A agregação por soma de mínimos por grupo na Eq.~\eqref{eq:score_repo_plus} atua em duas frentes complementares.
+Primeiro, para uma amostra benigna, a probabilidade de que todas as $K = 20$ máscaras de um mesmo grupo ocultem simultaneamente os atributos essenciais à reconstrução é reduzida a $p_{\text{falha}}^{K}$; basta que uma única máscara por grupo preserve pistas suficientes para que $\min_{i \in \mathcal{G}_g} e_i(\tilde{\mathbf{x}})$ seja pequeno, comprimindo a distribuição de escores benignos próxima de zero.
+Segundo, para uma amostra maliciosa ou adversarial que possua aparência majoritariamente benigna exceto em poucos atributos de ataque, a avaliação de $K = 20$ máscaras por grupo garante alta probabilidade de que os atributos maliciosos sejam expostos e penalizados ao longo dos $G = 5$ grupos, além de impedir que o atacante preveja quais combinações de atributos determinarão o mínimo de cada grupo na inferência real.
+O Alg.~\ref{alg:repo_inferencia} formaliza o processo completo de pontuação e decisão dos modos RePO e RePO+.
+
+\begin{algorithm}[!t]
+\caption{Inferência Estocástica e Detecção de Anomalias nos Modos RePO e RePO+}
+\label{alg:repo_inferencia}
+\begin{algorithmic}[1]
+\Require Amostra $\mathbf{x}$, limites $\mathbf{x}_{\min}$ e $\mathbf{x}_{\max}$, modelo $f_{\theta}$, taxa $p_{\text{mask}} = 0{,}75$, $M = 100$ máscaras, $G = 5$ grupos, modo $\mu \in \{\text{RePO}, \text{RePO+}\}$ e limiar $\tau$.
+\Ensure Escore de anomalia $S$ e decisão binária $y \in \{0, 1\}$.
+\State $\tilde{\mathbf{x}} \gets (\mathbf{x} - \mathbf{x}_{\min}) / (\mathbf{x}_{\max} - \mathbf{x}_{\min} + 10^{-6})$
+\For{$i = 1$ \textbf{até} $M$}
+    \State Sortear $\mathbf{u}_i \sim \mathcal{U}(\mathbf{0}, \mathbf{1})$ com a mesma dimensão de $\tilde{\mathbf{x}}$
+    \State $\mathbf{m}_i \gets \mathbb{I}(\mathbf{u}_i > p_{\text{mask}})$
+    \State $\hat{\mathbf{x}}_i \gets f_{\theta}(\tilde{\mathbf{x}} \odot \mathbf{m}_i)$
+    \State $e_i \gets \frac{1}{d} \|\hat{\mathbf{x}}_i - \tilde{\mathbf{x}}\|_2^2$
+\EndFor
+\If{$\mu = \text{RePO}$}
+    \State $S \gets \frac{1}{M} \sum_{i=1}^{M} e_i$
+\Else
+    \State $K \gets M / G$
+    \State $S \gets \sum_{g=1}^{G} \min_{i \in \{(g-1)K+1, \dots, gK\}} e_i$
 \EndIf
-\EndWhile
+\If{$S > \tau$}
+    \State $y \gets 1$ \Comment{Tráfego classificado como anômalo/ataque}
+\Else
+    \State $y \gets 0$ \Comment{Tráfego classificado como benigno}
+\EndIf
+\State \Return $(S, y)$
 \end{algorithmic}
 \end{algorithm}
 
-\section{Solução proposta pela equipe para melhorar a solução do artigo de referência (CASO FEITA)}
-
-Apresentar a arquitetura e funcionamento do sistema proposto pelo artigo de referência. Utilizar figuras e/ou algoritmos e/ou equações para descrever o sistema proposto.
-
-\begin{itemize}
-    \item O que espera-se melhorar em relação à solução proposta pelo artigo de referência?
-    \item Quais os componentes da solução? Quais as suas entradas e saídas? O que eles fazem? Como eles o fazem?
-    \item Quais métodos ou algoritmos estão sendo propostos ou empregados e por que?
-\end{itemize}
-
 \section{Metodologia}
 
-Descrever os dados e métricas utilizados para validar as soluções propostas e quais os experimentos realizados. Sobre os dados, descrever:
+A metodologia experimental deste trabalho foi estruturada em duas frentes complementares.
+A primeira consiste na reprodução fiel e na auditoria metodológica dos experimentos de detecção normal e de robustez adversarial originalmente propostos por Hashemi e Keller \cite{hashemi2020} nas granularidades de fluxos e de pacotes.
+A segunda consiste na extensão desse protocolo experimental para um novo domínio de tráfego de rede voltado à Internet das Coisas, mantendo inalteradas a arquitetura do detector e a mecânica de geração de exemplos adversariais a fim de isolar o efeito da mudança de domínio sobre a eficácia do método.
 
 \subsection{Dados usados pelo artigo de referência}
 
-Quais foram os dados usados para avaliar o sistema proposto? Por que eles foram escolhidos? O que eles representam? Como os conjuntos de treino, validação e teste foram formados? Há quantos dados em cada classe nos conjuntos de treino, validação e teste?
+O artigo de referência \cite{hashemi2020} fundamenta sua validação experimental no conjunto de dados público CICIDS2017 \cite{sharafaldin2018}, elaborado pelo \textit{Canadian Institute for Cybersecurity}.
+A escolha do CICIDS2017 justifica-se por superar limitações históricas de bases de dados legadas de detecção de intrusão — tais como a ausência de protocolos modernos, a falta de diversidade de vetores de ataque e a anonimização destrutiva de cargas úteis — ao fornecer capturas realistas de cinco dias consecutivos de tráfego (Segunda a Sexta-feira) em uma infraestrutura de rede completa com tráfego benigno (HTTP, HTTPS, FTP, SSH e correio eletrônico) e múltiplos cenários contemporâneos de intrusão.
+
+Seguindo a formulação não supervisionada de detecção de anomalias, todo o tráfego capturado na Segunda-feira — composto exclusivamente por atividades benignas legítimas — é reservado para o treinamento dos modelos e para o cálculo dos vetores de normalização $\mathbf{x}_{\min}$ e $\mathbf{x}_{\max}$.
+Os registros capturados de Terça a Sexta-feira, contendo tanto tráfego benigno inédito quanto ataques de diversas naturezas, compõem integralmente o conjunto de teste.
+O conjunto CICIDS2017 é processado e avaliado sob duas representações distintas:
+
+\begin{itemize}
+    \item \textbf{Representação Baseada em Fluxos ($D = 77$ atributos):} gerada pela agregação bidirecional de pacotes por meio da ferramenta CICFlowMeter \cite{sharafaldin2018}, na qual cada conexão é descrita pela porta de destino concatenada a $76$ estatísticas de sessão (duração do fluxo, totais de pacotes e bytes nas direções \textit{forward} e \textit{backward}, comprimentos mínimos, máximos, médios e desvios-padrão de pacotes, taxas de bytes e pacotes por segundo, intervalos temporais inter-chegada, contadores de \textit{flags} TCP, comprimentos de cabeçalhos, estatísticas de subfluxo e tempos de atividade e ociosidade).
+    Na etapa de saneamento, registros contendo valores ausentes ou infinitos são descartados, resultando em $529.481$ instâncias benignas válidas de treinamento (de um total bruto de $529.918$ fluxos na Segunda-feira, com $437$ descartes) e $2.298.431$ instâncias válidas de teste (de um total bruto de $2.300.861$ fluxos de Terça a Sexta-feira, com $2.430$ descartes).
+    O conjunto de teste válido compreende $1.741.803$ fluxos benignos, $554.447$ fluxos pertencentes às $11$ classes de ataque avaliadas pelo artigo de referência, $2.179$ fluxos de ataques Web (não incluídos no protocolo comparativo de referência) e $2$ registros espúrios de rotulagem.
+    A auditoria estrutural desse espaço de atributos evidencia que quatro variáveis de subfluxo duplicam exatamente as contagens totais de pacotes e bytes nas direções \textit{forward} e \textit{backward}, o tamanho médio de segmento \textit{forward} replica o comprimento médio de pacote \textit{forward}, e $50$ dos $77$ atributos assumem apenas valores inteiros no conjunto de teste — dependências que são estritamente impostas pelo operador de projeção $\Pi_{\mathcal{V}}$ durante a geração adversarial.
+    \item \textbf{Representação Baseada em Pacotes ($T = 20 \times D = 29$ atributos):} construída diretamente a partir das capturas de pacotes brutos, agrupando sequencialmente janelas contíguas de $T = 20$ pacotes consecutivos.
+    Cada pacote é representado por $D = 29$ atributos extraídos exclusivamente dos cabeçalhos das camadas de rede e de transporte (IP, TCP, UDP e ICMP) e da cronologia de captura, abrangendo o intervalo de tempo desde o pacote anterior ($\Delta t$), comprimentos de quadro e de cabeçalho IP, tempo de vida (TTL), flags de fragmentação e de controle TCP, tamanhos de janela, números de sequência e confirmação, portas e indicador de sentido do pacote.
+    Ataques Web são excluídos dessa avaliação porque sua assinatura reside na carga útil da camada de aplicação, a qual não é representada nos $29$ atributos de cabeçalho.
+    O conjunto de treinamento da Segunda-feira totaliza $12.696.652$ pacotes benignos ($\approx 634.833$ janelas de $20$ pacotes), ao passo que o conjunto de teste de Terça a Sexta-feira contém $2.216.623$ janelas válidas de $20$ pacotes, divididas em $1.988.539$ janelas benignas e $228.084$ janelas maliciosas distribuídas nas $11$ classes de ataque (atribuindo-se a cada janela o rótulo do seu vigésimo pacote).
+\end{itemize}
+
+No cenário adversarial sobre o CICIDS2017, o protocolo do artigo de referência seleciona sequencialmente até $5.000$ instâncias por classe de ataque na modalidade de fluxos (totalizando $47.003$ fluxos atacados, visto que as classes \textit{Bot}, \textit{Infiltration} e \textit{Heartbleed} possuem menos de $5.000$ amostras) e os primeiros $25.000$ pacotes (janelas deslizantes) por classe na modalidade de pacotes ($9.890$ no caso de \textit{Botnet}, totalizando $259.890$ instâncias atacadas).
+A Tabela~\ref{tab:cicids2017_dist} detalha a distribuição quantitativa completa do conjunto de dados CICIDS2017 nas duas representações.
+
+\begin{table}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\caption{Distribuição de instâncias válidas no conjunto de dados de referência (CICIDS2017) para as representações de fluxos e de pacotes.}
+\label{tab:cicids2017_dist}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.3cm}rrrr@{}}
+\toprule
+\textbf{Classe / Conjunto} & \textbf{Fluxos} & \textbf{Adv. Fluxo} & \textbf{Janelas Pac.} & \textbf{Adv. Pac.} \\
+\midrule
+Treino (Benigno) & $529.481$ & --- & $634.833$ & --- \\
+Teste (Benigno) & $1.741.803$ & --- & $1.988.539$ & --- \\
+\midrule
+DoS Hulk & $230.124$ & $5.000$ & $112.276$ & $25.000$ \\
+PortScan & $158.839$ & $5.000$ & $16.203$ & $25.000$ \\
+DDoS & $128.025$ & $5.000$ & $64.030$ & $25.000$ \\
+DoS GoldenEye & $10.293$ & $5.000$ & $5.309$ & $25.000$ \\
+FTP-Patator & $7.935$ & $5.000$ & $5.537$ & $25.000$ \\
+SSH-Patator & $5.897$ & $5.000$ & $6.931$ & $25.000$ \\
+DoS Slowloris & $5.796$ & $5.000$ & $2.380$ & $25.000$ \\
+DoS Slowhttptest & $5.499$ & $5.000$ & $1.963$ & $25.000$ \\
+Bot / Botnet & $1.956$ & $1.956$ & $494$ & $9.890$ \\
+Infiltration & $36$ & $36$ & $10.496$ & $25.000$ \\
+Heartbleed & $11$ & $11$ & $2.465$ & $25.000$ \\
+\midrule
+\textbf{Total (11 Ataques)} & $\mathbf{554.447}$ & $\mathbf{47.003}$ & $\mathbf{228.084}$ & $\mathbf{259.890}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Novo conjunto de dados escolhido}
 
-Quais foram os dados usados para avaliar o sistema proposto? Por que eles foram escolhidos? O que eles representam? Como os conjuntos de treino, validação e teste foram formados? Há quantos dados em cada classe nos conjuntos de treino, validação e teste?
+Para investigar a capacidade de generalização do método RePO/RePO+ e o comportamento do ataque adversarial fora do ambiente corporativo tradicional do CICIDS2017, selecionou-se o conjunto de dados \textbf{CIC-ToN-IoT}, gerado e disponibilizado por Sarhan et al. \cite{sarhan2022cictoniot}.
+Esse conjunto foi construído mediante o processamento das capturas de pacotes brutos (\textit{pcap}) do conjunto de dados original \textit{ToN-IoT} \cite{moustafa2019toniot} pela ferramenta CICFlowMeter-v4, totalizando originalmente $5.351.760$ fluxos rotulados ($2.515.236$ benignos e $2.836.524$ maliciosos) representativos de ambientes heterogêneos de Internet das Coisas (IoT) e Internet Industrial das Coisas (IIoT).
+
+A escolha do CIC-ToN-IoT fundamenta-se em dois critérios metodológicos principais alinhados à proposta de avaliação entre múltiplos domínios com conjunto padronizado de atributos \cite{sarhan2022cictoniot}.
+O primeiro é a \textbf{compatibilidade estrutural exata} do espaço de atributos: após a remoção de identificadores exclusivos de sessão e endereçamento, os fluxos são descritos pelas mesmas $D = 77$ variáveis estatísticas e protocolares na mesma ordenação canônica do modelo de referência (porta de destino seguida pelas $76$ métricas de fluxo do CICFlowMeter), permitindo aplicar diretamente a mesma arquitetura de \textit{Denoising Autoencoder}, o mesmo esquema de mascaramento parcial ($p_{\text{mask}} = 0{,}75$, $M = 100$ máscaras em $G = 5$ grupos) e as mesmas equações de projeção de domínio $\Pi_{\mathcal{V}}$ sem adaptações heurísticas.
+O segundo critério é a \textbf{diversidade de domínio e de ameaças}: o tráfego abrange padrões de telemetria de sensores e dispositivos inteligentes submetidos a nove famílias distintas de ataques cibernéticos (\textit{xss}, \textit{password}, \textit{injection}, \textit{scanning}, \textit{backdoor}, \textit{ransomware}, \textit{mitm}, \textit{ddos} e \textit{dos}), permitindo testar se a vantagem da agregação por soma de mínimos por grupo se sustenta sob distribuições estatísticas substancialmente diferentes.
+
+Para a formação dos subconjuntos experimentais, aplicou-se uma partição estratificada sobre a classe benigna com \textit{seed} pseudoaleatória fixa: $70\%$ de todas as instâncias benignas foram alocadas ao conjunto de treinamento, totalizando $1.759.850$ fluxos exclusivamente benignos usados para treinar o modelo reconstrutivo e estabelecer os parâmetros de normalização $(\mathbf{x}_{\min}, \mathbf{x}_{\max})$.
+Os $30\%$ restantes dos fluxos benignos foram combinados à integralidade das amostras das nove classes maliciosas e embaralhados com \textit{seed} fixa para formar o conjunto de teste.
+Após o descarte de $362$ registros contendo valores inválidos ou infinitos (de um total bruto de $3.591.095$ linhas), o conjunto de teste consolidou $3.590.733$ fluxos válidos, compostos por $754.209$ instâncias benignas (empregadas na calibração dos limiares de $\text{FPR} = 0{,}01$ e $\text{FPR} = 0{,}10$) e $2.836.524$ instâncias de ataque.
+
+Uma análise estatística dos parâmetros de normalização do CIC-ToN-IoT revela uma característica estrutural importante: oito dos $77$ atributos apresentam variância estritamente nula no conjunto de treinamento benigno ($x_{\max, j} = x_{\min, j}$), correspondendo aos contadores de \textit{flags} de urgência (\textit{forward}, \textit{backward} e total) e de \textit{push} no sentido reverso, às médias de bytes, pacotes e taxa de blocos no sentido \textit{forward}, e à contagem de pacotes em subfluxo reverso.
+Conforme a Eq.~\eqref{eq:norm_fluxo}, o denominador de normalização para esses oito atributos reduz-se à constante de estabilização $\epsilon = 10^{-6}$; consequentemente, qualquer amostra de teste que exiba valores positivos nessas coordenadas gera entradas normalizadas de elevada magnitude, produzindo erros quadráticos de reconstrução acentuados quando tais atributos são mascarados.
+
+Na avaliação adversarial sobre o CIC-ToN-IoT, a fim de eliminar o viés de seleção sequencial observado no protocolo original, amostraram-se aleatoriamente (com \textit{seed} fixa reprodutível) até $5.000$ fluxos por classe de ataque — ou a totalidade das instâncias disponíveis nas três classes com suporte inferior a $5.000$ amostras (\textit{mitm}, \textit{ddos} e \textit{dos}) —, perfazendo $30.864$ fluxos submetidos ao ataque adversarial.
+A Tabela~\ref{tab:cic_ton_iot_dist} sumariza a composição quantitativa do conjunto CIC-ToN-IoT.
+
+\begin{table}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Distribuição de instâncias válidas no novo conjunto de dados (CIC-ToN-IoT) e amostras selecionadas para avaliação adversarial.}
+\label{tab:cic_ton_iot_dist}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.8cm}rrr@{}}
+\toprule
+\textbf{Classe / Conjunto} & \textbf{Fluxos Válidos} & \textbf{Prop. Teste} & \textbf{Adv. Fluxo} \\
+\midrule
+Treino (Benigno — $70\%$) & $1.759.850$ & --- & --- \\
+Teste (Benigno — $30\%$) & $754.209$ & $21{,}00\%$ & --- \\
+\midrule
+xss & $2.149.308$ & $59{,}86\%$ & $5.000$ \\
+password & $340.208$ & $9{,}47\%$ & $5.000$ \\
+injection & $277.696$ & $7{,}73\%$ & $5.000$ \\
+scanning & $36.205$ & $1{,}01\%$ & $5.000$ \\
+backdoor & $27.145$ & $0{,}76\%$ & $5.000$ \\
+ransomware & $5.098$ & $0{,}14\%$ & $5.000$ \\
+mitm & $517$ & $0{,}01\%$ & $517$ \\
+ddos & $202$ & $0{,}01\%$ & $202$ \\
+dos & $145$ & $<0{,}01\%$ & $145$ \\
+\midrule
+\textbf{Total Malicioso (9 Ataques)} & $\mathbf{2.836.524}$ & $\mathbf{79{,}00\%}$ & $\mathbf{30.864}$ \\
+\textbf{Total Geral de Teste} & $\mathbf{3.590.733}$ & $\mathbf{100{,}00\%}$ & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Métricas de avaliação}
 
-Deverá descrever as métricas de avaliação que serão utilizadas para avaliar os resultados obtidos com a reprodução do artigo. Explicar a motivação de uso das métricas e o que se deseja observar com cada uma delas. Apresentar as equações das métricas consideradas.
+A avaliação de detectores de anomalias não supervisionados em segurança de redes exige métricas que capturem simultaneamente o custo operacional de falsos alertas sobre o tráfego legítimo e a sensibilidade de detecção frente a ataques diversos e desbalanceados.
+Seja $\mathcal{B}_{\text{test}}$ o subconjunto de amostras benignas de teste e $S(\mathbf{x})$ o escore de anomalia atribuído pelo detector (no modo RePO ou RePO+).
+A \textbf{Taxa de Falsos Positivos} ($\text{FPR}$) para um limiar de decisão $\tau$ é definida formalmente como a fração de instâncias benignas de teste cujo escore ultrapassa $\tau$:
+\begin{equation}
+\text{FPR}(\tau) = \frac{1}{|\mathcal{B}_{\text{test}}|} \sum_{\mathbf{x} \in \mathcal{B}_{\text{test}}} \mathbb{I}\!\left(S(\mathbf{x}) > \tau\right).
+\label{eq:fpr_metric}
+\end{equation}
+Conforme o método de referência \cite{hashemi2020}, o limiar operacional $\tau$ é determinado empiricamente pelo quantil $(1 - \text{FPR}_{\text{alvo}})$ da distribuição de escores em $\mathcal{B}_{\text{test}}$: adota-se $\text{FPR}_{\text{alvo}} = 0{,}01$ ($1\%$) para a avaliação em cenário normal — refletindo a exigência prática de baixo volume de alarmes falsos — e $\text{FPR}_{\text{alvo}} = 0{,}10$ ($10\%$) para a avaliação em cenário adversarial, ponto de operação mais sensível estipulado pelo artigo original para comparar a degradação provocada pelos ataques de evasão.
+
+Fixado o limiar $\tau$, a capacidade de detecção sobre cada classe de ataque $c \in \{1, \dots, C\}$, representada pelo conjunto de amostras maliciosas $\mathcal{A}_c$ de cardinalidade $n_c = |\mathcal{A}_c|$, é medida pela \textbf{Taxa de Verdadeiros Positivos} ($\text{TPR}_c$, também conhecida como \textit{Recall}):
+\begin{equation}
+\text{TPR}_c(\tau) = \frac{1}{n_c} \sum_{\mathbf{x} \in \mathcal{A}_c} \mathbb{I}\!\left(S(\mathbf{x}) > \tau\right).
+\label{eq:tpr_class}
+\end{equation}
+
+Em virtude da acentuada assimetria no número de amostras entre diferentes classes de ataque (como observado nas Tabelas~\ref{tab:cicids2017_dist} e~\ref{tab:cic_ton_iot_dist}), o desempenho global do sistema sobre as $C$ classes maliciosas é consolidado por duas métricas agregadas complementares: a \textbf{média macro} ($\text{TPR}_{\text{macro}}$), que atribui peso uniforme a todas as categorias de ataque independentemente de sua frequência, e a \textbf{média ponderada} ($\text{TPR}_{\text{pond}}$), que pondera a taxa de detecção de cada classe pela sua participação relativa no volume total de ataques:
+\begin{equation}
+\begin{aligned}
+\text{TPR}_{\text{macro}} &= \frac{1}{C} \sum_{c=1}^{C} \text{TPR}_c(\tau), \\
+\text{TPR}_{\text{pond}} &= \frac{\sum_{c=1}^{C} n_c \, \text{TPR}_c(\tau)}{\sum_{c=1}^{C} n_c}.
+\end{aligned}
+\label{eq:tpr_aggregates}
+\end{equation}
+Adicionalmente, nos conjuntos em que existem classes minoritárias com menos de $100$ instâncias (como \textit{Infiltration} e \textit{Heartbleed} em fluxos do CICIDS2017), calcula-se também a média macro restrita às classes com $n_c \ge 100$ para evitar que variações discretas em poucas amostras dominem a estimativa global.
+
+No cenário adversarial, seja $\text{TPR}_{\text{normal}, c}$ a taxa de detecção obtida sobre as amostras originais da classe $c$ sob o limiar $\tau_{0{,}10}$ e seja $\text{TPR}_{\text{vítima}, c}$ a taxa de detecção obtida pelo NIDS vítima (com um novo sorteio independente de $M = 100$ máscaras) após a aplicação do ataque adversarial.
+A perda bruta de sensibilidade é expressa pela variação absoluta $\Delta\text{TPR}_c = \text{TPR}_{\text{vítima}, c} - \text{TPR}_{\text{normal}, c}$, medida em pontos percentuais (p.p.).
+Entretanto, avaliar a eficácia ofensiva apenas pelo complemento $1 - \text{TPR}_{\text{vítima}, c}$ é insuficiente, pois essa grandeza soma as evasões reais causadas pelo atacante aos falsos negativos que já ocorriam naturalmente antes de qualquer perturbação (particularmente em classes onde $\text{TPR}_{\text{normal}, c}$ já é reduzida).
+Para isolar estritamente a fração de detecções legítimas que foi suprimida pela perturbação adversarial, emprega-se a \textbf{Queda Condicional de Detecção} ($\text{QC}_c$), definida para toda classe com $\text{TPR}_{\text{normal}, c} > 0$ como:
+\begin{equation}
+\text{QC}_c = 1 - \frac{\text{TPR}_{\text{vítima}, c}}{\text{TPR}_{\text{normal}, c}} = \frac{\text{TPR}_{\text{normal}, c} - \text{TPR}_{\text{vítima}, c}}{\text{TPR}_{\text{normal}, c}}.
+\label{eq:queda_condicional}
+\end{equation}
+Por construção, $\text{QC}_c \in (-\infty, 1]$ quantifica a proporção relativa de ataques originalmente detectados que passaram a evadir o NIDS após a manipulação adversarial: valores próximos de $0\%$ atestam alta resiliência do detector contra o ataque, enquanto valores próximos de $100\%$ indicam evasão quase completa das amostras previamente detectadas.
 
 \section{Resultados e discussões}
-
-Apresentar e analisar os resultados obtidos comparando-os com os resultados de outros trabalhos. Utilizar gráficos e tabelas. Atentar para \textbf{não apenas descrever os resultados apresentados}, mas também para \textbf{explicá-los e discuti-los}.
-
-\subsection{Resultados reprodução do artigo de referência}
-
-\begin{itemize}
-    \item Nos dados usados pelo artigo de referência
-    \item No novo conjunto de dados escolhido
-\end{itemize}
-
-Utilizar gráficos e tabelas. Atentar para não apenas descrever os resultados apresentados, mas também para explicá-los e discuti-los.
-
-\subsection{Resultados proposta de melhoria do artigo de referência (CASO FEITA)}
-
-\begin{itemize}
-    \item Nos dados usados pelo artigo de referência
-    \item No novo conjunto de dados escolhido
-\end{itemize}
-
-Utilizar gráficos e tabelas. Atentar para não apenas descrever os resultados apresentados, mas também para explicá-los e discuti-los.
-
-Comparar e discutir os resultados da proposta de melhoria com os resultados obtidos com a reprodução do artigo de referência.
+Seção em elaboração para a próxima etapa do relatório.
 
 \section{Conclusões e trabalhos futuros}
+Seção em elaboração para a próxima etapa do relatório.
 
-Conclusão, principais limitações e problemas do sistema proposto pelo artigo de referência e pela proposta de melhoria (CASO FEITA), e trabalhos futuros.
+\begin{thebibliography}{99}
 
-% An example of a floating figure using the graphicx package.
-% Note that \label must occur AFTER (or within) \caption.
-% For figures, \caption should occur after the \includegraphics.
-% Note that IEEEtran v1.7 and later has special internal code that
-% is designed to preserve the operation of \label within \caption
-% even when the captionsoff option is in effect. However, because
-% of issues like this, it may be the safest practice to put all your
-% \label just after \caption rather than within \caption{}.
-%
-% Reminder: the "draftcls" or "draftclsnofoot", not "draft", class
-% option should be used if it is desired that the figures are to be
-% displayed while in draft mode.
-%
-%\begin{figure}[!t]
-%\centering
-%\includegraphics[width=2.5in]{myfigure}
-% where an .eps filename suffix will be assumed under latex, 
-% and a .pdf suffix will be assumed for pdflatex; or what has been declared
-% via \DeclareGraphicsExtensions.
-%\caption{Simulation results for the network.}
-%\label{fig_sim}
-%\end{figure}
+\bibitem{symantec2019}
+Symantec, ``Internet security threat report,'' Symantec Corporation, Tech. Rep., 2019.
 
-% Note that the IEEE typically puts floats only at the top, even when this
-% results in a large percentage of a column being occupied by floats.
+\bibitem{icscert2016}
+ICS-CERT, ``Cyber-attack against Ukrainian critical infrastructure,'' Industrial Control Systems Cyber Emergency Response Team, Alert IR-ALERT-H-16-056-01, 2016.
 
+\bibitem{kumar2017}
+R.~S.~S. Kumar, A.~Wicker, and M.~Swann, ``Practical machine learning for cloud intrusion detection: Challenges and the way forward,'' in \emph{Proc. 10th ACM Workshop on Artificial Intelligence and Security (AISec)}, Dallas, TX, USA, 2017, pp. 81--90.
 
-% An example of a double column floating figure using two subfigures.
-% (The subfig.sty package must be loaded for this to work.)
-% The subfigure \label commands are set within each subfloat command,
-% and the \label for the overall figure must come after \caption.
-% \hfil is used as a separator to get equal spacing.
-% Watch out that the combined width of all the subfigures on a 
-% line do not exceed the text width or a line break will occur.
-%
-%\begin{figure*}[!t]
-%\centering
-%\subfloat[Case I]{\includegraphics[width=2.5in]{box}%
-%\label{fig_first_case}}
-%\hfil
-%\subfloat[Case II]{\includegraphics[width=2.5in]{box}%
-%\label{fig_second_case}}
-%\caption{Simulation results for the network.}
-%\label{fig_sim}
-%\end{figure*}
-%
-% Note that often IEEE papers with subfigures do not employ subfigure
-% captions (using the optional argument to \subfloat[]), but instead will
-% reference/describe all of them (a), (b), etc., within the main caption.
-% Be aware that for subfig.sty to generate the (a), (b), etc., subfigure
-% labels, the optional argument to \subfloat must be present. If a
-% subcaption is not desired, just leave its contents blank,
-% e.g., \subfloat[].
+\bibitem{ahmad2015}
+I.~Ahmad, S.~Namal, M.~Ylianttila, and A.~Gurtov, ``Security in software defined networks: A survey,'' \emph{IEEE Communications Surveys \& Tutorials}, vol.~17, no.~4, pp. 2317--2346, 2015.
 
-% Note that the IEEE does not put floats in the very first column
-% - or typically anywhere on the first page for that matter. Also,
-% in-text middle ("here") positioning is typically not used, but it
-% is allowed and encouraged for Computer Society conferences (but
-% not Computer Society journals). Most IEEE journals/conferences use
-% top floats exclusively. 
-% Note that, LaTeX2e, unlike IEEE journals/conferences, places
-% footnotes above bottom floats. This can be corrected via the
-% \fnbelowfloat command of the stfloats package.
+\bibitem{lee2017}
+S.~Lee, J.~Kim, S.~Shin, P.~Porras, and V.~Yegneswaran, ``Athena: A framework for scalable anomaly detection in software-defined networks,'' in \emph{Proc. 47th Annual IEEE/IFIP Int. Conf. on Dependable Systems and Networks (DSN)}, Denver, CO, USA, 2017, pp. 249--260.
 
+\bibitem{khraisat2019}
+A.~Khraisat, I.~Gondal, P.~Vamplew, and J.~Kamruzzaman, ``Survey of intrusion detection systems: Techniques, datasets and challenges,'' \emph{Cybersecurity}, vol.~2, no.~1, pp. 1--22, 2019.
 
-% trigger a \newpage just before the given reference
-% number - used to balance the columns on the last page
-% adjust value as needed - may need to be readjusted if
-% the document is modified later
-%\IEEEtriggeratref{8}
-% The "triggered" command can be changed if desired:
-%\IEEEtriggercmd{\enlargethispage{-5in}}
+\bibitem{alqatf2018}
+M.~Al-Qatf, Y.~Lasheng, M.~Al-Habib, and K.~Al-Sabahi, ``Deep learning approach combining sparse autoencoder with SVM for network intrusion detection,'' \emph{IEEE Access}, vol.~6, pp. 52\,843--52\,856, 2018.
 
-% references section
+\bibitem{yu2017}
+Y.~Yu, J.~Long, and Z.~Cai, ``Network intrusion detection through stacking dilated convolutional autoencoders,'' \emph{Security and Communication Networks}, vol. 2017, pp. 1--10, 2017.
 
-% can use a bibliography generated by BibTeX as a .bbl file
-% BibTeX documentation can be easily obtained at:
-% http://mirror.ctan.org/biblio/bibtex/contrib/doc/
-% The IEEEtran BibTeX style support page is at:
-% http://www.michaelshell.org/tex/ieeetran/bibtex/
-%\bibliographystyle{IEEEtran}
-% argument is your BibTeX string definitions and bibliography database(s)
-%\bibliography{IEEEabrv,../bib/paper}
-%
-% <OR> manually copy in the resultant .bbl file
-% set second argument of \begin to the number of references
-% (used to reserve space for the reference number labels box)
+\bibitem{yin2018}
+C.~Yin, Y.~Zhu, S.~Liu, J.~Fei, and H.~Zhang, ``An enhancing framework for botnet detection using generative adversarial networks,'' in \emph{Proc. Int. Conf. on Artificial Intelligence and Big Data (ICAIBD)}, Chengdu, China, 2018, pp. 228--234.
 
-\begin{thebibliography}{1}
-\bibitem{IEEEhowto:kopka}
-H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus
-  0.5em minus 0.4em\relax Harlow, England: Addison-Wesley, 1999.
+\bibitem{malaiya2018}
+R.~K. Malaiya, D.~Kwon, J.~Kim, S.~C. Suh, H.~Kim, and I.~Kim, ``An empirical evaluation of deep learning for network anomaly detection,'' in \emph{Proc. Int. Conf. on Computing, Networking and Communications (ICNC)}, Maui, HI, USA, 2018, pp. 893--898.
+
+\bibitem{mirsky2018}
+Y.~Mirsky, T.~Doitshman, Y.~Elovici, and A.~Shabtai, ``Kitsune: An ensemble of autoencoders for online network intrusion detection,'' in \emph{Proc. Network and Distributed System Security Symposium (NDSS)}, San Diego, CA, USA, 2018, pp. 1--15.
+
+\bibitem{zong2018}
+B.~Zong, Q.~Song, M.~R. Min, W.~Cheng, C.~Lumezanu, D.~Cho, and H.~Chen, ``Deep autoencoding Gaussian mixture model for unsupervised anomaly detection,'' in \emph{Proc. Int. Conf. on Learning Representations (ICLR)}, Vancouver, BC, Canada, 2018, pp. 1--19.
+
+\bibitem{zenati2018}
+H.~Zenati, C.~S. Foo, B.~Lecouat, G.~Manek, and V.~R. Chandrasekhar, ``Efficient GAN-based anomaly detection,'' \emph{arXiv preprint arXiv:1802.06222}, 2018.
+
+\bibitem{chalapathy2019}
+R.~Chalapathy and S.~Chawla, ``Deep learning for anomaly detection: A survey,'' \emph{arXiv preprint arXiv:1901.03407}, 2019.
+
+\bibitem{hashemi2019}
+M.~J. Hashemi, G.~Cusack, and E.~Keller, ``Towards evaluation of NIDSs in adversarial setting,'' in \emph{Proc. 3rd ACM CoNEXT Workshop on Big DAta, Machine Learning and Artificial Intelligence for Data Communication Networks (Big-DAMA)}, Orlando, FL, USA, 2019, pp. 14--21.
+
+\bibitem{aiken2019}
+J.~Aiken and S.~Scott-Hayward, ``Investigating adversarial attacks against network intrusion detection systems in SDNs,'' in \emph{Proc. IEEE Conf. on Network Function Virtualization and Software Defined Networks (NFV-SDN)}, Dallas, TX, USA, 2019, pp. 1--7.
+
+\bibitem{hashemi2020}
+M.~J. Hashemi and E.~Keller, ``Enhancing robustness against adversarial examples in network intrusion detection systems,'' in \emph{Proc. IEEE Conf. on Network Function Virtualization and Software Defined Networks (NFV-SDN)}, Leganés, Spain, 2020, pp. 1--7.
+
+\bibitem{vincent2008}
+P.~Vincent, H.~Larochelle, Y.~Bengio, and P.-A. Manzagol, ``Extracting and composing robust features with denoising autoencoders,'' in \emph{Proc. 25th Int. Conf. on Machine Learning (ICML)}, Helsinki, Finland, 2008, pp. 1096--1103.
+
+\bibitem{biggio2013}
+B.~Biggio, I.~Corona, D.~Maiorca, B.~Nelson, N.~{\v{S}}rndi{\fontencoding{OT1}\selectfont\'c}, P.~Laskov, G.~Giacinto, and F.~Roli, ``Evasion attacks against machine learning at test time,'' in \emph{Proc. European Conf. on Machine Learning and Knowledge Discovery in Databases (ECML PKDD)}, Prague, Czech Republic, 2013, pp. 387--402.
+
+\bibitem{szegedy2013}
+C.~Szegedy, W.~Zaremba, I.~Sutskever, J.~Bruna, D.~Erhan, I.~Goodfellow, and R.~Fergus, ``Intriguing properties of neural networks,'' \emph{arXiv preprint arXiv:1312.6199}, 2013.
+
+\bibitem{carlini2018}
+N.~Carlini and D.~Wagner, ``Audio adversarial examples: Targeted attacks on speech-to-text,'' in \emph{Proc. IEEE Security and Privacy Workshops (SPW)}, San Francisco, CA, USA, 2018, pp. 1--7.
+
+\bibitem{sharif2016}
+M.~Sharif, S.~Bhagavatula, L.~Bauer, and M.~K. Reiter, ``Accessorize to a crime: Real and stealthy attacks on state-of-the-art face recognition,'' in \emph{Proc. ACM SIGSAC Conf. on Computer and Communications Security (CCS)}, Vienna, Austria, 2016, pp. 1528--1540.
+
+\bibitem{eykholt2018}
+K.~Eykholt, I.~Evtimov, E.~Fernandes, B.~Li, A.~Rahmati, C.~Xiao, A.~Prakash, T.~Kohno, and D.~Song, ``Robust physical-world attacks on deep learning visual classification,'' in \emph{Proc. IEEE/CVF Conf. on Computer Vision and Pattern Recognition (CVPR)}, Salt Lake City, UT, USA, 2018, pp. 1625--1634.
+
+\bibitem{grosse2017}
+K.~Grosse, N.~Papernot, P.~Manoharan, M.~Backes, and P.~McDaniel, ``Adversarial examples for malware detection,'' in \emph{Proc. 22nd European Symposium on Research in Computer Security (ESORICS)}, Oslo, Norway, 2017, pp. 62--79.
+
+\bibitem{sharafaldin2018}
+I.~Sharafaldin, A.~H. Lashkari, and A.~A. Ghorbani, ``Toward generating a new intrusion detection dataset and intrusion traffic characterization,'' in \emph{Proc. 4th Int. Conf. on Information Systems Security and Privacy (ICISSP)}, Funchal, Madeira, Portugal, 2018, pp. 108--116.
+
+\bibitem{axelsson2000}
+S.~Axelsson, ``The base-rate fallacy and the difficulty of intrusion detection,'' \emph{ACM Transactions on Information and System Security (TISSEC)}, vol.~3, no.~3, pp. 186--205, 2000.
+
+\bibitem{sarhan2022cictoniot}
+M.~Sarhan, S.~Layeghy, and M.~Portmann, ``Evaluating standard feature sets towards increased generalisability and explainability of ML-based network intrusion detection,'' \emph{Big Data Research}, vol.~30, p. 100359, 2022.
+
+\bibitem{moustafa2019toniot}
+N.~Moustafa, ``ToN-IoT datasets,'' \emph{IEEE DataPort}, 2019, doi: 10.21227/fesz-dm97.
 
 \end{thebibliography}
 
-
-
-
-% that's all folks
 \end{document}
-
-

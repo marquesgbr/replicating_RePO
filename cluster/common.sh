@@ -154,12 +154,78 @@ require_packet_data() {
   fi
 }
 
+new_data_model_dir_for() {
+  local source="${1:-${MODEL_SOURCE}}"
+  if [[ -n "${MODEL_DIR:-}" ]]; then
+    printf '%s\n' "${MODEL_DIR}"
+    return 0
+  fi
+  if [[ "${source}" == "retrained" ]]; then
+    printf '%s\n' "${REPO_ROOT}/models/retrained/new_data_model"
+  else
+    printf '%s\n' "${REPO_ROOT}/models/new_data_model"
+  fi
+}
+
+new_data_results_root() {
+  printf '%s\n' "${RESULTS_ROOT}/new_data"
+}
+
+new_data_model_is_protected() {
+  local candidate="$1"
+  local protected="${REPO_ROOT}/models/new_data_model"
+  local resolved_candidate resolved_protected
+  if command -v realpath >/dev/null 2>&1; then
+    resolved_candidate="$(realpath -m -- "${candidate}" 2>/dev/null || printf '%s' "${candidate}")"
+    resolved_protected="$(realpath -m -- "${protected}" 2>/dev/null || printf '%s' "${protected}")"
+  else
+    resolved_candidate="${candidate}"
+    resolved_protected="${protected}"
+  fi
+  [[ "${resolved_candidate}" == "${resolved_protected}" \
+     || "${resolved_candidate}" == "${resolved_protected}/"* ]]
+}
+
+require_new_data() {
+  local source="${1:-${MODEL_SOURCE}}"
+  local missing_data=0
+  local missing_model=0
+  local file
+  for file in \
+    "${REPO_ROOT}/data/new_data/new_train.csv" \
+    "${REPO_ROOT}/data/new_data/new_test.csv" \
+    "${REPO_ROOT}/data/new_data/x_train_meta/train_min.npy" \
+    "${REPO_ROOT}/data/new_data/x_train_meta/train_max.npy"; do
+    if [[ ! -s "${file}" ]]; then
+      echo "[error] arquivo ausente ou vazio: ${file}" >&2
+      missing_data=1
+    fi
+  done
+
+  local model_dir
+  model_dir="$(new_data_model_dir_for "${source}")"
+  if [[ ! -f "${model_dir}/saved_model.pb" ]]; then
+    echo "[error] SavedModel ausente: ${model_dir}/saved_model.pb" >&2
+    missing_model=1
+  fi
+
+  if (( missing_data )); then
+    echo "[hint] rode bash cluster/setup_env.sh (ou use --skip-new-data se só precisa de fluxo/pacotes)" >&2
+  fi
+  if (( missing_model )); then
+    echo "[hint] use MODEL_SOURCE=pretrained ou treine com 'bash cluster/submit.sh new-data train'" >&2
+  fi
+  if (( missing_data || missing_model )); then
+    return 2
+  fi
+}
+
 print_runtime_env() {
   echo "[env] repo=${REPO_ROOT}"
   echo "[env] host=$(hostname) user=${USER:-$(id -un)}"
   echo "[env] scratch=${SCRATCH} venv=${VENV}"
   echo "[env] data=${DATA_ROOT} results=${RESULTS_ROOT}"
-  echo "[env] model_source=${MODEL_SOURCE} seed=${SEED}"
+  echo "[env] model_source=${MODEL_SOURCE} seed=${SEED} task=${TASK:-?} dataset=${DATASET:-flow/packet}"
   if [[ -n "${SLURM_JOB_ID:-}" ]]; then
     echo "[job] id=${SLURM_JOB_ID} name=${SLURM_JOB_NAME:-?} partition=${SLURM_JOB_PARTITION:-?} array=${SLURM_ARRAY_TASK_ID:-none}"
   fi
@@ -171,3 +237,4 @@ print_runtime_env() {
 }
 
 mkdir -p "${RESULTS_ROOT}/logs" "${RESULTS_ROOT}/manifests" "${RESULTS_ROOT}/attack-lists"
+mkdir -p "$(new_data_results_root)/logs" "$(new_data_results_root)/attack-lists"
