@@ -63,7 +63,7 @@ Este trabalho realiza a reprodução experimental, a auditoria metodológica e a
 Os experimentos conduzidos sobre o conjunto de dados de referência nas granularidades de fluxos e de pacotes confirmam a alta fidelidade da reprodução em cenário normal, atingindo taxas médias de detecção de 25,25\% em fluxos e de 34,72\% em pacotes sob taxa de falsos positivos de 1\%, além de preservar a detecção acima da taxa de falsos positivos de 10\% em 8 de 11 ataques de fluxo e em 10 de 11 ataques de pacotes no cenário adversarial.
 Paralelamente, a investigação do protocolo original revela limitações metodológicas importantes ligadas ao viés de amostragem temporal e à variância da reavaliação estocástica com máscara única.
 Por fim, a aplicação da metodologia a um conjunto adicional de fluxos de Internet das Coisas evidencia que o ganho proporcionado pela agregação de observações parciais se mantém fora do domínio original, mas que a eficácia da evasão adversarial é fortemente dependente das características estatísticas do conjunto de dados.
-Complementarmente, o trabalho propõe e instrumenta três direções de melhoria de eficiência sobre o RePO+: a redução e a estruturação do orçamento de máscaras, a decisão em cascata com um estágio de baixo custo e a destilação do ensemble em um aluno determinístico de passe único, discutindo o custo computacional que motivou cada proposta e as razões pelas quais se esperava ganho em custo, acurácia e robustez adversarial.
+Complementarmente, o trabalho propõe duas regras de alocação de máscaras por amostra, motivadas pelo custo de cem passagens pelo autoencoder por amostra: uma cascata \textit{cheap-first}, que resolve a amostra com um prefixo de dez máscaras e só recorre ao ensemble completo quando o escore barato não é conclusivo, e uma decisão sequencial com parada antecipada por intervalo de confiança. A cascata reduz o custo de cem para $60{,}80$ máscaras por amostra, uma redução de $39{,}2\%$, preserva exatamente a taxa de detecção do RePO+ completo e mantém taxa de contorno adversarial de $0{,}25\%$; a decisão sequencial reduz o custo em $94{,}7\%$ com $99{,}93\%$ de concordância com a decisão completa, ao preço de $1{,}2$ ponto percentual de detecção média, e sua avaliação adversarial está em curso.
 \end{abstract}
 
 \IEEEpeerreviewmaketitle
@@ -99,7 +99,7 @@ As principais contribuições deste trabalho são:
     \item Reproduzir integralmente e validar empiricamente os experimentos do artigo de referência \cite{hashemi2020} para detecção de intrusão baseada em fluxos e em pacotes sobre o conjunto de dados CICIDS2017 \cite{sharafaldin2018}, avaliando os modos RePO e RePO+ tanto no cenário normal ($\text{FPR} = 0{,}01$) quanto sob ataques adversariais ($\text{FPR} = 0{,}10$);
     \item Realizar uma auditoria metodológica e estatística rigorosa do protocolo experimental de referência, identificando e quantificando o impacto do viés de amostragem temporal na seleção sequencial de instâncias de ataque, da variância estocástica associada à reavaliação por máscara única e da desproporção amostral em classes minoritárias;
     \item Estender a avaliação do método RePO/RePO+ e do ataque adversarial de fluxo para um novo conjunto de dados de tráfego de Internet das Coisas (CIC-ToN-IoT), demonstrando que a vantagem da agregação por mínimos por grupo se mantém em um novo domínio, ao passo que a transferibilidade e o sucesso do ataque adversarial dependem fortemente da distribuição dos atributos e da escala dos escores de reconstrução;
-    \item Propor e instrumentar três direções de melhoria de eficiência sobre o RePO+ — redução e estruturação do orçamento de máscaras, decisão em cascata com estágio de baixo custo e destilação do ensemble em um aluno determinístico de passe único —, explicitando os critérios de projeto, as hipóteses de ganho e o custo computacional que motivou cada proposta.
+    \item Propor e avaliar duas regras de alocação de máscaras por amostra que reduzem o custo de inferência do RePO+ sem substituir a função de decisão na região difícil do espaço de entrada: uma cascata \textit{cheap-first} com estágio barato de dez máscaras, que reduz o custo em $39{,}2\%$ preservando exatamente a detecção do detector completo e mantendo taxa de contorno adversarial de 0,25\%, e uma decisão sequencial com parada antecipada por intervalo de confiança, que reduz o custo em $94{,}7\%$ ao preço de $1{,}2$ ponto percentual de detecção média.
 \end{itemize}
 
 \section{Trabalhos relacionados}
@@ -341,104 +341,74 @@ O Alg.~\ref{alg:repo_inferencia} formaliza o processo completo de pontuação e 
 
 \section{Solução proposta pela equipe}\label{sec:proposta}
 
-O RePO e o RePO+ avaliam $M = 100$ máscaras por amostra porque o escore é um ensemble de erros de reconstrução, o que corresponde, em produção, a $100$ vezes o custo de inferência de um autoencoder de passe único.
-O ataque adversarial correspondente soma a esse custo até $300$ iterações de otimização por pacote e até $540$ iterações por fluxo, cada uma delas calculada sobre as $100$ máscaras.
-No protocolo de referência, essa combinação resulta em dezenas de horas de GPU apenas para reproduzir a rodada adversarial de um único conjunto de dados, o que motivou a busca por alternativas de menor custo dentro do próprio desenho do estudo.
+O detector de referência classifica cada amostra pela agregação de $N = 100$ erros de reconstrução, um por máscara binária: em produção, isso significa $100$ passagens pelo autoencoder por amostra, ou $100$ vezes o custo de uma única inferência, e o custo cresce linearmente com $N$.
+O RePO+, em particular, precisa das $100$ máscaras para calcular os cinco mínimos de vinte que compõem seu escore.
+Diante disso, a proposta da equipe não é reduzir o número de máscaras para todas as amostras — uma decisão de hiperparâmetro em que uma amostra trivial e uma amostra ambígua pagam o mesmo orçamento —, mas alocar máscaras \emph{por amostra}: a maior parte do tráfego é fácil e um prefixo pequeno de máscaras já produz um escore distante do limiar, de modo que apenas as amostras difíceis precisam pagar o ensemble completo.
+Duas regras de alocação são propostas: a cascata \textit{cheap-first} e a decisão sequencial.
+A diferença de garantia entre essa abordagem e a redução estática é precisa: na redução estática o escore de toda amostra muda quando $N$ muda, inclusive o das amostras difíceis; na alocação por amostra, a amostra que não usa o atalho é julgada pelo mesmo RePO+ de $100$ máscaras do artigo, e só a região fácil é resolvida mais barato.
 
-O custo não é, contudo, a única consequência do ensemble de máscaras.
-Como a avaliação de cada amostra depende de um sorteio independente de $100$ máscaras, a reavaliação do mesmo tráfego produz variações da ordem de grandeza do efeito que se deseja medir: durante a reprodução, ataques cujo TPR \emph{aumentou} após a perturbação adversarial evidenciaram que o ruído de uma única reavaliação não pode ser separado do efeito do ataque sem repetições e comparação pareada.
+\subsection{Formulação: o custo depende da carga}
 
-Sob essa ótica, a proposta da equipe consiste em caracterizar e deslocar a fronteira custo $\times$ robustez do RePO+: medir quanto de robustez adversarial se perde em cada ponto da curva de orçamento de máscaras e qual desenho de máscara entrega mais robustez por passagem direta.
-A investigação foi organizada em três direções complementares, descritas a seguir, juntamente com as hipóteses que motivaram cada uma.
-
-\subsection{Formulação do problema de eficiência}
-
-O desenho do estudo fixa cinco critérios para que uma direção seja considerada fechada: custo de produção medido; TPR normal no FPR de $1\%$ com limiar recalibrado; TPR de vítima no FPR de $10\%$; taxa de amostras efetivamente enganadas entre as que o detector acertava antes do ataque, reportada separadamente das que já eram benignas; e custo do ataque.
-Seja $\pi$ uma política de mascaramento e $n$ o número de máscaras avaliadas por amostra.
-O custo de produção do detector é proporcional ao produto $n \cdot c_f$, em que $c_f$ é o custo de uma passagem direta pela rede, e o custo do atacante é proporcional ao número de avaliações que ele precisa realizar por amostra, também governado por $n$ e pelo número de iterações da otimização.
-Com esses critérios, o compromisso entre custo, acurácia normal e retenção sob ataque é formalizado como:
+Como apenas amostras benignas podem ser descartadas no atalho, a economia não é uma propriedade do detector, e sim do detector sob uma carga.
+O custo esperado por amostra de uma regra de dois estágios com prefixo de $n_{\text{cheap}}$ máscaras é
 \begin{equation}
-\begin{aligned}
-\min_{n,\,\pi}\quad & n \, c_f \\
-\text{s.a.}\quad & \text{TPR}_{\text{norm}}(n,\pi) \;\ge\; \text{TPR}_{\text{ref}} - \varepsilon, \\
-& \text{TPR}_{\text{vít}}(n,\pi) \;\ge\; \rho \, \text{TPR}_{\text{norm}}(n,\pi),
-\end{aligned}
-\label{eq:eficiencia}
+\mathbb{E}[\text{máscaras/amostra}] = n_{\text{cheap}} + f_{\text{roteada}}\,\left(100 - n_{\text{cheap}}\right),
+\label{eq:custo_cascata}
 \end{equation}
-em que $\text{TPR}_{\text{ref}} = \text{TPR}_{\text{norm}}(100, \text{iid})$ é o desempenho do protocolo de referência, $\varepsilon$ é a perda tolerada em pontos percentuais no cenário normal e $\rho \in (0,1]$ é a fração da detecção que se exige preservar sob ataque.
-Como ambos os critérios dependem do limiar operacional, cada variante tem seu limiar recalibrado no mesmo alvo de $\text{FPR}$, de modo que a comparação não seja contaminada por pontos de operação distintos.
-O custo do ataque é reportado ao lado do custo do detector, de modo a não comparar um ataque caro contra um detector barato.
+em que $f_{\text{roteada}} = p_{\text{ben}}\left(1 - s\right) + p_{\text{atk}}\left(1 - \Phi\right)$ é a fração de amostras que seguem para o ensemble completo, $p_{\text{ben}}$ e $p_{\text{atk}}$ são as prevalências de tráfego benigno e de ataque, $s$ é a taxa de benignos resolvidos pelo atalho e $\Phi$ é a taxa de ataques descartados por ele.
+Duas consequências dessa formulação guiam a avaliação: o ganho precisa ser reportado junto com a prevalência em que foi medido, e o orçamento $\Phi$ é uma decisão de projeto explícita, não um efeito colateral.
 
-\subsection{Direção A: orçamento reduzido e máscaras estruturadas}
+\subsection{Proposta 1: cascata cheap-first}
 
-A primeira direção ataca o custo pela raiz, reduzindo $n$ e controlando quais atributos cada máscara preserva.
-Além da política original do artigo, cada coordenada é preservada de forma independente e identicamente distribuída com probabilidade $0{,}25$, como na Eq.~\eqref{eq:bernoulli_mask}.
-Foram consideradas duas políticas estruturadas:
-\begin{itemize}
-    \item \textbf{Balanceada:} cada máscara preserva exatamente $\lfloor d/4 \rfloor$ coordenadas sorteadas sem reposição, evitando que uma máscara revele muito mais atributos que as demais;
-    \item \textbf{Cobertura:} as máscaras de cada grupo $\mathcal{G}_g$ do RePO+ cobrem, em conjunto, todas as $d$ coordenadas, de modo que o mínimo por grupo seja calculado sobre uma observação do vetor inteiro.
-\end{itemize}
-Com $d = 77$ e máscaras que preservam $19$ atributos, cobrir um grupo exige $K \ge 5$ máscaras, isto é, $n \ge 25$; abaixo desse orçamento a política de cobertura degenera para a balanceada, o que é uma propriedade estrutural do problema e não uma escolha de implementação.
-
-A hipótese que motivou essa direção é dupla.
-Do lado defensivo, esperava-se encontrar um joelho de custo: a partir de certo $n$, a curva de TPR deveria saturar, de modo que $20$ a $25$ máscaras produzissem a mesma detecção que $100$ por uma fração do custo.
-Do lado ofensivo, esperava-se que menos máscaras também reduzissem a superfície de ataque, pois o atacante dispõe de $n$ sorteios para encontrar uma configuração que engane o ensemble.
-
-\subsection{Direção B: cascata e decisão sequencial}
-
-A segunda direção mantém o ensemble completo, mas evita cobrá-lo de amostras que já se mostram benignas com poucas máscaras.
-A política de cascata avalia primeiro um estágio barato com $n_{\text{cheap}} \in \{5, 10, 25\}$ máscaras e decide em dois limiares:
+A cascata calcula primeiro um escore com $n_{\text{cheap}} \in \{5, 10, 25\}$ máscaras, reorganizadas nos mesmos cinco grupos do RePO+, e decide em dois limiares:
 \begin{equation}
 \hat{y}(\tilde{\mathbf{x}}) =
 \begin{cases}
-0, & \text{se } S_{\text{cheap}}(\tilde{\mathbf{x}}) \le \tau_{\text{low}}, \\
+0, & \text{se } S_{\text{cheap}}(\tilde{\mathbf{x}}) < t_{\text{low}}, \\
 \mathbb{I}\left[S_{\text{RePO+}}(\tilde{\mathbf{x}}) > \tau\right], & \text{caso contrário},
 \end{cases}
 \label{eq:cascata}
 \end{equation}
-em que o primeiro ramo significa declarar a amostra benigna sem avaliar o ensemble completo, e $\tau_{\text{low}}$ é calibrado sobre as amostras de ataque para respeitar um orçamento explícito de falsos negativos do estágio barato.
-Uma variante mais agressiva, a decisão sequencial, acumula máscaras uma a uma e interrompe a avaliação assim que o escore parcial permite decidir, sem nunca completar as $100$ máscaras.
-
-A expectativa era de que a maior parte do tráfego legítimo — que domina o volume em uma rede real — fosse descartada no estágio barato, produzindo economia de cerca de um terço das máscaras sem perda de TPR.
-O risco identificado de antemão é específico e mensurável: um atacante que descubra o limiar do estágio barato pode tentar empurrar a amostra maliciosa para baixo de $\tau_{\text{low}}$ e, com isso, nunca ser submetido ao ensemble completo.
-Por esse motivo, a taxa de contorno do estágio barato foi definida como a métrica de segurança da direção: se ela for alta, a cascata deve ser reportada como proposta rejeitada, e não como recomendação de projeto.
-
-\subsection{Direção C: destilação do ensemble}
-
-A terceira direção substitui o ensemble por um único modelo, treinado para reproduzir o escore do professor.
-Seja $g_{\phi}$ uma rede determinística que recebe a amostra normalizada e devolve um escore em um único passe, treinada sobre tráfego benigno para aproximar o escore do RePO+:
+em que $t_{\text{low}}$ é o maior valor que mantém a fração de ataques descartados dentro do orçamento de falsos negativos $\Phi$:
 \begin{equation}
-\mathcal{L}_{\text{dest}}(\phi) = \mathbb{E}_{\tilde{\mathbf{x}} \sim \mathcal{D}_{\text{train}}}\left[ \left( g_{\phi}(\tilde{\mathbf{x}}) - S_{\text{RePO+}}(\tilde{\mathbf{x}}) \right)^{2} \right],
-\label{eq:destilacao}
+t_{\text{low}} = Q_{\Phi}\!\left(\left\{ S_{\text{cheap}}(\mathbf{x}) : \mathbf{x} \in \mathcal{A} \right\}\right),
+\label{eq:t_low}
 \end{equation}
-ao passo que a fidelidade de ordenação entre aluno e professor não entra na perda: ela é medida a posteriori pela correlação de postos $\rho_s$ entre os escores de ambos.
-A motivação é econômica: se um único passe reproduz o escore do ensemble, o custo de produção cai por um fator próximo de $100$, e a inferência deixa de depender de $100$ sorteios independentes.
-O risco é simétrico ao benefício: a destilação comprime a função de escore, mas também a diversidade de máscaras que dava robustez ao professor, e o aluno, sendo caixa-branca, não tem um ensemble em que se apoiar.
-Por isso a hipótese da direção é conservadora — esperava-se que a destilação preservasse a acurácia normal e \emph{não} preservasse a robustez adversarial —, e o experimento inclui um aluno de controle treinado com aumento de dados por mascaramento, de modo a separar duas explicações possíveis para uma eventual perda de robustez: o determinismo do aluno e o fato de ele nunca ter visto máscaras durante o treinamento.
+com $Q_{\Phi}$ denotando o quantil de ordem $\Phi$ dos escores baratos das amostras de ataque $\mathcal{A}$, e $t_{\text{low}} = \min_{\mathbf{x} \in \mathcal{A}} S_{\text{cheap}}(\mathbf{x}) - \epsilon$ quando $\Phi = 0$.
+O ponto central do desenho é que $t_{\text{low}}$ \emph{não} é o limiar de decisão: ele fica de uma a duas ordens de grandeza abaixo de $\tau$, de modo que só caem no atalho as amostras cujo escore barato está longe da fronteira.
+Como o escore barato toma cada mínimo sobre menos sorteios, ele é viesado para cima em relação ao RePO+ completo; isso reforça a assimetria da regra — um escore barato baixo é evidência forte de benignidade, enquanto um escore barato alto é inconclusivo e manda a amostra para o ensemble.
+Da calibração do limiar final sobre o escore cascateado decorre que $\tau$ coincide com o limiar do RePO+ completo: o ponto de operação é preservado e o atalho nunca produz um positivo.
+A contrapartida é que o atalho se torna uma superfície de ataque: um atacante que empurre o escore barato para baixo de $t_{\text{low}}$ nunca enfrenta o ensemble, e é isso que a avaliação adversarial mede por meio da \textbf{taxa de contorno} (\textit{bypass}), a fração de amostras maliciosas que pulam o estágio caro.
 
-\subsection{Protocolo de avaliação e hipóteses}
+\subsection{Proposta 2: decisão sequencial}
 
-As três direções compartilham um mesmo protocolo, derivado do protocolo de referência e executado pelo mesmo 	extit{runner}: amostragem aleatória por classe em vez das primeiras $N$ instâncias, $5.000$ amostras por ataque, limiares recalibrados no alvo de $\text{FPR}$ de $1\%$ no cenário normal e de $10\%$ no cenário adversarial, e o mesmo ataque baseado em gradiente com projeção de viabilidade.
-Para cada célula são registrados o TPR normal, o TPR de vítima, a taxa de amostras efetivamente modificadas, a taxa de amostras que já eram classificadas como benignas antes do ataque e o custo em máscaras avaliadas, tanto do detector quanto do atacante.
-O protocolo é protegido por três critérios de aceitação: a reprodução do baseline deve coincidir com os resultados da replicação dentro do ruído; uma variante que perca mais de um ponto percentual de TPR normal deve ser reavaliada após retreino com a nova política antes de ser descartada; e uma variante de cascata com contorno elevado do estágio barato deve ser reportada como resultado negativo.
+A decisão sequencial não tem dois estágios: ela revela as máscaras em blocos de cinco e interrompe quando o intervalo de confiança de $95\%$ da média exclui o limiar.
+Para $k \in \{5, 10, 15, \dots, 100\}$ máscaras já reveladas, calcula-se
+\begin{equation}
+\left[\, m_k - 1{,}96\,\frac{s_k}{\sqrt{k}},\; m_k + 1{,}96\,\frac{s_k}{\sqrt{k}} \,\right],
+\label{eq:ic_sequencial}
+\end{equation}
+em que $m_k$ e $s_k$ são a média e o desvio-padrão dos $k$ erros de reconstrução disponíveis.
+Se o limite inferior estiver acima de $\tau$, a amostra é declarada ataque; se o limite superior ficar abaixo de $\tau$, é declarada benigna; caso contrário, revelam-se mais cinco máscaras, até o limite de $100$, quando a decisão passa a ser a média pontual.
+A regra usa a média (RePO) e não o RePO+, porque é a média que admite um estimador de intervalo simples; o custo de $5{,}32$ máscaras por amostra é, portanto, acompanhado de uma troca de detector, e não apenas de uma economia de máscaras.
 
-As hipóteses registradas no desenho do estudo podem ser resumidas em quatro afirmações: (H1) $25$ máscaras estruturadas substituem $100$ máscaras independentes com perda inferior a um ponto percentual de TPR; (H2) a redução do número de máscaras aumenta a retenção de detecção sob ataque, por diminuir a superfície de exploração do atacante; (H3) a cascata reduz o custo de produção em cerca de um terço sem perda de TPR, ao preço de um orçamento controlado de falsos negativos; e (H4) a destilação preserva o desempenho normal com um único passe, mas perde robustez adversarial.
+\subsection{Protocolo de avaliação}
 
-\subsection{Custo de execução e estado atual da avaliação}
+A avaliação da proposta usa o mesmo modelo, a mesma normalização e o mesmo esquema de máscaras da reprodução, com uma amostra de $144.182$ exemplos do CICIDS2017 (100.000 benignos e $44.182$ ataques, amostragem uniforme por classe com semente fixa, teto de $5.000$ por ataque e classes menores inteiras).
+No cenário normal, o limiar é calibrado para $\text{FPR} = 1\%$ sobre os benignos; no cenário adversarial, o atacante conhece a regra, otimiza o escore do estágio barato e opera no ponto de $\text{FPR} = 10\%$, com $1.000$ amostras por ataque — todas as disponíveis para Heartbleed e Infiltration —, totalizando $9.047$ amostras atacadas.
+O estágio barato é avaliado em cinco repetições de escore, enquanto o baseline do artigo usa uma, e essa é a única diferença metodológica em relação à referência.
+As métricas são: máscaras por amostra na mistura $99\%$ benigno / $1\%$ ataque, taxa de benignos resolvidos pelo atalho, fração consumida do orçamento de falsos negativos, taxa de contorno, TPR normal e de vítima, e o custo do ataque em máscaras avaliadas pelo otimizador.
 
-A matriz experimental necessária para sustentar essas hipóteses é extensa e foi executada em um cluster compartilhado com GPUs A100 e RTX 3090.
-A curva de variância exige $6$ orçamentos de máscaras $\times$ $3$ políticas $\times$ $5$ repetições, isto é, $90$ passagens completas sobre a amostra de avaliação, sendo as repetições obrigatórias porque o próprio escore é estocástico.
-A avaliação adversarial da Direção A cresce de forma combinatória: $9$ variantes $\times$ $11$ ataques $\times$ $5.000$ amostras, o que corresponde a aproximadamente $495.000$ execuções do ataque, cada uma envolvendo centenas de iterações sobre $100$ máscaras.
-Somam-se a isso a cascata e sua variante sequencial, a destilação com $40$ épocas sobre $100$ mil amostras e as rodadas adversariais contra o aluno e contra o estágio barato.
-Para calibrar a ordem de grandeza, a rodada adversarial de pacotes do protocolo de referência consumiu cerca de $109$ horas de GPU, e a rodada adversarial no conjunto de dados de Internet das Coisas consumiu $7{,}29$ segundos por amostra; o estudo de eficiência replica essa escala para cada variante.
+\subsection{Estado da avaliação}
 
-A esse custo computacional somaram-se dois fatores de atraso.
-O primeiro foi a necessidade de código novo para duas células do desenho: o aluno de controle com aumento de dados por mascaramento e a variante adversarial em nível de pacotes, nenhuma delas disponível na implementação de referência.
-O segundo foi a correção de falhas encontradas na implementação de referência durante a reprodução — rótulos de pacotes armazenados como ponto flutuante, que zeraram todas as taxas por classe na primeira execução, métrica adversarial que reportava o TPR anterior ao ataque e ausência de semente fixa nos \textit{notebooks} —, necessária para que o mesmo executor pudesse ser usado no estudo de eficiência.
+A cascata está avaliada por completo: na mistura de avaliação e nos onze ataques do protocolo adversarial.
+A decisão sequencial tem a avaliação normal concluída; o ataque adversarial à regra sequencial foi especificado e implementado, mas ainda estava em execução no cluster no fechamento desta versão, e por isso aparece aqui apenas com custo e acurácia em tráfego limpo.
 
-No fechamento desta versão, a matriz completa das três direções ainda estava em execução no cluster.
-Por esse motivo, a Seção~\ref{sec:resultados} reporta apenas os resultados da reprodução do sistema de referência e da avaliação no conjunto de dados adicional, e os resultados da proposta da equipe serão incorporados ao relatório quando a execução for concluída.
-A discussão apresentada nesta seção cumpre, portanto, o papel de registrar o desenho, as hipóteses e o custo da proposta, sem antecipar conclusões que os dados ainda não sustentam.
+\subsection{Outras direções investigadas}
+
+Duas direções adicionais foram investigadas em paralelo e não compõem a proposta levada ao artigo.
+A primeira é a redução estática do orçamento, com máscaras balanceadas e com cobertura garantida por grupo; ela serve de referência para quantificar o preço da uniformidade, já que o mesmo número reduzido de máscaras é pago por toda amostra.
+A segunda é a destilação do escore do RePO+ em um aluno de passe único; nos pilotos dessa direção, o aluno igualou o professor em tráfego limpo e perdeu cerca de $48\%$ do TPR sob ataque, contra cerca de $2\%$ do professor, o que indica ganho de custo sem ganho de robustez.
 
 \section{Metodologia}\label{sec:metodologia}
 
@@ -587,8 +557,8 @@ Por construção, $\text{QC}_c \in (-\infty, 1]$ quantifica a proporção relati
 
 \section{Resultados e discussões}\label{sec:resultados}
 
-Esta seção apresenta os resultados obtidos com o protocolo descrito na Seção~\ref{sec:proposta} para o sistema de referência e o conjunto de dados adicional.
-A ordem acompanha a do método: primeiro o cenário normal sobre o CICIDS2017 nas duas granularidades, depois o cenário adversarial em fluxos e em pacotes, em seguida as duas avaliações sobre o CIC-ToN-IoT e, por fim, a discussão comparativa entre domínios.
+Esta seção apresenta os resultados da reprodução do sistema de referência, da sua aplicação ao conjunto de dados adicional e das duas propostas de redução de custo descritas na Seção~\ref{sec:proposta}.
+A ordem acompanha a do método: primeiro o cenário normal sobre o CICIDS2017 nas duas granularidades, depois o cenário adversarial em fluxos e em pacotes, em seguida as duas avaliações sobre o CIC-ToN-IoT, a discussão comparativa entre domínios e, por fim, as duas propostas de alocação de máscaras por amostra.
 Os limiares de operação foram sempre determinados no conjunto de teste benigno do respectivo conjunto de dados, e cada taxa adversarial é reportada em conjunto com a taxa obtida nas mesmas amostras antes do ataque, de modo que a \text{TPR} de vítima nunca seja interpretada isoladamente.
 
 \subsection{Cenário normal sobre o CICIDS2017}
@@ -863,14 +833,164 @@ Como os detectores concorrentes — Kitsune, DAGMM e BiGAN — não foram retrei
 
 Por fim, as limitações que afetam a leitura dos números são as seguintes: as classes minoritárias do CICIDS2017 (Heartbleed, com $11$ fluxos, e Infiltration, com $36$) têm intervalos de confiança largos e foram mantidas nas médias macro por fidelidade ao protocolo; a seleção das primeiras $N$ amostras por classe introduz viés temporal, com o DDoS caindo de $0{,}3177$ para $0{,}1898$ no RePO e de $0{,}3974$ para $0{,}2890$ no RePO+; a reavaliação com uma única amostragem de máscaras limita a resolução a cerca de um ponto percentual; e a calibração do limiar adversarial em fluxos depende de um fator $0{,}8$ empírico, que funciona nos dados avaliados mas não é derivado de um princípio e exigiria recalibração em um modelo retreinado.
 
-\subsection{Avaliação da proposta da equipe}
+\subsection{Proposta 1: cascata cheap-first}
 
-A matriz experimental descrita na Seção~\ref{sec:proposta} ainda estava em execução no fechamento desta versão, e por isso não há resultados da proposta de eficiência a reportar neste momento.
-Os três blocos acima cobrem exclusivamente a reprodução do sistema de referência e a sua aplicação ao conjunto adicional, que são as condições de comparação contra as quais as variantes de orçamento de máscaras, de cascata e de destilação deverão ser julgadas.
-Quando a execução for concluída, os resultados serão incorporados a esta seção seguindo a mesma estrutura: custo de mascaramento medido, TPR normal no FPR de $1\%$, TPR de vítima no FPR de $10\%$ e queda condicional, sempre com o custo do atacante explicitado ao lado do custo do detector.
+A Tabela~\ref{tab:cascata_normal} apresenta o custo e a acurácia das nove configurações de cascata avaliadas, além do detector de referência e da decisão sequencial.
+O resultado central é que as nove configurações têm a mesma TPR do RePO+ completo da mesma rodada — $0{,}2560$ de média macro e $0{,}1871$ ponderada, idênticas até a sexta casa decimal — com o mesmo $\text{FPR}$ de $1\%$ e o mesmo limiar final.
+Não há ganho de acurácia; há ganho de custo, e ele vem de o limiar final ser calibrado sobre o escore cascateado e de nenhuma amostra descartada ter sido detectada.
+O melhor ponto da grade é o estágio barato com $10$ máscaras e orçamento de $1\%$ de falsos negativos: $60{,}80$ máscaras por amostra, redução de $39{,}2\%$ em relação às $100$, com $43{,}98\%$ dos benignos resolvidos pelo atalho.
+
+\begin{table*}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{6pt}
+\caption{Custo e acurácia da cascata cheap-first e da decisão sequencial na mistura de avaliação ($99\%$ benigno / $1\%$ ataque), $\text{FPR} = 1\%$. A coluna de falsos negativos é a fração medida do orçamento do atalho.}
+\label{tab:cascata_normal}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+\textbf{Regra} & \textbf{TPR macro} & \textbf{TPR pond.} & \textbf{Máscaras/am.} & \textbf{Ganho} & \textbf{Benignos pulados} & \textbf{FN medido} \\
+\midrule
+RePO (artigo, 100 máscaras) & $0{,}2396$ & $0{,}1581$ & $100{,}00$ & --- & --- & --- \\
+RePO+ (artigo, 100 máscaras) & $0{,}2546$ & $0{,}1873$ & $100{,}00$ & --- & --- & --- \\
+RePO+ (referência interna, 5 rep.) & $0{,}2560$ & $0{,}1871$ & $100{,}00$ & --- & $0{,}00\%$ & $0{,}00\%$ \\
+\midrule
+cascata $n_{\text{cheap}}=5$, FN $0$ & $0{,}2560$ & $0{,}1871$ & $72{,}66$ & $27{,}3\%$ & $29{,}07\%$ & $0{,}00\%$ \\
+cascata $n_{\text{cheap}}=5$, FN $0{,}1\%$ & $0{,}2560$ & $0{,}1871$ & $67{,}42$ & $32{,}6\%$ & $34{,}64\%$ & $0{,}10\%$ \\
+cascata $n_{\text{cheap}}=5$, FN $1\%$ & $0{,}2560$ & $0{,}1871$ & $64{,}83$ & $35{,}2\%$ & $37{,}39\%$ & $1{,}00\%$ \\
+cascata $n_{\text{cheap}}=10$, FN $0$ & $0{,}2560$ & $0{,}1871$ & $66{,}37$ & $33{,}6\%$ & $37{,}74\%$ & $0{,}00\%$ \\
+cascata $n_{\text{cheap}}=10$, FN $0{,}1\%$ & $0{,}2560$ & $0{,}1871$ & $64{,}04$ & $36{,}0\%$ & $40{,}36\%$ & $0{,}10\%$ \\
+\textbf{cascata $n_{\text{cheap}}=10$, FN $1\%$} & $\mathbf{0{,}2560}$ & $\mathbf{0{,}1871}$ & $\mathbf{60{,}80}$ & $\mathbf{39{,}2\%}$ & $\mathbf{43{,}98\%}$ & $\mathbf{1{,}00\%}$ \\
+cascata $n_{\text{cheap}}=25$, FN $0$ & $0{,}2560$ & $0{,}1871$ & $80{,}81$ & $19{,}2\%$ & $25{,}85\%$ & $0{,}00\%$ \\
+cascata $n_{\text{cheap}}=25$, FN $0{,}1\%$ & $0{,}2560$ & $0{,}1871$ & $69{,}83$ & $30{,}2\%$ & $40{,}63\%$ & $0{,}10\%$ \\
+cascata $n_{\text{cheap}}=25$, FN $1\%$ & $0{,}2560$ & $0{,}1871$ & $68{,}84$ & $31{,}2\%$ & $41{,}96\%$ & $1{,}00\%$ \\
+\midrule
+RePO sequencial (blocos de 5) & $0{,}2438$ & $0{,}1577$ & $\mathbf{5{,}32}$ & $\mathbf{94{,}7\%}$ & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Três leituras qualificam esse número.
+A primeira é que o ponto ótimo não está nos extremos da grade: com $5$ máscaras o escore barato é mais ruidoso, o $t_{\text{low}}$ calibrado sobe e menos benignos pulam ($37{,}39\%$ contra $43{,}98\%$); com $25$ máscaras o estágio barato já custa caro e o limiar fica tão baixo que apenas $41{,}96\%$ pulam.
+A economia máxima é, portanto, um compromisso entre o custo do prefixo e a seletividade do atalho.
+A segunda é que o orçamento de falsos negativos é consumido exatamente: $1\%$ de $44.182$ ataques corresponde a $442$ amostras, e o valor medido é $1{,}0004\%$.
+A terceira é que a diferença entre o RePO+ de $100$ máscaras do artigo ($0{,}2546$) e a referência interna com cinco repetições ($0{,}2560$) é de $0{,}0013$, compatível com o desvio entre repetições ($\approx 0{,}0011$); ela é a média de cinco sorteios contra um, e não uma mudança de comportamento do detector.
+
+\begin{table*}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{6pt}
+\caption{Avaliação adversarial da cascata: TPR antes e depois do ataque e taxa de contorno do estágio barato, no ponto de operação de $\text{FPR} \approx 10\%$, com $1.000$ amostras por ataque.}
+\label{tab:cascata_adv}
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+& & \multicolumn{2}{c}{\textbf{$n_{\text{cheap}} = 5$}} & \multicolumn{2}{c}{\textbf{$n_{\text{cheap}} = 10$}} & \multicolumn{2}{c}{\textbf{$n_{\text{cheap}} = 25$}} \\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(l){7-8}
+\textbf{Ataque} & \textbf{$n$} & \textbf{TPR vít.} & \textbf{bypass} & \textbf{TPR vít.} & \textbf{bypass} & \textbf{TPR vít.} & \textbf{bypass} \\
+\midrule
+FTP-Patator & $1.000$ & $0{,}504$ & $0{,}0\%$ & $0{,}499$ & $0{,}0\%$ & $0{,}502$ & $0{,}1\%$ \\
+SSH-Patator & $1.000$ & $0{,}006$ & $5{,}3\%$ & $0{,}006$ & $2{,}0\%$ & $0{,}006$ & $0{,}0\%$ \\
+DoS slowloris & $1.000$ & $0{,}664$ & $0{,}0\%$ & $0{,}665$ & $0{,}0\%$ & $0{,}665$ & $0{,}0\%$ \\
+DoS Slowhttptest & $1.000$ & $0{,}932$ & $0{,}0\%$ & $0{,}932$ & $0{,}0\%$ & $0{,}932$ & $0{,}0\%$ \\
+DoS Hulk & $1.000$ & $0{,}991$ & $0{,}0\%$ & $0{,}991$ & $0{,}0\%$ & $0{,}991$ & $0{,}0\%$ \\
+DoS GoldenEye & $1.000$ & $0{,}719$ & $0{,}0\%$ & $0{,}719$ & $0{,}0\%$ & $0{,}719$ & $0{,}0\%$ \\
+Heartbleed & $11$ & $1{,}000$ & $0{,}0\%$ & $1{,}000$ & $0{,}0\%$ & $1{,}000$ & $0{,}0\%$ \\
+Infiltration & $36$ & $0{,}667$ & $0{,}0\%$ & $0{,}667$ & $2{,}8\%$ & $0{,}667$ & $0{,}0\%$ \\
+Bot & $1.000$ & $0{,}029$ & $0{,}7\%$ & $0{,}029$ & $0{,}2\%$ & $0{,}029$ & $0{,}1\%$ \\
+PortScan & $1.000$ & $0{,}117$ & $0{,}0\%$ & $0{,}117$ & $0{,}0\%$ & $0{,}117$ & $0{,}0\%$ \\
+DDoS & $1.000$ & $0{,}641$ & $0{,}0\%$ & $0{,}641$ & $0{,}0\%$ & $0{,}641$ & $0{,}0\%$ \\
+\midrule
+\textbf{Agregado} & $\mathbf{9.047}$ & --- & $\mathbf{0{,}663\%}$ & --- & $\mathbf{0{,}254\%}$ & --- & $\mathbf{0{,}022\%}$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+A Tabela~\ref{tab:cascata_adv} reporta o ataque ao estágio barato em $9.047$ amostras.
+A taxa de contorno agregada é de $0{,}663\%$ com $5$ máscaras, $0{,}254\%$ com $10$ (intervalo de Wilson de $95\%$: $0{,}169$–$0{,}381\%$) e $0{,}022\%$ com $25$.
+Como $t_{\text{low}}$ é cerca de $60$ vezes menor que o limiar de decisão no caso de $10$ máscaras, todo escore abaixo dele também está abaixo de $\tau$; o contorno é, portanto, um \emph{limite inferior} da evasão, e não a taxa de evasão.
+Duas ressalvas de leitura acompanham o número: contornar o estágio barato não é o mesmo que perder a detecção — PortScan e Slowhttptest têm onze detecções perdidas com contorno nulo, ou seja, a perda ocorreu no escore completo e não no atalho —, e parte das amostras já era falso negativo antes de qualquer otimização (SSH-Patator: $993$ de $1.000$; Bot: $971$; PortScan: $888$).
+Excluindo o SSH-Patator, cujo TPR no ponto de operação é de $0{,}007$ e cujo contorno mede, portanto, cegueira preexistente — havia uma única detecção para perder, e ela foi contabilizada —, o contorno agregado cai para $0{,}09\%$, $0{,}04\%$ e $0{,}02\%$ nas três configurações.
+Em Infiltration o contorno de $2{,}8\%$ com $10$ máscaras corresponde a um único evento em $36$ amostras, cujo intervalo de confiança de Wilson vai de $0{,}5\%$ a $14{,}2\%$.
+Vale registrar ainda que as TPRs dessa tabela são medidas no ponto de operação de $10\%$ de FPR e não correspondem à operação a $1\%$: no baseline, FTP-Patator tem TPR $0{,}0000$, SSH-Patator $0{,}0002$ e PortScan $0{,}0000$ nesse ponto.
+
+\begin{table}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Sensibilidade do custo da cascata ($n_{\text{cheap}}=10$, FN $1\%$) à prevalência de ataque.}
+\label{tab:prevalencia}
+\begin{tabular}{@{}llrr@{}}
+\toprule
+\textbf{$p_{\text{ben}}$ / $p_{\text{atk}}$} & \textbf{$f_{\text{roteada}}$} & \textbf{Máscaras/am.} & \textbf{Ganho} \\
+\midrule
+$100\%$ / $0\%$ & $0{,}560$ & $60{,}42$ & $39{,}6\%$ \\
+$99\%$ / $1\%$ (avaliação) & $0{,}564$ & $60{,}80$ & $39{,}2\%$ \\
+$90\%$ / $10\%$ & $0{,}603$ & $64{,}28$ & $35{,}7\%$ \\
+$50\%$ / $50\%$ & $0{,}775$ & $79{,}76$ & $20{,}2\%$ \\
+$10\%$ / $90\%$ & $0{,}947$ & $95{,}23$ & $4{,}8\%$ \\
+$0\%$ / $100\%$ & $0{,}990$ & $99{,}10$ & $0{,}9\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A economia é dependente da carga, como a Eq.~\eqref{eq:custo_cascata} prevê (Tabela~\ref{tab:prevalencia}).
+Com $100\%$ de tráfego benigno o custo cai para $60{,}42$ máscaras por amostra; com metade de ataque, o ganho recua para $20{,}2\%$; com tráfego inteiramente hostil, a cascata praticamente não economiza, porque o orçamento de falsos negativos impede que ataques pulem o ensemble.
+O número de manchete só tem significado acompanhado da prevalência em que foi medido.
+
+\subsection{Proposta 2: decisão sequencial}
+
+A decisão sequencial leva o custo a $5{,}32$ máscaras por amostra — redução de $94{,}7\%$ — mantendo $99{,}93\%$ de concordância com a decisão do RePO de $100$ máscaras e um FPR de $0{,}9916\%$, ligeiramente abaixo do alvo porque o intervalo de confiança às vezes decide "benigno" antes de a média cruzar o limiar.
+O preço aparece na acurácia: a TPR macro é de $0{,}2438$ e a ponderada de $0{,}1577$, contra $0{,}2560$ e $0{,}1871$ do RePO+ — uma perda de $1{,}2$ ponto percentual na média macro e de $2{,}9$ pontos na ponderada.
+Parte dessa diferença é a troca de detector: a regra sequencial opera sobre a média (RePO) e não sobre o RePO+, porque é a média que admite estimador de intervalo; a coluna reportada é a do escore pontual do RePO, e como a regra decide o mesmo em $99{,}93\%$ dos casos, a TPR realizada fica a uma fração de ponto percentual desse valor.
+A avaliação adversarial dessa regra ainda não foi concluída: o ataque foi especificado e implementado para otimizar a estatística que a regra usa — o limite superior do intervalo do primeiro bloco —, mas a execução estava em andamento no fechamento desta versão, de modo que a comparação direta entre as duas propostas permanece aberta.
+
+\subsection{Síntese: custo $\times$ robustez das duas propostas}
+
+A Tabela~\ref{tab:custo_robustez} coloca as duas propostas lado a lado com o detector de referência.
+O padrão é claro: a cascata compra custo com uma superfície de ataque nova, e essa superfície é pequena no protocolo medido; a decisão sequencial compra muito mais custo, mas troca de detector e ainda não foi atacada.
+Do ponto de vista de recomendação, o estágio barato de $10$ máscaras com orçamento de $1\%$ de falsos negativos é o ponto defensável da grade — é o menor custo medido, preserva a TPR do artigo e mantém a taxa de contorno agregada abaixo de $0{,}3\%$ —, com a ressalva de que qualquer afirmação sobre economia precisa vir acompanhada da prevalência (Tabela~\ref{tab:prevalencia}).
+
+\begin{table}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Comparação final entre o detector de referência e as duas propostas.}
+\label{tab:custo_robustez}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Regra} & \textbf{Máscaras/am.} & \textbf{TPR macro} & \textbf{Bypass} \\
+\midrule
+RePO+ ($100$ máscaras) & $100{,}00$ & $0{,}2560$ & --- \\
+cascata $10$/FN $0$ & $66{,}37$ & $0{,}2560$ & não medido \\
+cascata $10$/FN $1\%$ & $60{,}80$ & $0{,}2560$ & $0{,}25\%$ \\
+cascata $25$/FN $1\%$ & $68{,}84$ & $0{,}2560$ & $0{,}02\%$ \\
+sequencial (blocos de $5$) & $5{,}32$ & $0{,}2438$ & não avaliado \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Conclusões e trabalhos futuros}
-Seção em elaboração para a próxima etapa do relatório.
+
+Este trabalho reproduziu o método RePO/RePO+ com alta fidelidade nos dados do artigo — $0{,}2525$ de TPR em fluxos e $0{,}3472$ em pacotes no cenário normal, contra $0{,}2549$ e $0{,}3477$ publicados —, auditou o protocolo de avaliação, identificando o viés da seleção sequencial de amostras, o ruído da reavaliação com máscara única e o peso das classes minoritárias, e estendeu a avaliação a um conjunto de tráfego de Internet das Coisas, no qual a vantagem do RePO+ sobre o RePO se mantém e o ataque adversarial se mostra ineficaz.
+Sobre essa base, a contribuição que o trabalho defende é de outra natureza: \textbf{o gargalo de implantação de um detector como o RePO+ não é a acurácia, e sim o custo}.
+
+O detector de referência gasta $100$ passagens pelo autoencoder por amostra, porque o escore é um ensemble de $100$ erros de reconstrução, e esse custo cresce linearmente com o número de máscaras.
+As duas propostas avaliadas atacam esse custo pela alocação de máscaras por amostra, e não pela redução uniforme do orçamento: a amostra que não usa o atalho continua sendo julgada pelo mesmo RePO+ de $100$ máscaras do artigo.
+A cascata \textit{cheap-first} com estágio barato de $10$ máscaras e orçamento de $1\%$ de falsos negativos reduz o custo de $100$ para $60{,}80$ máscaras por amostra ($-39{,}2\%$) na mistura de avaliação, resolve $43{,}98\%$ do tráfego benigno com $10$ máscaras, preserva exatamente a TPR do RePO+ completo ($0{,}2560$ macro e $0{,}1871$ ponderada, com o mesmo $\text{FPR}$ de $1\%$ e o mesmo limiar) e apresenta taxa de contorno agregada de $0{,}25\%$ sob ataque — $0{,}04\%$ quando se exclui o SSH-Patator, cujo contorno mede cegueira preexistente do detector.
+A decisão sequencial, que revela máscaras em blocos de cinco e para quando o intervalo de confiança exclui o limiar, leva o custo a $5{,}32$ máscaras por amostra ($-94{,}7\%$) com $99{,}93\%$ de concordância com a decisão completa, ao preço de $1{,}2$ ponto percentual de TPR macro e da troca do RePO+ pela média do RePO.
+
+A tese que organiza os dois resultados é que \textbf{reduzir custo sem degradar a decisão é possível quando o orçamento computacional é alocado por amostra}, e que essa redução é mensurável, mas não é universal.
+Ela é mensurável porque a cascata preserva a função de decisão na região em que ela importa e porque o custo por amostra pode ser contabilizado com precisão — $60{,}80$ máscaras na mistura avaliada, com o orçamento de falsos negativos consumido exatamente ($1{,}0004\%$ de $44.182$ ataques).
+Ela não é universal porque só amostras benignas podem ser descartadas: o mesmo detector custa $60{,}42$ máscaras por amostra em tráfego exclusivamente benigno, $79{,}76$ em uma carga com metade de ataques e $99{,}10$ em tráfego inteiramente hostil.
+Qualquer afirmação sobre economia precisa, portanto, vir acompanhada da prevalência de ataque em que foi medida.
+
+O que os dados permitem afirmar e o que não permitem também delimita o trabalho.
+Não se pode afirmar que a cascata seja mais robusta que o RePO+: ela acrescenta um caminho de decisão que antes não existia, e o ataque a esse caminho é possível em princípio — o que se mediu foi uma superfície pequena no protocolo avaliado, não a ausência de superfície.
+Não se pode afirmar que $60{,}80$ seja um número transferível: o limiar do estágio barato é calibrado nos mesmos ataques que depois são avaliados, de modo que a garantia de falsos negativos é in-sample e pode ser consumida de outra forma em uma população de ataques diferente.
+E não se pode fechar a comparação entre as duas propostas, porque a decisão sequencial troca o detector e ainda não foi submetida ao ataque adversarial.
+
+As limitações do estudo acompanham essas ressalvas: a avaliação cobre um único conjunto de dados e uma única arquitetura, com $1.000$ amostras por ataque no cenário adversarial, das quais duas classes têm $11$ e $36$ amostras e, portanto, nenhuma taxa estimável com precisão; o ponto de operação adversarial é o de $10\%$ de FPR, mais permissivo que a operação a $1\%$; e a cascata não foi avaliada na granularidade de pacotes.
+Os trabalhos futuros seguem diretamente dessas lacunas: concluir o ataque à decisão sequencial e compará-la à cascata no mesmo protocolo; construir uma versão sequencial do RePO+, que exige um estimador de intervalo para a soma de mínimos por grupo, e não apenas para a média; avaliar a cascata em pacotes; e incorporar a prevalência como parâmetro explícito de projeto, já que a economia depende dela.
+Duas direções investigadas em paralelo permanecem como candidatas a combinar com a alocação por amostra: as máscaras estruturadas, que reduzem o orçamento de base sem alterar a decisão na região difícil, e a destilação, que reduz o custo por avaliação mas, nos pilotos realizados, não preservou a robustez adversarial.
 
 \begin{thebibliography}{99}
 
