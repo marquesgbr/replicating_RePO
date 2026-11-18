@@ -60,7 +60,7 @@ A evolução contínua em volume, diversidade e sofisticação dos ataques ciber
 Diante da incapacidade dos sistemas tradicionais baseados em assinaturas para detectar ataques de dia zero, detectores de anomalias não supervisionados fundamentados em redes neurais profundas têm sido amplamente investigados.
 Entretanto, estudos recentes demonstram que tais modelos sofrem tanto de supergeneralização na reconstrução de tráfego quanto de severa vulnerabilidade a exemplos adversariais, nos quais um atacante perturba atributos de tráfego de modo a evadir a detecção sem violar a semântica dos protocolos de rede.
 Este trabalho realiza a reprodução experimental, a auditoria metodológica e a avaliação de generalização do método de Reconstrução a partir de Observação Parcial e de sua variante aprimorada com agregação por soma de mínimos por grupo, propostos originalmente para elevar a robustez de detectores de anomalias baseados em autoencoders de remoção de ruído.
-Os experimentos conduzidos sobre o conjunto de dados de referência nas granularidades de fluxos e de pacotes confirmam a alta fidelidade da reprodução em cenário normal, atingindo taxas médias de detecção de 25,25\% em fluxos e de 34,72\% em pacotes sob taxa de falsos positivos de 1\%, além de preservar a detecção acima da taxa de falsos positivos de 10\% em 9 de 11 ataques de fluxo e em 10 de 11 ataques de pacotes no cenário adversarial.
+Os experimentos conduzidos sobre o conjunto de dados de referência nas granularidades de fluxos e de pacotes confirmam a alta fidelidade da reprodução em cenário normal, atingindo taxas médias de detecção de 25,25\% em fluxos e de 34,72\% em pacotes sob taxa de falsos positivos de 1\%, além de preservar a detecção acima da taxa de falsos positivos de 10\% em 8 de 11 ataques de fluxo e em 10 de 11 ataques de pacotes no cenário adversarial.
 Paralelamente, a investigação do protocolo original revela limitações metodológicas importantes ligadas ao viés de amostragem temporal e à variância da reavaliação estocástica com máscara única.
 Por fim, a aplicação da metodologia a um conjunto adicional de fluxos de Internet das Coisas evidencia que o ganho proporcionado pela agregação de observações parciais se mantém fora do domínio original, mas que a eficácia da evasão adversarial é fortemente dependente das características estatísticas do conjunto de dados.
 Complementarmente, o trabalho propõe e instrumenta três direções de melhoria de eficiência sobre o RePO+: a redução e a estruturação do orçamento de máscaras, a decisão em cascata com um estágio de baixo custo e a destilação do ensemble em um aluno determinístico de passe único, discutindo o custo computacional que motivou cada proposta e as razões pelas quais se esperava ganho em custo, acurácia e robustez adversarial.
@@ -445,7 +445,7 @@ No fechamento desta versão, a matriz completa das três direções ainda estava
 Por esse motivo, a Seção~\ref{sec:resultados} reporta apenas os resultados da reprodução do sistema de referência e da avaliação no conjunto de dados adicional, e os resultados da proposta da equipe serão incorporados ao relatório quando a execução for concluída.
 A discussão apresentada nesta seção cumpre, portanto, o papel de registrar o desenho, as hipóteses e o custo da proposta, sem antecipar conclusões que os dados ainda não sustentam.
 
-\section{Metodologia}
+\section{Metodologia}\label{sec:metodologia}
 
 A metodologia experimental deste trabalho foi estruturada em três frentes complementares.
 A primeira consiste na reprodução fiel e na auditoria metodológica dos experimentos de detecção normal e de robustez adversarial originalmente propostos por Hashemi e Keller \cite{hashemi2020} nas granularidades de fluxos e de pacotes.
@@ -590,8 +590,291 @@ Para isolar estritamente a fração de detecções legítimas que foi suprimida 
 \end{equation}
 Por construção, $\text{QC}_c \in (-\infty, 1]$ quantifica a proporção relativa de ataques originalmente detectados que passaram a evadir o NIDS após a manipulação adversarial: valores próximos de $0\%$ atestam alta resiliência do detector contra o ataque, enquanto valores próximos de $100\%$ indicam evasão quase completa das amostras previamente detectadas.
 
-\section{Resultados e discussões}
-Seção em elaboração para a próxima etapa do relatório.
+\section{Resultados e discussões}\label{sec:resultados}
+
+Esta seção apresenta os resultados obtidos com o protocolo descrito na Seção~\ref{sec:proposta} para o sistema de referência e o conjunto de dados adicional.
+A ordem acompanha a do método: primeiro o cenário normal sobre o CICIDS2017 nas duas granularidades, depois o cenário adversarial em fluxos e em pacotes, em seguida as duas avaliações sobre o CIC-ToN-IoT e, por fim, a discussão comparativa entre domínios.
+Os limiares de operação foram sempre determinados no conjunto de teste benigno do respectivo conjunto de dados, e cada taxa adversarial é reportada em conjunto com a taxa obtida nas mesmas amostras antes do ataque, de modo que a \text{TPR} de vítima nunca seja interpretada isoladamente.
+
+\subsection{Cenário normal sobre o CICIDS2017}
+
+A Tabela~\ref{tab:normal_resumo} consolida a reprodução do cenário normal sob $\text{FPR} = 0{,}01$.
+O modo RePO+ atinge $0{,}2525$ em fluxos e $0{,}3472$ em pacotes, contra $0{,}2549$ e $0{,}3477$ publicados, ou seja, as diferenças são de $-0{,}24$ e $-0{,}05$ ponto percentual e ficam dentro da variabilidade introduzida pelo sorteio das máscaras.
+O modo RePO, no entanto, não reproduz o valor do artigo: fica $2{,}82$ pontos acima em fluxos e $4{,}20$ pontos acima em pacotes.
+
+\begin{table}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\caption{Reprodução do cenário normal ($\text{FPR} = 0{,}01$) nas duas granularidades, comparada aos valores publicados em \cite{hashemi2020}.}
+\label{tab:normal_resumo}
+\begin{tabular}{@{}llrrrr@{}}
+\toprule
+\textbf{Granul.} & \textbf{Modo} & \textbf{Limiar} & \textbf{TPR} & \textbf{Artigo} & \textbf{$\Delta$} \\
+\midrule
+Fluxos & RePO & $0{,}0413$ & $0{,}2443$ & $0{,}2161$ & $+2{,}82$ \\
+ & RePO+ & $0{,}1061$ & $0{,}2525$ & $0{,}2549$ & $-0{,}24$ \\
+\addlinespace
+Pacotes & RePO & $0{,}0355$ & $0{,}3185$ & $0{,}2765$ & $+4{,}20$ \\
+ & RePO+ & $0{,}1429$ & $0{,}3472$ & $0{,}3477$ & $-0{,}05$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A consequência desse descolamento é que o ganho atribuído à agregação por mínimos por grupo encolhe nesta replicação: $+0{,}82$ ponto percentual em fluxos e $+2{,}87$ em pacotes, contra $+3{,}88$ e $+7{,}12$ no artigo.
+A explicação mais direta é que o RePO puro, por agregar $100$ amostragens pela média, já captura parte do benefício que o artigo atribui exclusivamente à agregação por grupos; como o RePO parte de um patamar mais alto, o espaço de ganho do RePO+ diminui.
+Uma segunda fonte de diferença é de implementação: o laço de pacotes do código de referência depende de \textit{broadcasting} entre o lote e as máscaras, o que altera o número efetivo de máscaras por janela, enquanto o executor utilizado nesta replicação aplica explicitamente $100$ máscaras por amostra.
+A conclusão qualitativa do artigo — RePO+ superior ao RePO — se mantém nas duas granularidades, mas a magnitude do efeito é sensível ao treinamento, ao sorteio de máscaras e ao conjunto de avaliação.
+
+Um teste mais forte de fidelidade vem da calibração absoluta dos limiares.
+Aplicando os limiares adversariais publicados aos nossos escores, o FPR medido é de $0{,}1005$ para o RePO em fluxos e de $0{,}0997$ para o RePO+ em fluxos e em pacotes, isto é, os limiares do artigo produzem exatamente o ponto de operação de $10\%$ que os autores declaram.
+Isso indica que os escores reconstruídos estão na mesma escala do trabalho original, o que torna as comparações adversariais a seguir interpretáveis.
+
+A Tabela~\ref{tab:normal_por_ataque} abre a média por classe e mostra que ela esconde comportamentos muito distintos.
+Em fluxos, quatro das onze classes praticamente não são detectadas no ponto de operação de $1\%$ (FTP-Patator, SSH-Patator, Bot e PortScan), enquanto DoS Hulk atinge $0{,}6239$ e Heartbleed chega a $1{,}0$ com apenas $11$ amostras.
+Em pacotes, o padrão se inverte para PortScan ($0{,}9931$) e Infiltration ($0{,}7992$), mas Heartbleed cai para $0{,}0004$ e Botnet permanece em $0{,}0000$.
+A leitura relevante é que a média macro é dominada por classes com suporte muito pequeno — Heartbleed tem $11$ amostras em fluxos e Infiltration $36$ —, de modo que um único acerto ou erro move a média em vários pontos percentuais.
+Por esse motivo, a média macro restrita às classes com $n_c \ge 100$, definida na Seção~\ref{sec:metodologia}, é reportada em paralelo sempre que a comparação é feita sobre classes desbalanceadas.
+
+\begin{table*}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{6pt}
+\caption{TPR por classe de ataque no cenário normal ($\text{FPR} = 0{,}01$) para as representações de fluxos e de pacotes.}
+\label{tab:normal_por_ataque}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+& \multicolumn{3}{c}{\textbf{Fluxos}} & \multicolumn{3}{c}{\textbf{Pacotes}} \\
+\cmidrule(lr){2-4}\cmidrule(l){5-7}
+\textbf{Ataque} & \textbf{$n$} & \textbf{RePO} & \textbf{RePO+} & \textbf{$n$} & \textbf{RePO} & \textbf{RePO+} \\
+\midrule
+FTP-Patator & $7.935$ & $0{,}0000$ & $0{,}0000$ & $5.537$ & $0{,}1651$ & $0{,}1875$ \\
+SSH-Patator & $5.897$ & $0{,}0000$ & $0{,}0003$ & $6.931$ & $0{,}0004$ & $0{,}0006$ \\
+DoS slowloris & $5.796$ & $0{,}1917$ & $0{,}1938$ & $2.380$ & $0{,}4689$ & $0{,}4887$ \\
+DoS Slowhttptest & $5.499$ & $0{,}0100$ & $0{,}1020$ & $1.963$ & $0{,}5777$ & $0{,}7275$ \\
+DoS Hulk & $230.124$ & $0{,}6164$ & $0{,}6239$ & $112.276$ & $0{,}1935$ & $0{,}2649$ \\
+DoS GoldenEye & $10.293$ & $0{,}1797$ & $0{,}2230$ & $5.309$ & $0{,}0812$ & $0{,}1053$ \\
+Heartbleed & $11$ & $1{,}0000$ & $1{,}0000$ & $2.465$ & $0{,}0000$ & $0{,}0004$ \\
+Infiltration & $36$ & $0{,}3611$ & $0{,}2222$ & $10.496$ & $0{,}7969$ & $0{,}7992$ \\
+Bot / Botnet & $1.956$ & $0{,}0102$ & $0{,}0148$ & $494$ & $0{,}0000$ & $0{,}0000$ \\
+PortScan & $158.839$ & $0{,}0001$ & $0{,}0004$ & $16.203$ & $0{,}9931$ & $0{,}9931$ \\
+DDoS & $128.025$ & $0{,}3177$ & $0{,}3974$ & $64.030$ & $0{,}2273$ & $0{,}2525$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Cenário adversarial sobre o CICIDS2017: fluxos}
+
+A Tabela~\ref{tab:adv_fluxo} apresenta o ataque em nível de fluxo sobre $47.003$ amostras distribuídas nas onze classes, medido no limiar de $\text{FPR} = 0{,}10$.
+O TPR de vítima ponderado por amostras é de $0{,}4663$, contra $0{,}4702$ reportados pelo artigo, uma diferença de $-0{,}39$ ponto percentual.
+Tomado como média simples sobre as onze classes, o mesmo resultado é $0{,}5059$; restringindo às classes com $n_c \ge 100$, cai para $0{,}4362$.
+Essa dispersão de mais de $7$ pontos percentuais entre formas de agregação é relevante porque o artigo não explicita a regra utilizada, e ela é suficiente para transformar uma aparente superação do resultado publicado em uma aparente degradação.
+Adota-se neste relatório a média ponderada por amostras, que é a forma mais próxima do valor publicado e a que corresponde à taxa de detecção efetivamente observada pelo operador do NIDS.
+
+\begin{table}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\caption{Cenário adversarial em fluxos ($\text{FPR} = 0{,}10$): taxa de detecção antes e depois do ataque e queda condicional por classe.}
+\label{tab:adv_fluxo}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Ataque} & \textbf{$n$} & \textbf{TPR norm.} & \textbf{TPR vít.} & \textbf{$\Delta$ (p.p.)} & \textbf{QC} \\
+\midrule
+FTP-Patator & $5.000$ & $0{,}4994$ & $0{,}0920$ & $-40{,}74$ & $81{,}6\%$ \\
+SSH-Patator & $5.000$ & $0{,}0014$ & $0{,}0010$ & $-0{,}04$ & $28{,}6\%$ \\
+DoS slowloris & $5.000$ & $0{,}6824$ & $0{,}6202$ & $-6{,}22$ & $9{,}1\%$ \\
+DoS Slowhttptest & $5.000$ & $0{,}9048$ & $0{,}8708$ & $-3{,}40$ & $3{,}8\%$ \\
+DoS Hulk & $5.000$ & $0{,}9860$ & $0{,}9432$ & $-4{,}28$ & $4{,}3\%$ \\
+DoS GoldenEye & $5.000$ & $0{,}7454$ & $0{,}6718$ & $-7{,}36$ & $9{,}9\%$ \\
+Heartbleed & $11$ & $1{,}0000$ & $1{,}0000$ & $0{,}00$ & $0{,}0\%$ \\
+Infiltration & $36$ & $0{,}6944$ & $0{,}6389$ & $-5{,}55$ & $8{,}0\%$ \\
+Bot & $1.956$ & $0{,}0302$ & $0{,}0261$ & $-0{,}41$ & $13{,}6\%$ \\
+PortScan & $5.000$ & $0{,}1128$ & $0{,}1174$ & $+0{,}46$ & $-4{,}1\%$ \\
+DDoS & $5.000$ & $0{,}5746$ & $0{,}5836$ & $+0{,}90$ & $-1{,}6\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Depois do ataque, a detecção permanece acima do FPR de $10\%$ em oito das onze classes; o artigo reporta nove.
+A distribuição dos efeitos, no entanto, é claramente bimodal: o FTP-Patator concentra a única evasão massiva, com queda de $40{,}74$ pontos percentuais e queda condicional de $81{,}6\%$ — isto é, quatro de cada cinco fluxos que eram detectados deixaram de ser.
+Nos ataques volumétricos, o efeito é o oposto: DoS Hulk, DoS Slowhttptest e slowloris continuam detectados com TPR entre $0{,}62$ e $0{,}94$, apesar de uma fração substancial de suas amostras ter sido efetivamente modificada pelo atacante.
+A interpretação que se sustenta nos dados é que o atacante só consegue converter modificação em evasão quando a assinatura do ataque reside em atributos que lhe é permitido perturbar.
+Em ataques de força bruta como FTP-Patator e SSH-Patator, o sinal que separa o tráfego malicioso do benigno é justamente a sequência temporal de pacotes e o volume de tentativas, que o modelo adversarial controla diretamente; em ataques volumétricos, parte da assinatura permanece ancorada em atributos imutáveis — porta de destino, contadores do sentido reverso e mínimos observados —, e a reconstrução continua falhando mesmo com os atributos mutáveis ajustados.
+
+Dois ataques apresentaram TPR \emph{superior} depois da perturbação: PortScan ($+0{,}46$ ponto) e DDoS ($+0{,}90$ ponto).
+Como o protocolo reavalia cada amostra uma única vez, com um novo sorteio de $100$ máscaras, esses ganhos não indicam que o ataque tenha ajudado o detector, mas medem o piso de ruído da estimativa: a variância da reavaliação é da mesma ordem de grandeza do efeito que se deseja medir justamente nas classes com TPR baixo.
+O mesmo raciocínio explica por que a queda condicional é indispensável para ler a tabela.
+SSH-Patator exibe $1 - \text{TPR}_{\text{vítima}} = 99{,}9\%$, mas seu TPR normal já era de $0{,}14\%$; a queda entre as amostras originalmente detectadas é de apenas $0{,}04$ ponto.
+Um segundo viés afeta diretamente a interpretação comparativa: o protocolo de referência seleciona as primeiras $5.000$ amostras de cada classe, e o tráfego do CICIDS2017 é capturado em ordem temporal.
+Para o DDoS, a comparação no mesmo ponto de operação mostra $0{,}2890$ nas primeiras $5.000$ amostras contra $0{,}3974$ no conjunto completo no RePO+, e $0{,}1898$ contra $0{,}3177$ no RePO — uma redução relativa de $40\%$ que decorre da seleção temporal e não do ataque.
+
+\subsection{Cenário adversarial sobre o CICIDS2017: pacotes}
+
+A Tabela~\ref{tab:adv_pacotes} reporta a avaliação adversarial em pacotes, com $259.890$ janelas de vinte pacotes distribuídas nas onze classes.
+O TPR de vítima ponderado é de $0{,}5995$ e a média macro de $0{,}6020$, contra $0{,}6207$ publicados, o que corresponde a $-2{,}12$ e $-1{,}87$ ponto percentual, respectivamente.
+Como todas as classes têm pelo menos $9.890$ amostras nesta rodada, o filtro $n_c \ge 100$ não altera a média macro.
+A detecção permanece acima do FPR de $10\%$ em dez das onze classes, e a única exceção — Heartbleed — já tinha TPR normal de $0{,}0261$, de modo que sua queda condicional de $99{,}5\%$ descreve a perda de $2{,}6\%$ de uma base que o detector praticamente não reconhecia.
+
+\begin{table}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\caption{Cenário adversarial em pacotes ($\text{FPR} = 0{,}10$): taxa de detecção antes e depois do ataque e queda condicional por classe.}
+\label{tab:adv_pacotes}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Ataque} & \textbf{$n$} & \textbf{TPR norm.} & \textbf{TPR vít.} & \textbf{$\Delta$ (p.p.)} & \textbf{QC} \\
+\midrule
+Botnet & $9.890$ & $0{,}6653$ & $0{,}6438$ & $-2{,}16$ & $3{,}24\%$ \\
+DDoS & $25.000$ & $0{,}6542$ & $0{,}6003$ & $-5{,}39$ & $8{,}24\%$ \\
+FTP-Patator & $25.000$ & $0{,}7451$ & $0{,}7157$ & $-2{,}94$ & $3{,}95\%$ \\
+DoS GoldenEye & $25.000$ & $0{,}5785$ & $0{,}5435$ & $-3{,}50$ & $6{,}05\%$ \\
+Heartbleed & $25.000$ & $0{,}0261$ & $0{,}0001$ & $-2{,}60$ & $99{,}54\%$ \\
+DoS Hulk & $25.000$ & $0{,}9832$ & $0{,}9719$ & $-1{,}13$ & $1{,}15\%$ \\
+Infiltration & $25.000$ & $0{,}2360$ & $0{,}2354$ & $-0{,}06$ & $0{,}27\%$ \\
+PortScan & $25.000$ & $0{,}9913$ & $0{,}9852$ & $-0{,}60$ & $0{,}61\%$ \\
+SSH-Patator & $25.000$ & $0{,}1730$ & $0{,}1436$ & $-2{,}94$ & $17{,}00\%$ \\
+DoS Slowhttptest & $25.000$ & $0{,}9149$ & $0{,}9096$ & $-0{,}54$ & $0{,}59\%$ \\
+DoS slowloris & $25.000$ & $0{,}8822$ & $0{,}8725$ & $-0{,}97$ & $1{,}10\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Comparada à granularidade de fluxos, a representação de pacotes é substancialmente mais robusta: a maior queda absoluta é de $5{,}39$ pontos percentuais (DDoS) contra $40{,}74$ em fluxos, e a maior queda condicional entre classes com TPR normal relevante é de $17{,}0\%$ (SSH-Patator) contra $81{,}6\%$.
+A explicação está na estrutura da entrada.
+Em pacotes, o atacante controla apenas o pacote atual e dispõe de três transformações de efeito local — atraso, fragmentação e injeção —, enquanto os dezenove pacotes anteriores da janela permanecem intactos; como o escore é calculado sobre $580$ coordenadas, a evidência residual contida nos pacotes já transmitidos mantém a reconstrução próxima da observada em tráfego malicioso íntegro.
+Em fluxos, ao contrário, cada perturbação temporal se propaga para dezenas de estatísticas agregadas simultaneamente, e o atacante pode reescrever a assinatura de toda a conexão.
+Essa leitura é coerente com o fato de o ataque mais eficaz em pacotes (DDoS, $-5{,}39$ ponto) ser justamente o de maior volume por janela, em que o custo de manter os dezenove pacotes íntegros pesa menos para o atacante.
+
+A rodada consumiu cerca de $109{,}2$ horas de GPU somadas para $259.890$ amostras.
+A execução do laço de $300$ iterações por pacote dentro de um grafo compilado reduziu o tempo de $245{,}1$ s para $94{,}3$ s em um teste A/B controlado de $200$ pacotes, com métricas idênticas ($\text{TPR}_{\text{vítima}} = 0{,}6350$ e três amostras evadidas nos dois modos), o que evidencia que o custo do protocolo é dominado pela otimização do atacante e não pela inferência do detector.
+
+\subsection{Cenário normal sobre o CIC-ToN-IoT}
+
+O CIC-ToN-IoT apresenta um quadro distinto do conjunto de referência (Tabela~\ref{tab:toniot_normal}).
+No FPR de $1\%$, o RePO+ atinge média macro de $0{,}2013$ e ponderada de $0{,}0711$, abaixo dos $0{,}2525$ obtidos em fluxos do CICIDS2017; no FPR de $10\%$, os valores sobem para $0{,}6349$ e $0{,}7700$.
+Apesar do patamar absoluto mais baixo, a direção do efeito do artigo se reproduz com folga: o ganho do RePO+ sobre o RePO é de $+6{,}28$ pontos percentuais de média macro no FPR de $1\%$ e de $+14{,}35$ pontos no FPR de $10\%$, ambos superiores aos ganhos observados nos dois conjuntos do artigo.
+Isso ocorre porque o RePO puro é particularmente frágil neste domínio ($0{,}1384$ de média macro no FPR de $1\%$): nas classes em que a média das $100$ máscaras é contaminada por um subconjunto de atributos difícil de reconstruir, o mínimo por grupo recupera a detecção que a média perde.
+
+\begin{table}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\setlength{\tabcolsep}{2.5pt}
+\caption{TPR por classe no CIC-ToN-IoT nos pontos de operação de $\text{FPR} = 0{,}01$ e $\text{FPR} = 0{,}10$ (subscritos indicam o FPR alvo).}
+\label{tab:toniot_normal}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Classe} & \textbf{$n$} & \textbf{RePO$_{1\%}$} & \textbf{RePO+$_{1\%}$} & \textbf{RePO$_{10\%}$} & \textbf{RePO+$_{10\%}$} \\
+\midrule
+\textit{backdoor} & $27.145$ & $0{,}3695$ & $0{,}6249$ & $0{,}9945$ & $0{,}9957$ \\
+\textit{password} & $340.208$ & $0{,}0415$ & $0{,}1344$ & $0{,}6757$ & $0{,}9697$ \\
+\textit{injection} & $277.696$ & $0{,}0278$ & $0{,}0911$ & $0{,}5890$ & $0{,}9221$ \\
+\textit{ransomware} & $5.098$ & $0{,}4790$ & $0{,}5947$ & $0{,}7421$ & $0{,}9176$ \\
+\textit{xss} & $2.149.308$ & $0{,}0198$ & $0{,}0496$ & $0{,}4554$ & $0{,}7171$ \\
+\textit{scanning} & $36.205$ & $0{,}0770$ & $0{,}1135$ & $0{,}5101$ & $0{,}6865$ \\
+\textit{mitm} & $517$ & $0{,}2244$ & $0{,}2031$ & $0{,}4371$ & $0{,}5010$ \\
+\textit{ddos} & $202$ & $0{,}0000$ & $0{,}0000$ & $0{,}0050$ & $0{,}0050$ \\
+\textit{dos} & $145$ & $0{,}0069$ & $0{,}0000$ & $0{,}0138$ & $0{,}0000$ \\
+\midrule
+Macro & --- & $0{,}1384$ & $0{,}2013$ & $0{,}4914$ & $0{,}6349$ \\
+Ponderada & --- & $0{,}0281$ & $0{,}0711$ & $0{,}5012$ & $0{,}7700$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A leitura por classe mostra por que as duas médias divergem tanto.
+\textit{backdoor}, \textit{password}, \textit{injection} e \textit{ransomware} são bem detectados no FPR de $10\%$ ($0{,}92$ a $0{,}9957$), enquanto \textit{xss} — que concentra $60\%$ do conjunto de teste — fica em $0{,}7171$ e é o principal limitador da média ponderada.
+\textit{ddos} e \textit{dos} praticamente não são detectados em nenhum dos dois pontos de operação, com $202$ e $145$ amostras, respectivamente.
+A origem mais provável desse comportamento está na normalização: oito dos $77$ atributos apresentam variância nula no conjunto de treinamento benigno, e o denominador da Eq.~\eqref{eq:norm_fluxo} reduz-se à constante de estabilização $\epsilon$.
+Qualquer valor positivo observado em uma dessas coordenadas produz, portanto, uma entrada normalizada de magnitude elevada, que gera erro de reconstrução acentuado quando a coordenada é mascarada — e esse erro é atribuído igualmente a amostras benignas e maliciosas, elevando o limiar necessário para respeitar o FPR alvo e comprimindo a separação entre as classes.
+
+\subsection{Cenário adversarial sobre o CIC-ToN-IoT}
+
+A avaliação adversarial no conjunto adicional atacou $30.864$ amostras em nove classes (Tabela~\ref{tab:toniot_adv}).
+O resultado é qualitativamente diferente de tudo o que foi observado no CICIDS2017: houve três evasões em $30.864$ amostras, ou $0{,}010\%$ do total, todas na classe \textit{ransomware}.
+O TPR de vítima ponderado é de $0{,}8539$, contra $0{,}8535$ nas mesmas amostras antes do ataque, o que corresponde a um $\Delta$ de $+0{,}04$ ponto percentual; a média macro sobre as nove classes é de $0{,}6354$.
+Em sete das nove classes a detecção permaneceu acima do FPR de $10\%$ após o ataque, e as duas exceções (\textit{ddos} e \textit{dos}) já estavam nesse patamar antes de qualquer perturbação.
+
+\begin{table}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\caption{Cenário adversarial no CIC-ToN-IoT ($\text{FPR} = 0{,}10$): detecção antes e depois do ataque por classe ($\dagger$: havia uma única amostra detectada antes do ataque).}
+\label{tab:toniot_adv}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Classe} & \textbf{$n$} & \textbf{TPR norm.} & \textbf{TPR vít.} & \textbf{$\Delta$ (p.p.)} & \textbf{QC} \\
+\midrule
+\textit{backdoor} & $5.000$ & $0{,}9966$ & $0{,}9966$ & $0{,}00$ & $0{,}00\%$ \\
+\textit{ransomware} & $5.000$ & $0{,}9172$ & $0{,}9186$ & $+0{,}14$ & $-0{,}15\%$ \\
+\textit{password} & $5.000$ & $0{,}9680$ & $0{,}9690$ & $+0{,}10$ & $-0{,}10\%$ \\
+\textit{injection} & $5.000$ & $0{,}9202$ & $0{,}9220$ & $+0{,}18$ & $-0{,}20\%$ \\
+\textit{xss} & $5.000$ & $0{,}7174$ & $0{,}7180$ & $+0{,}06$ & $-0{,}08\%$ \\
+\textit{scanning} & $5.000$ & $0{,}6972$ & $0{,}6954$ & $-0{,}18$ & $+0{,}26\%$ \\
+\textit{mitm} & $517$ & $0{,}5010$ & $0{,}4990$ & $-0{,}19$ & $+0{,}39\%$ \\
+\textit{ddos} & $202$ & $0{,}0050$ & $0{,}0000$ & $-0{,}50$ & $\dagger$ \\
+\textit{dos} & $145$ & $0{,}0000$ & $0{,}0000$ & $0{,}00$ & n/d \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A primeira explicação para esse contraste é que a taxa de sucesso aparente do ataque engana neste conjunto.
+$14{,}6\%$ das amostras atacadas já eram classificadas como benignas antes de qualquer otimização, e a diferença $1 - \text{TPR}_{\text{vítima}}$ contabiliza integralmente esses falsos negativos preexistentes.
+A queda condicional, que desconta esse efeito, fica em $0{,}00\%$ para \textit{backdoor}, $0{,}26\%$ para \textit{scanning} e $0{,}39\%$ para \textit{mitm}, ou seja, no limite do ruído de reavaliação observado no próprio conjunto.
+Na classe \textit{ddos}, a queda condicional de $100\%$ indicada por $\dagger$ corresponde a uma única amostra: havia uma detecção entre $202$ amostras e ela deixou de ocorrer; em \textit{dos} o denominador é zero e a métrica não é definida.
+Reportar esses dois casos como evidência de eficácia do ataque seria um artefato de denominador.
+
+A segunda explicação é estrutural e diz respeito ao desalinhamento entre o objetivo do atacante e a métrica de sucesso.
+A perda otimizada pelo ataque é a média dos $100$ erros de reconstrução, enquanto o escore que decide a detecção é o RePO+, isto é, a soma dos mínimos por grupo.
+Reduzir a média não reduz necessariamente o mínimo: basta que algumas máscaras continuem reconstruindo bem a amostra modificada para que o escore agregado permaneça alto.
+Essa assimetria — também presente no protocolo original, mas com consequências muito mais visíveis neste domínio, em que a escala dos escores e o limiar calibrado ($0{,}00696$ no FPR de $10\%$) são bem menores que no CICIDS2017 — explica por que três evasões em trinta mil amostras não podem ser interpretadas como um ataque que \emph{funciona pouco}, e sim como ausência de efeito mensurável.
+O custo dessa rodada foi de $31{,}4$ horas de parede e $62{,}5$ horas de GPU, o que corresponde a $7{,}29$ segundos por amostra.
+
+\subsection{Discussão comparativa entre granularidades e domínios}
+
+A Tabela~\ref{tab:comparativo} reúne os três blocos experimentais.
+A conclusão que emerge da comparação é que a robustez do RePO+ não é uma propriedade do método isoladamente, mas da interação entre a granularidade da representação, o conjunto de atributos que o atacante pode manipular e a escala dos escores de reconstrução.
+No CICIDS2017 em fluxos, um único ataque (FTP-Patator) suprime $81{,}6\%$ das detecções existentes; em pacotes, o pior caso com TPR normal relevante cai para $17{,}0\%$; no CIC-ToN-IoT, o pior caso fica em $0{,}39\%$.
+
+\begin{table*}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{8pt}
+\caption{Síntese comparativa dos três blocos adversariais avaliados.}
+\label{tab:comparativo}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Métrica} & \textbf{Fluxos (CICIDS2017)} & \textbf{Pacotes (CICIDS2017)} & \textbf{Fluxos (CIC-ToN-IoT)} \\
+\midrule
+Amostras atacadas & $47.003$ & $259.890$ & $30.864$ \\
+Classes de ataque & $11$ & $11$ & $9$ \\
+TPR de vítima ponderado & $0{,}4663$ & $0{,}5995$ & $0{,}8539$ \\
+TPR de vítima macro & $0{,}5059$ & $0{,}6020$ & $0{,}6354$ \\
+Maior queda absoluta (p.p.) & $-40{,}74$ & $-5{,}39$ & $-0{,}50$ \\
+Maior queda condicional & $81{,}6\%$ & $17{,}0\%$ & $0{,}39\%$ \\
+Classes acima do FPR após o ataque & $8$ de $11$ & $10$ de $11$ & $7$ de $9$ \\
+Custo por amostra & $\approx 1{,}16$ s & $\approx 1{,}0$ s & $7{,}29$ s \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Três fatores explicam esse gradiente.
+O primeiro é o espaço de perturbação disponível: em fluxos, uma modificação temporal reescreve dezenas de estatísticas agregadas ao mesmo tempo; em pacotes, ela afeta um único vetor dentro de uma janela de vinte; e no CIC-ToN-IoT o atacante parte de fluxos cujo conjunto de atributos mutáveis tem menor poder de alterar o perfil reconstruído.
+O segundo é a política de limiar: em fluxos do CICIDS2017 o atacante otimiza contra $0{,}8\tau$ para compensar a substituição de máscaras, em pacotes ele opera no limiar publicado e no conjunto adicional o limiar é recalibrado no próprio conjunto, de modo que as taxas de sucesso não são diretamente transportáveis entre blocos — por isso a discussão se apoia nas quedas condicionais, que são comparáveis por construção.
+O terceiro é a variância de reavaliação: no conjunto adicional as diferenças observadas entre o antes e o depois são da ordem de $\pm 0{,}2$ ponto percentual e, em quatro das nove classes, o TPR chegou a aumentar, o que delimita a resolução com que qualquer efeito pode ser medido naquele domínio.
+
+Quanto à comparação com outros trabalhos, a reprodução preserva a ordenação qualitativa defendida no artigo: o RePO+ supera o RePO nos três conjuntos avaliados, e os valores absolutos do cenário normal ficam a menos de meio ponto percentual dos publicados.
+Como os detectores concorrentes — Kitsune, DAGMM e BiGAN — não foram retreinados neste trabalho, a comparação com eles permanece a reportada pelos autores originais, discutida na Seção~\ref{sec:sistema_referencia} e sintetizada na Tabela~\ref{tab:trabalhos-relacionados}; o que esta replicação acrescenta é a verificação independente de que o ganho do RePO+ sobre a agregação por média se sustenta fora do ambiente em que foi proposto.
+
+Por fim, as limitações que afetam a leitura dos números são as seguintes: as classes minoritárias do CICIDS2017 (Heartbleed, com $11$ fluxos, e Infiltration, com $36$) têm intervalos de confiança largos e foram mantidas nas médias macro por fidelidade ao protocolo; a seleção das primeiras $N$ amostras por classe introduz viés temporal, com o DDoS caindo de $0{,}3177$ para $0{,}1898$ no RePO e de $0{,}3974$ para $0{,}2890$ no RePO+; a reavaliação com uma única amostragem de máscaras limita a resolução a cerca de um ponto percentual; e a calibração do limiar adversarial em fluxos depende de um fator $0{,}8$ empírico, que funciona nos dados avaliados mas não é derivado de um princípio e exigiria recalibração em um modelo retreinado.
+
+\subsection{Avaliação da proposta da equipe}
+
+A matriz experimental descrita na Seção~\ref{sec:proposta} ainda estava em execução no fechamento desta versão, e por isso não há resultados da proposta de eficiência a reportar neste momento.
+Os três blocos acima cobrem exclusivamente a reprodução do sistema de referência e a sua aplicação ao conjunto adicional, que são as condições de comparação contra as quais as variantes de orçamento de máscaras, de cascata e de destilação deverão ser julgadas.
+Quando a execução for concluída, os resultados serão incorporados a esta seção seguindo a mesma estrutura: custo de mascaramento medido, TPR normal no FPR de $1\%$, TPR de vítima no FPR de $10\%$ e queda condicional, sempre com o custo do atacante explicitado ao lado do custo do detector.
 
 \section{Conclusões e trabalhos futuros}
 Seção em elaboração para a próxima etapa do relatório.
