@@ -341,23 +341,22 @@ O Alg.~\ref{alg:repo_inferencia} formaliza o processo completo de pontuação e 
 
 \section{Solução proposta pela equipe}\label{sec:proposta}
 
-A reprodução do sistema descrito na Seção~\ref{sec:sistema_referencia} evidenciou que o custo de inferência é o principal obstáculo prático à operação do RePO+.
-Cada amostra avaliada exige $M = 100$ passagens diretas pela rede neural, e o ataque adversarial correspondente soma a esse custo até $300$ iterações de otimização por pacote e até $540$ iterações por fluxo, cada uma delas calculada sobre as $100$ máscaras.
-No protocolo de referência, essa combinação resulta em dezenas de horas de GPU apenas para reproduzir a rodada adversarial de um único conjunto de dados, o que torna proibitiva a avaliação repetida de variantes do detector sob o mesmo protocolo.
+O RePO e o RePO+ avaliam $M = 100$ máscaras por amostra porque o escore é um ensemble de erros de reconstrução, o que corresponde, em produção, a $100$ vezes o custo de inferência de um autoencoder de passe único.
+O ataque adversarial correspondente soma a esse custo até $300$ iterações de otimização por pacote e até $540$ iterações por fluxo, cada uma delas calculada sobre as $100$ máscaras.
+No protocolo de referência, essa combinação resulta em dezenas de horas de GPU apenas para reproduzir a rodada adversarial de um único conjunto de dados, o que motivou a busca por alternativas de menor custo dentro do próprio desenho do estudo.
 
 O custo não é, contudo, a única consequência do ensemble de máscaras.
-A mesma estocasticidade que sustenta a robustez do RePO+ introduz um piso de ruído na medição: como a avaliação de cada amostra depende de um sorteio independente de $100$ máscaras, reavaliações sucessivas do mesmo tráfego alteram o escore o suficiente para mover a taxa de detecção em frações de ponto percentual a poucos pontos percentuais.
-Durante a reprodução, esse efeito foi observado diretamente em ataques cujo TPR \emph{aumentou} após a perturbação adversarial, indicando que variações dessa ordem de grandeza não podem ser interpretadas como efeito do ataque sem repetições e comparação pareada.
-Ambas as observações — custo e ruído — apontam para a mesma direção: o orçamento de máscaras deve ser tratado como um recurso de projeto explícito, e não como uma constante herdada do artigo de referência.
+Como a avaliação de cada amostra depende de um sorteio independente de $100$ máscaras, a reavaliação do mesmo tráfego produz variações da ordem de grandeza do efeito que se deseja medir: durante a reprodução, ataques cujo TPR \emph{aumentou} após a perturbação adversarial evidenciaram que o ruído de uma única reavaliação não pode ser separado do efeito do ataque sem repetições e comparação pareada.
 
-Sob essa ótica, a proposta da equipe consiste em investigar se o mesmo desempenho de detecção, ou um desempenho próximo, pode ser obtido com uma fração do custo de mascaramento, e em verificar se essa economia preserva ou deteriora a robustez adversarial que justifica o método.
+Sob essa ótica, a proposta da equipe consiste em caracterizar e deslocar a fronteira custo $\times$ robustez do RePO+: medir quanto de robustez adversarial se perde em cada ponto da curva de orçamento de máscaras e qual desenho de máscara entrega mais robustez por passagem direta.
 A investigação foi organizada em três direções complementares, descritas a seguir, juntamente com as hipóteses que motivaram cada uma.
 
 \subsection{Formulação do problema de eficiência}
 
+O desenho do estudo fixa cinco critérios para que uma direção seja considerada fechada: custo de produção medido; TPR normal no FPR de $1\%$ com limiar recalibrado; TPR de vítima no FPR de $10\%$; taxa de amostras efetivamente enganadas entre as que o detector acertava antes do ataque, reportada separadamente das que já eram benignas; e custo do ataque.
 Seja $\pi$ uma política de mascaramento e $n$ o número de máscaras avaliadas por amostra.
 O custo de produção do detector é proporcional ao produto $n \cdot c_f$, em que $c_f$ é o custo de uma passagem direta pela rede, e o custo do atacante é proporcional ao número de avaliações que ele precisa realizar por amostra, também governado por $n$ e pelo número de iterações da otimização.
-A busca por eficiência é formulada como um problema restrito, no qual se deseja minimizar o custo sujeito à preservação da acurácia em tráfego normal e de uma fração da detecção sob ataque:
+Com esses critérios, o compromisso entre custo, acurácia normal e retenção sob ataque é formalizado como:
 \begin{equation}
 \begin{aligned}
 \min_{n,\,\pi}\quad & n \, c_f \\
@@ -368,7 +367,7 @@ A busca por eficiência é formulada como um problema restrito, no qual se desej
 \end{equation}
 em que $\text{TPR}_{\text{ref}} = \text{TPR}_{\text{norm}}(100, \text{iid})$ é o desempenho do protocolo de referência, $\varepsilon$ é a perda tolerada em pontos percentuais no cenário normal e $\rho \in (0,1]$ é a fração da detecção que se exige preservar sob ataque.
 Como ambos os critérios dependem do limiar operacional, cada variante tem seu limiar recalibrado no mesmo alvo de $\text{FPR}$, de modo que a comparação não seja contaminada por pontos de operação distintos.
-O custo do ataque é contabilizado separadamente: avaliar uma variante barata contra um atacante que gasta o mesmo número de avaliações que gastaria contra o RePO+ integral não é uma comparação justa, e a diferença precisa aparecer explicitamente nos resultados.
+O custo do ataque é reportado ao lado do custo do detector, de modo a não comparar um ataque caro contra um detector barato.
 
 \subsection{Direção A: orçamento reduzido e máscaras estruturadas}
 
@@ -383,7 +382,7 @@ Com $d = 77$ e máscaras que preservam $19$ atributos, cobrir um grupo exige $K 
 
 A hipótese que motivou essa direção é dupla.
 Do lado defensivo, esperava-se encontrar um joelho de custo: a partir de certo $n$, a curva de TPR deveria saturar, de modo que $20$ a $25$ máscaras produzissem a mesma detecção que $100$ por uma fração do custo.
-Do lado ofensivo, esperava-se que menos máscaras também reduzissem a superfície de ataque, pois cada máscara adicional é um novo sorteio que o atacante pode explorar para obter uma reconstrução favorável; nessa leitura, o ensemble grande que aumenta a acurácia também ampliaria a exposição ao ataque.
+Do lado ofensivo, esperava-se que menos máscaras também reduzissem a superfície de ataque, pois o atacante dispõe de $n$ sorteios para encontrar uma configuração que engane o ensemble.
 
 \subsection{Direção B: cascata e decisão sequencial}
 
@@ -414,7 +413,7 @@ Seja $g_{\phi}$ uma rede determinística que recebe a amostra normalizada e devo
 \end{equation}
 ao passo que a fidelidade de ordenação entre aluno e professor não entra na perda: ela é medida a posteriori pela correlação de postos $\rho_s$ entre os escores de ambos.
 A motivação é econômica: se um único passe reproduz o escore do ensemble, o custo de produção cai por um fator próximo de $100$, e a inferência deixa de depender de $100$ sorteios independentes.
-O risco é simétrico ao benefício: um modelo determinístico é justamente o alvo para o qual os ataques de evasão por gradiente foram concebidos, e a estocasticidade do professor era parte da defesa.
+O risco é simétrico ao benefício: a destilação comprime a função de escore, mas também a diversidade de máscaras que dava robustez ao professor, e o aluno, sendo caixa-branca, não tem um ensemble em que se apoiar.
 Por isso a hipótese da direção é conservadora — esperava-se que a destilação preservasse a acurácia normal e \emph{não} preservasse a robustez adversarial —, e o experimento inclui um aluno de controle treinado com aumento de dados por mascaramento, de modo a separar duas explicações possíveis para uma eventual perda de robustez: o determinismo do aluno e o fato de ele nunca ter visto máscaras durante o treinamento.
 
 \subsection{Protocolo de avaliação e hipóteses}
@@ -423,7 +422,7 @@ As três direções compartilham um mesmo protocolo, derivado do protocolo de re
 Para cada célula são registrados o TPR normal, o TPR de vítima, a taxa de amostras efetivamente modificadas, a taxa de amostras que já eram classificadas como benignas antes do ataque e o custo em máscaras avaliadas, tanto do detector quanto do atacante.
 O protocolo é protegido por três critérios de aceitação: a reprodução do baseline deve coincidir com os resultados da replicação dentro do ruído; uma variante que perca mais de um ponto percentual de TPR normal deve ser reavaliada após retreino com a nova política antes de ser descartada; e uma variante de cascata com contorno elevado do estágio barato deve ser reportada como resultado negativo.
 
-As hipóteses testadas podem ser resumidas em quatro afirmações: (H1) $25$ máscaras estruturadas substituem $100$ máscaras independentes com perda inferior a um ponto percentual de TPR; (H2) a redução do número de máscaras aumenta a retenção de detecção sob ataque, por diminuir a superfície de exploração do atacante; (H3) a cascata reduz o custo de produção em cerca de um terço sem perda de TPR, ao preço de um orçamento controlado de falsos negativos; e (H4) a destilação preserva o desempenho normal com um único passe, mas perde robustez adversarial.
+As hipóteses registradas no desenho do estudo podem ser resumidas em quatro afirmações: (H1) $25$ máscaras estruturadas substituem $100$ máscaras independentes com perda inferior a um ponto percentual de TPR; (H2) a redução do número de máscaras aumenta a retenção de detecção sob ataque, por diminuir a superfície de exploração do atacante; (H3) a cascata reduz o custo de produção em cerca de um terço sem perda de TPR, ao preço de um orçamento controlado de falsos negativos; e (H4) a destilação preserva o desempenho normal com um único passe, mas perde robustez adversarial.
 
 \subsection{Custo de execução e estado atual da avaliação}
 
@@ -433,9 +432,9 @@ A avaliação adversarial da Direção A cresce de forma combinatória: $9$ vari
 Somam-se a isso a cascata e sua variante sequencial, a destilação com $40$ épocas sobre $100$ mil amostras e as rodadas adversariais contra o aluno e contra o estágio barato.
 Para calibrar a ordem de grandeza, a rodada adversarial de pacotes do protocolo de referência consumiu cerca de $109$ horas de GPU, e a rodada adversarial no conjunto de dados de Internet das Coisas consumiu $7{,}29$ segundos por amostra; o estudo de eficiência replica essa escala para cada variante.
 
-A esse custo computacional somaram-se dois fatores de atraso que não estavam previstos no cronograma.
+A esse custo computacional somaram-se dois fatores de atraso.
 O primeiro foi a necessidade de código novo para duas células do desenho: o aluno de controle com aumento de dados por mascaramento e a variante adversarial em nível de pacotes, nenhuma delas disponível na implementação de referência.
-O segundo foi a descoberta, durante a reprodução, de falhas que invalidavam medições já realizadas — rótulos de pacotes armazenados como ponto flutuante, métrica adversarial que reportava o TPR anterior ao ataque e ausência de semente fixa nos 	extit{notebooks} —, o que obrigou a refazer rodadas para que os números comparados pertencessem ao mesmo protocolo.
+O segundo foi a correção de falhas encontradas na implementação de referência durante a reprodução — rótulos de pacotes armazenados como ponto flutuante, que zeraram todas as taxas por classe na primeira execução, métrica adversarial que reportava o TPR anterior ao ataque e ausência de semente fixa nos \textit{notebooks} —, necessária para que o mesmo executor pudesse ser usado no estudo de eficiência.
 
 No fechamento desta versão, a matriz completa das três direções ainda estava em execução no cluster.
 Por esse motivo, a Seção~\ref{sec:resultados} reporta apenas os resultados da reprodução do sistema de referência e da avaliação no conjunto de dados adicional, e os resultados da proposta da equipe serão incorporados ao relatório quando a execução for concluída.
@@ -618,13 +617,12 @@ Pacotes & RePO & $0{,}0355$ & $0{,}3185$ & $0{,}2765$ & $+4{,}20$ \\
 \end{table}
 
 A consequência desse descolamento é que o ganho atribuído à agregação por mínimos por grupo encolhe nesta replicação: $+0{,}82$ ponto percentual em fluxos e $+2{,}87$ em pacotes, contra $+3{,}88$ e $+7{,}12$ no artigo.
-A explicação mais direta é que o RePO puro, por agregar $100$ amostragens pela média, já captura parte do benefício que o artigo atribui exclusivamente à agregação por grupos; como o RePO parte de um patamar mais alto, o espaço de ganho do RePO+ diminui.
+A diferença não invalida o método, mas mostra que o tamanho do ganho é sensível ao treino, às máscaras e ao conjunto de avaliação.
 Uma segunda fonte de diferença é de implementação: o laço de pacotes do código de referência depende de \textit{broadcasting} entre o lote e as máscaras, o que altera o número efetivo de máscaras por janela, enquanto o executor utilizado nesta replicação aplica explicitamente $100$ máscaras por amostra.
 A conclusão qualitativa do artigo — RePO+ superior ao RePO — se mantém nas duas granularidades, mas a magnitude do efeito é sensível ao treinamento, ao sorteio de máscaras e ao conjunto de avaliação.
 
 Um teste mais forte de fidelidade vem da calibração absoluta dos limiares.
 Aplicando os limiares adversariais publicados aos nossos escores, o FPR medido é de $0{,}1005$ para o RePO em fluxos e de $0{,}0997$ para o RePO+ em fluxos e em pacotes, isto é, os limiares do artigo produzem exatamente o ponto de operação de $10\%$ que os autores declaram.
-Isso indica que os escores reconstruídos estão na mesma escala do trabalho original, o que torna as comparações adversariais a seguir interpretáveis.
 
 A Tabela~\ref{tab:normal_por_ataque} abre a média por classe e mostra que ela esconde comportamentos muito distintos.
 Em fluxos, quatro das onze classes praticamente não são detectadas no ponto de operação de $1\%$ (FTP-Patator, SSH-Patator, Bot e PortScan), enquanto DoS Hulk atinge $0{,}6239$ e Heartbleed chega a $1{,}0$ com apenas $11$ amostras.
@@ -665,7 +663,7 @@ A Tabela~\ref{tab:adv_fluxo} apresenta o ataque em nível de fluxo sobre $47.003
 O TPR de vítima ponderado por amostras é de $0{,}4663$, contra $0{,}4702$ reportados pelo artigo, uma diferença de $-0{,}39$ ponto percentual.
 Tomado como média simples sobre as onze classes, o mesmo resultado é $0{,}5059$; restringindo às classes com $n_c \ge 100$, cai para $0{,}4362$.
 Essa dispersão de mais de $7$ pontos percentuais entre formas de agregação é relevante porque o artigo não explicita a regra utilizada, e ela é suficiente para transformar uma aparente superação do resultado publicado em uma aparente degradação.
-Adota-se neste relatório a média ponderada por amostras, que é a forma mais próxima do valor publicado e a que corresponde à taxa de detecção efetivamente observada pelo operador do NIDS.
+Adota-se neste relatório a média ponderada por amostras, que é a que mais se aproxima do valor publicado.
 
 \begin{table}[!t]
 \centering
@@ -693,13 +691,11 @@ DDoS & $5.000$ & $0{,}5746$ & $0{,}5836$ & $+0{,}90$ & $-1{,}6\%$ \\
 \end{table}
 
 Depois do ataque, a detecção permanece acima do FPR de $10\%$ em oito das onze classes; o artigo reporta nove.
-A distribuição dos efeitos, no entanto, é claramente bimodal: o FTP-Patator concentra a única evasão massiva, com queda de $40{,}74$ pontos percentuais e queda condicional de $81{,}6\%$ — isto é, quatro de cada cinco fluxos que eram detectados deixaram de ser.
-Nos ataques volumétricos, o efeito é o oposto: DoS Hulk, DoS Slowhttptest e slowloris continuam detectados com TPR entre $0{,}62$ e $0{,}94$, apesar de uma fração substancial de suas amostras ter sido efetivamente modificada pelo atacante.
-A interpretação que se sustenta nos dados é que o atacante só consegue converter modificação em evasão quando a assinatura do ataque reside em atributos que lhe é permitido perturbar.
-Em ataques de força bruta como FTP-Patator e SSH-Patator, o sinal que separa o tráfego malicioso do benigno é justamente a sequência temporal de pacotes e o volume de tentativas, que o modelo adversarial controla diretamente; em ataques volumétricos, parte da assinatura permanece ancorada em atributos imutáveis — porta de destino, contadores do sentido reverso e mínimos observados —, e a reconstrução continua falhando mesmo com os atributos mutáveis ajustados.
+A distribuição dos efeitos é desigual: o FTP-Patator concentra a única evasão massiva, com queda de $40{,}74$ pontos percentuais e queda condicional de $81{,}6\%$ — isto é, quatro de cada cinco fluxos que eram detectados deixaram de ser —, e é também o único ataque em que quase metade das amostras ($49{,}8\%$) recebeu uma modificação adversarial bem-sucedida.
+Nos ataques volumétricos, DoS Hulk, DoS Slowhttptest e slowloris continuam detectados com TPR entre $0{,}62$ e $0{,}94$, apesar de $17$ a $29\%$ das amostras terem sido modificadas com sucesso: a modificação não se converte em evasão.
 
 Dois ataques apresentaram TPR \emph{superior} depois da perturbação: PortScan ($+0{,}46$ ponto) e DDoS ($+0{,}90$ ponto).
-Como o protocolo reavalia cada amostra uma única vez, com um novo sorteio de $100$ máscaras, esses ganhos não indicam que o ataque tenha ajudado o detector, mas medem o piso de ruído da estimativa: a variância da reavaliação é da mesma ordem de grandeza do efeito que se deseja medir justamente nas classes com TPR baixo.
+Como o protocolo reavalia cada amostra uma única vez, com um novo sorteio de $100$ máscaras, esses ganhos não indicam que o ataque tenha ajudado o detector: eles mostram que uma única reavaliação por amostra tem ruído da ordem do efeito que se quer medir nesses ataques.
 O mesmo raciocínio explica por que a queda condicional é indispensável para ler a tabela.
 SSH-Patator exibe $1 - \text{TPR}_{\text{vítima}} = 99{,}9\%$, mas seu TPR normal já era de $0{,}14\%$; a queda entre as amostras originalmente detectadas é de apenas $0{,}04$ ponto.
 Um segundo viés afeta diretamente a interpretação comparativa: o protocolo de referência seleciona as primeiras $5.000$ amostras de cada classe, e o tráfego do CICIDS2017 é capturado em ordem temporal.
@@ -738,13 +734,10 @@ DoS slowloris & $25.000$ & $0{,}8822$ & $0{,}8725$ & $-0{,}97$ & $1{,}10\%$ \\
 \end{table}
 
 Comparada à granularidade de fluxos, a representação de pacotes é substancialmente mais robusta: a maior queda absoluta é de $5{,}39$ pontos percentuais (DDoS) contra $40{,}74$ em fluxos, e a maior queda condicional entre classes com TPR normal relevante é de $17{,}0\%$ (SSH-Patator) contra $81{,}6\%$.
-A explicação está na estrutura da entrada.
-Em pacotes, o atacante controla apenas o pacote atual e dispõe de três transformações de efeito local — atraso, fragmentação e injeção —, enquanto os dezenove pacotes anteriores da janela permanecem intactos; como o escore é calculado sobre $580$ coordenadas, a evidência residual contida nos pacotes já transmitidos mantém a reconstrução próxima da observada em tráfego malicioso íntegro.
-Em fluxos, ao contrário, cada perturbação temporal se propaga para dezenas de estatísticas agregadas simultaneamente, e o atacante pode reescrever a assinatura de toda a conexão.
-Essa leitura é coerente com o fato de o ataque mais eficaz em pacotes (DDoS, $-5{,}39$ ponto) ser justamente o de maior volume por janela, em que o custo de manter os dezenove pacotes íntegros pesa menos para o atacante.
+As maiores quedas absolutas ocorreram em DDoS ($5{,}39$ p.p.), DoS GoldenEye ($3{,}50$ p.p.) e FTP-Patator e SSH-Patator ($2{,}94$ p.p. cada); em Infiltration a queda foi de $0{,}06$ p.p.
 
 A rodada consumiu cerca de $109{,}2$ horas de GPU somadas para $259.890$ amostras.
-A execução do laço de $300$ iterações por pacote dentro de um grafo compilado reduziu o tempo de $245{,}1$ s para $94{,}3$ s em um teste A/B controlado de $200$ pacotes, com métricas idênticas ($\text{TPR}_{\text{vítima}} = 0{,}6350$ e três amostras evadidas nos dois modos), o que evidencia que o custo do protocolo é dominado pela otimização do atacante e não pela inferência do detector.
+A execução do laço de $300$ iterações por pacote dentro de um grafo compilado reduziu o tempo de $245{,}1$ s para $94{,}3$ s em um teste A/B controlado de $200$ pacotes, com métricas idênticas ($\text{TPR}_{\text{vítima}} = 0{,}6350$ e três amostras evadidas nos dois modos).
 
 \subsection{Cenário normal sobre o CIC-ToN-IoT}
 
@@ -783,8 +776,10 @@ Ponderada & --- & $0{,}0281$ & $0{,}0711$ & $0{,}5012$ & $0{,}7700$ \\
 A leitura por classe mostra por que as duas médias divergem tanto.
 \textit{backdoor}, \textit{password}, \textit{injection} e \textit{ransomware} são bem detectados no FPR de $10\%$ ($0{,}92$ a $0{,}9957$), enquanto \textit{xss} — que concentra $60\%$ do conjunto de teste — fica em $0{,}7171$ e é o principal limitador da média ponderada.
 \textit{ddos} e \textit{dos} praticamente não são detectados em nenhum dos dois pontos de operação, com $202$ e $145$ amostras, respectivamente.
-A origem mais provável desse comportamento está na normalização: oito dos $77$ atributos apresentam variância nula no conjunto de treinamento benigno, e o denominador da Eq.~\eqref{eq:norm_fluxo} reduz-se à constante de estabilização $\epsilon$.
-Qualquer valor positivo observado em uma dessas coordenadas produz, portanto, uma entrada normalizada de magnitude elevada, que gera erro de reconstrução acentuado quando a coordenada é mascarada — e esse erro é atribuído igualmente a amostras benignas e maliciosas, elevando o limiar necessário para respeitar o FPR alvo e comprimindo a separação entre as classes.
+Duas características da avaliação nesse conjunto ajudam a enquadrar esses números.
+A primeira é que \textit{ddos} e \textit{dos} têm $202$ e $145$ amostras, de modo que a estimativa é grosseira.
+A segunda é que oito dos $77$ atributos apresentam variância nula no conjunto de treinamento benigno e são normalizados apenas pela constante $\epsilon$ da Eq.~\eqref{eq:norm_fluxo} (Seção~\ref{sec:metodologia}); o efeito dessas coordenadas sobre os escores não foi isolado.
+Ainda assim, o salto entre os dois pontos de operação é grande — a média macro passa de $0{,}2013$ para $0{,}6349$ —, o que acompanha a cauda longa da distribuição de escores benignos: baixar o limiar de $0{,}0391$ para $0{,}0070$ triplica o TPR macro.
 
 \subsection{Cenário adversarial sobre o CIC-ToN-IoT}
 
@@ -825,14 +820,15 @@ Reportar esses dois casos como evidência de eficácia do ataque seria um artefa
 A segunda explicação é estrutural e diz respeito ao desalinhamento entre o objetivo do atacante e a métrica de sucesso.
 A perda otimizada pelo ataque é a média dos $100$ erros de reconstrução, enquanto o escore que decide a detecção é o RePO+, isto é, a soma dos mínimos por grupo.
 Reduzir a média não reduz necessariamente o mínimo: basta que algumas máscaras continuem reconstruindo bem a amostra modificada para que o escore agregado permaneça alto.
-Essa assimetria — também presente no protocolo original, mas com consequências muito mais visíveis neste domínio, em que a escala dos escores e o limiar calibrado ($0{,}00696$ no FPR de $10\%$) são bem menores que no CICIDS2017 — explica por que três evasões em trinta mil amostras não podem ser interpretadas como um ataque que \emph{funciona pouco}, e sim como ausência de efeito mensurável.
+Essa é a hipótese mais provável apontada na análise deste conjunto para a assimetria entre “amostra modificada com sucesso” e “amostra que evade” — consistente com os dados, mas não demonstrada, pois testá-la exigiria medir o erro por máscara antes e depois do ataque.
+Sob essa leitura, as três evasões em trinta mil amostras indicam ausência de efeito mensurável, e não um ataque que \emph{funciona pouco}.
 O custo dessa rodada foi de $31{,}4$ horas de parede e $62{,}5$ horas de GPU, o que corresponde a $7{,}29$ segundos por amostra.
 
 \subsection{Discussão comparativa entre granularidades e domínios}
 
 A Tabela~\ref{tab:comparativo} reúne os três blocos experimentais.
-A conclusão que emerge da comparação é que a robustez do RePO+ não é uma propriedade do método isoladamente, mas da interação entre a granularidade da representação, o conjunto de atributos que o atacante pode manipular e a escala dos escores de reconstrução.
-No CICIDS2017 em fluxos, um único ataque (FTP-Patator) suprime $81{,}6\%$ das detecções existentes; em pacotes, o pior caso com TPR normal relevante cai para $17{,}0\%$; no CIC-ToN-IoT, o pior caso fica em $0{,}39\%$.
+A comparação mais informativa é a queda condicional, porque ela desconta os falsos negativos que já existiam: o pior ataque de fluxo do CICIDS2017 suprime $81{,}6\%$ das detecções existentes, o pior ataque de pacotes com TPR normal relevante fica em $17{,}0\%$ e o pior caso no CIC-ToN-IoT em $0{,}39\%$.
+Como são conjuntos de dados diferentes, essa comparação é descritiva e não uma medida de generalização estatística.
 
 \begin{table*}[!t]
 \centering
@@ -856,13 +852,14 @@ Custo por amostra & $\approx 1{,}16$ s & $\approx 1{,}0$ s & $7{,}29$ s \\
 \end{tabular}
 \end{table*}
 
-Três fatores explicam esse gradiente.
-O primeiro é o espaço de perturbação disponível: em fluxos, uma modificação temporal reescreve dezenas de estatísticas agregadas ao mesmo tempo; em pacotes, ela afeta um único vetor dentro de uma janela de vinte; e no CIC-ToN-IoT o atacante parte de fluxos cujo conjunto de atributos mutáveis tem menor poder de alterar o perfil reconstruído.
-O segundo é a política de limiar: em fluxos do CICIDS2017 o atacante otimiza contra $0{,}8\tau$ para compensar a substituição de máscaras, em pacotes ele opera no limiar publicado e no conjunto adicional o limiar é recalibrado no próprio conjunto, de modo que as taxas de sucesso não são diretamente transportáveis entre blocos — por isso a discussão se apoia nas quedas condicionais, que são comparáveis por construção.
-O terceiro é a variância de reavaliação: no conjunto adicional as diferenças observadas entre o antes e o depois são da ordem de $\pm 0{,}2$ ponto percentual e, em quatro das nove classes, o TPR chegou a aumentar, o que delimita a resolução com que qualquer efeito pode ser medido naquele domínio.
+Essa diferença pede cautela: mudam o conjunto de dados, as features, a escala dos escores e o próprio limiar.
+Em fluxos do CICIDS2017 o atacante otimiza contra $0{,}8\tau$ para compensar a substituição de máscaras, em pacotes ele opera no limiar publicado e no conjunto adicional o limiar é recalibrado no próprio conjunto, de modo que os três blocos não operam no mesmo ponto de operação.
+Quanto à resolução das medidas, no conjunto adicional as diferenças entre o antes e o depois são da ordem de $\pm 0{,}2$ ponto percentual e, em quatro das nove classes, o TPR chegou a aumentar; no fluxo do CICIDS2017, PortScan e DDoS também apresentaram TPR superior após o ataque.
+
+Uma ressalva adicional diz respeito à ponderação no conjunto adicional: o TPR de vítima ponderado ($0{,}8539$) é medido sobre no máximo $5.000$ amostras por classe, enquanto \textit{xss} tem $2{,}15$ milhões de amostras no conjunto de teste completo, de modo que a ponderação da rodada adversarial não é a mesma da avaliação normal.
 
 Quanto à comparação com outros trabalhos, a reprodução preserva a ordenação qualitativa defendida no artigo: o RePO+ supera o RePO nos três conjuntos avaliados, e os valores absolutos do cenário normal ficam a menos de meio ponto percentual dos publicados.
-Como os detectores concorrentes — Kitsune, DAGMM e BiGAN — não foram retreinados neste trabalho, a comparação com eles permanece a reportada pelos autores originais, discutida na Seção~\ref{sec:sistema_referencia} e sintetizada na Tabela~\ref{tab:trabalhos-relacionados}; o que esta replicação acrescenta é a verificação independente de que o ganho do RePO+ sobre a agregação por média se sustenta fora do ambiente em que foi proposto.
+Como os detectores concorrentes — Kitsune, DAGMM e BiGAN — não foram retreinados neste trabalho, a comparação com eles permanece a reportada pelos autores originais, discutida na Seção~\ref{sec:sistema_referencia} e sintetizada na Tabela~\ref{tab:trabalhos-relacionados}; o que esta replicação acrescenta é a verificação de que a ordenação qualitativa do artigo se mantém nos três conjuntos avaliados.
 
 Por fim, as limitações que afetam a leitura dos números são as seguintes: as classes minoritárias do CICIDS2017 (Heartbleed, com $11$ fluxos, e Infiltration, com $36$) têm intervalos de confiança largos e foram mantidas nas médias macro por fidelidade ao protocolo; a seleção das primeiras $N$ amostras por classe introduz viés temporal, com o DDoS caindo de $0{,}3177$ para $0{,}1898$ no RePO e de $0{,}3974$ para $0{,}2890$ no RePO+; a reavaliação com uma única amostragem de máscaras limita a resolução a cerca de um ponto percentual; e a calibração do limiar adversarial em fluxos depende de um fator $0{,}8$ empírico, que funciona nos dados avaliados mas não é derivado de um princípio e exigiria recalibração em um modelo retreinado.
 
