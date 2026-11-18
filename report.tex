@@ -869,8 +869,8 @@ RePO sequencial (blocos de 5) & $0{,}2438$ & $0{,}1577$ & $\mathbf{5{,}32}$ & $\
 \end{tabular}
 \end{table*}
 
-Três leituras qualificam esse número.
-A primeira é que o ponto ótimo não está nos extremos da grade: com $5$ máscaras o escore barato é mais ruidoso, o $t_{\text{low}}$ calibrado sobe e menos benignos pulam ($37{,}39\%$ contra $43{,}98\%$); com $25$ máscaras o estágio barato já custa caro e o limiar fica tão baixo que apenas $41{,}96\%$ pulam.
+Três propriedades qualificam esse resultado.
+A primeira é que o ponto ótimo não está nos extremos da grade: com $5$ máscaras o escore barato é mais ruidoso, o $t_{\text{low}}$ calibrado sobe e menos benignos pulam ($37{,}39\%$ contra $43{,}98\%$); com $25$ máscaras o estágio barato é caro e o limiar fica tão baixo que apenas $41{,}96\%$ pulam.
 A economia máxima é, portanto, um compromisso entre o custo do prefixo e a seletividade do atalho.
 A segunda é que o orçamento de falsos negativos é consumido exatamente: $1\%$ de $44.182$ ataques corresponde a $442$ amostras, e o valor medido é $1{,}0004\%$.
 A terceira é que a diferença entre o RePO+ de $100$ máscaras do artigo ($0{,}2546$) e a referência interna com cinco repetições ($0{,}2560$) é de $0{,}0013$, compatível com o desvio entre repetições ($\approx 0{,}0011$); ela é a média de cinco sorteios contra um, e não uma mudança de comportamento do detector.
@@ -933,8 +933,8 @@ $0\%$ / $100\%$ & $0{,}990$ & $99{,}10$ & $0{,}9\%$ \\
 \end{table}
 
 A economia é dependente da carga, como a Eq.~\eqref{eq:custo_cascata} prevê (Tabela~\ref{tab:prevalencia}).
-Com $100\%$ de tráfego benigno o custo cai para $60{,}42$ máscaras por amostra; com metade de ataque, o ganho recua para $20{,}2\%$; com tráfego inteiramente hostil, a cascata praticamente não economiza, porque o orçamento de falsos negativos impede que ataques pulem o ensemble.
-O número de manchete só tem significado acompanhado da prevalência em que foi medido.
+Com $100\%$ de tráfego benigno o custo cai para $60{,}42$ máscaras por amostra; com metade de ataque, o ganho recua para $20{,}2\%$; com tráfego inteiramente hostil, a redução de custo é de apenas $0{,}9\%$, porque o orçamento de falsos negativos impede que ataques pulem o ensemble.
+O valor agregado só tem significado acompanhado da prevalência em que foi medido.
 
 \subsection{Proposta 2: decisão sequencial}
 
@@ -946,7 +946,7 @@ A avaliação adversarial dessa regra ainda não foi concluída: o ataque foi es
 \subsection{Síntese: custo $\times$ robustez das duas propostas}
 
 A Tabela~\ref{tab:custo_robustez} coloca as duas propostas lado a lado com o detector de referência.
-O padrão é claro: a cascata compra custo com uma superfície de ataque nova, e essa superfície é pequena no protocolo medido; a decisão sequencial compra muito mais custo, mas troca de detector e ainda não foi atacada.
+O resultado é consistente entre as duas propostas: a cascata reduz o custo ao preço de uma superfície de ataque nova, que é pequena no protocolo medido; a decisão sequencial reduz o custo em maior grau, mas troca de detector e ainda não foi atacada.
 Do ponto de vista de recomendação, o estágio barato de $10$ máscaras com orçamento de $1\%$ de falsos negativos é o ponto defensável da grade — é o menor custo medido, preserva a TPR do artigo e mantém a taxa de contorno agregada abaixo de $0{,}3\%$ —, com a ressalva de que qualquer afirmação sobre economia precisa vir acompanhada da prevalência (Tabela~\ref{tab:prevalencia}).
 
 \begin{table}[!t]
@@ -978,7 +978,7 @@ As duas propostas avaliadas atacam esse custo pela alocação de máscaras por a
 A cascata \textit{cheap-first} com estágio barato de $10$ máscaras e orçamento de $1\%$ de falsos negativos reduz o custo de $100$ para $60{,}80$ máscaras por amostra ($-39{,}2\%$) na mistura de avaliação, resolve $43{,}98\%$ do tráfego benigno com $10$ máscaras, preserva exatamente a TPR do RePO+ completo ($0{,}2560$ macro e $0{,}1871$ ponderada, com o mesmo $\text{FPR}$ de $1\%$ e o mesmo limiar) e apresenta taxa de contorno agregada de $0{,}25\%$ sob ataque — $0{,}04\%$ quando se exclui o SSH-Patator, cujo contorno mede cegueira preexistente do detector.
 A decisão sequencial, que revela máscaras em blocos de cinco e para quando o intervalo de confiança exclui o limiar, leva o custo a $5{,}32$ máscaras por amostra ($-94{,}7\%$) com $99{,}93\%$ de concordância com a decisão completa, ao preço de $1{,}2$ ponto percentual de TPR macro e da troca do RePO+ pela média do RePO.
 
-A tese que organiza os dois resultados é que \textbf{reduzir custo sem degradar a decisão é possível quando o orçamento computacional é alocado por amostra}, e que essa redução é mensurável, mas não é universal.
+Os dois resultados sustentam a conclusão de que \textbf{reduzir custo sem degradar a decisão é possível quando o orçamento computacional é alocado por amostra}, e de que essa redução é mensurável, mas não é universal.
 Ela é mensurável porque a cascata preserva a função de decisão na região em que ela importa e porque o custo por amostra pode ser contabilizado com precisão — $60{,}80$ máscaras na mistura avaliada, com o orçamento de falsos negativos consumido exatamente ($1{,}0004\%$ de $44.182$ ataques).
 Ela não é universal porque só amostras benignas podem ser descartadas: o mesmo detector custa $60{,}42$ máscaras por amostra em tráfego exclusivamente benigno, $79{,}76$ em uma carga com metade de ataques e $99{,}10$ em tráfego inteiramente hostil.
 Qualquer afirmação sobre economia precisa, portanto, vir acompanhada da prevalência de ataque em que foi medida.
