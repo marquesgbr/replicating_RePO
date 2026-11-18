@@ -50,12 +50,27 @@ __all__ = [
     "FlowAttack",
     "ITERATIONS",
     "LEARNING_RATES",
+    "LOSSES",
+    "ci_objective",
+    "validate_objective",
 ]
 
 LOG = logging.getLogger(__name__)
 
-#: Adam learning rates of the four optimization attempts (reference order).
+#: Learning rates of the four optimization attempts (reference order).
 LEARNING_RATES: tuple[float, ...] = (0.001, 0.01, 0.1, 1.0)
+
+#: Objectives the attack can minimize.
+#:
+#: ``sum``
+#:     The reference loss: the sum of the per-mask errors of the block (the
+#:     RePO+ score of the masks revealed so far).
+#: ``ci``
+#:     The upper confidence bound of the mean error of the block, scaled by
+#:     the block size.  It is the very statistic the sequential decision rule
+#:     compares with its threshold, so the attack targets the stopping rule
+#:     instead of the point estimate.
+LOSSES: tuple[str, ...] = ("sum", "ci")
 
 #: Iteration budget of every learning rate of :data:`LEARNING_RATES`.
 ITERATIONS: tuple[int, ...] = (30, 40, 50, 60)
@@ -154,6 +169,43 @@ def _tensorflow():
     return _TF
 
 
+def validate_objective(loss: str, n_masks: int) -> None:
+    """Reject an objective the attack cannot optimize with ``n_masks`` masks.
+
+    The confidence-bound objective needs the spread of at least two per-mask
+    errors; the reference sum works with any positive block size.
+    """
+    if loss not in LOSSES:
+        raise ValueError(f"loss must be one of {list(LOSSES)}, got {loss!r}")
+    if int(n_masks) <= 0:
+        raise ValueError(f"n_masks must be positive, got {n_masks!r}")
+    if loss == "ci" and int(n_masks) < 2:
+        raise ValueError(
+            "loss='ci' requires at least 2 masks per block, "
+            f"got n_masks={n_masks}"
+        )
+
+
+def ci_objective(per_mask_errors, z: float):
+    """Return ``n * (mean + z * standard_error)`` as a TensorFlow scalar.
+
+    ``per_mask_errors`` is the ``(n_masks,)`` vector of reconstruction errors of
+    one block.  Multiplying the upper confidence bound of the mean by ``n``
+    keeps the objective in the same scale as the RePO+ score the attack uses
+    everywhere else (:meth:`FlowAttack.score` returns the sum, not the mean).
+
+    The standard error uses the sample standard deviation (``ddof=1``), exactly
+    like :func:`new_data_eval.decision.mean_confidence_bounds`; sharing the
+    convention is what makes ``objective < n * threshold`` the same criterion as
+    the sequential rule's ``high < threshold``.
+    """
+    tf = _tensorflow()
+    block = tf.cast(tf.size(per_mask_errors), tf.float32)
+    mean = tf.reduce_mean(per_mask_errors)
+    variance = tf.reduce_sum(tf.square(per_mask_errors - mean)) / (block - 1.0)
+    return tf.reduce_sum(per_mask_errors) + float(z) * tf.sqrt(block * variance)
+
+
 def _derive_seed(*parts: object) -> int:
     """Return a stable 64 bit seed derived from ``parts``.
 
@@ -213,6 +265,8 @@ class FlowAttack:
         score_repeats: int = 1,
         paired_seed: int | None = None,
         mask_policy: MaskPolicy | None = None,
+        loss: str = "sum",
+        ci_z: float = 1.96,
     ) -> None:
         num_input = int(num_input)
         if num_input != N_FEATURES:
@@ -231,10 +285,16 @@ class FlowAttack:
             raise ValueError(
                 f"score_repeats must be positive, got {score_repeats}"
             )
+        validate_objective(loss, n_masks)
+        ci_z = float(ci_z)
+        if not np.isfinite(ci_z) or ci_z < 0.0:
+            raise ValueError(f"ci_z must be finite and non negative, got {ci_z!r}")
 
         self.model = model
         self.num_input = num_input
         self.n_masks = n_masks
+        self.loss = loss
+        self.ci_z = ci_z
         self.score_repeats = score_repeats
         self.paired_seed = None if paired_seed is None else int(paired_seed)
         self.seed = int(seed)
@@ -426,7 +486,11 @@ class FlowAttack:
                 score = t.reduce_mean(
                     t.square(rec_x - adv_ex_normalized), axis=1
                 )
-                loss = t.reduce_sum(score)
+                loss = (
+                    ci_objective(score, self.ci_z)
+                    if self.loss == "ci"
+                    else t.reduce_sum(score)
+                )
             gradients = tape.gradient(loss, [self.alpha])
             optimizer.apply_gradients(zip(gradients, [self.alpha]))
 
