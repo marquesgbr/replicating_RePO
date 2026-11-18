@@ -397,10 +397,10 @@ A política de cascata avalia primeiro um estágio barato com $n_{\text{cheap}} 
 \end{cases}
 \label{eq:cascata}
 \end{equation}
-em que o primeiro ramo significa declarar a amostra benigna sem avaliar o ensemble completo, e $\tau_{\text{low}}$ é calibrado no tráfego benigno para respeitar um orçamento explícito de falsos negativos do estágio barato.
+em que o primeiro ramo significa declarar a amostra benigna sem avaliar o ensemble completo, e $\tau_{\text{low}}$ é calibrado sobre as amostras de ataque para respeitar um orçamento explícito de falsos negativos do estágio barato.
 Uma variante mais agressiva, a decisão sequencial, acumula máscaras uma a uma e interrompe a avaliação assim que o escore parcial permite decidir, sem nunca completar as $100$ máscaras.
 
-A expectativa era de que a maior parte do tráfego legítimo — que domina o volume em uma rede real — fosse descartada no estágio barato, produzindo economia de $30$ a $40\%$ das máscaras sem perda de TPR.
+A expectativa era de que a maior parte do tráfego legítimo — que domina o volume em uma rede real — fosse descartada no estágio barato, produzindo economia de cerca de um terço das máscaras sem perda de TPR.
 O risco identificado de antemão é específico e mensurável: um atacante que descubra o limiar do estágio barato pode tentar empurrar a amostra maliciosa para baixo de $\tau_{\text{low}}$ e, com isso, nunca ser submetido ao ensemble completo.
 Por esse motivo, a taxa de contorno do estágio barato foi definida como a métrica de segurança da direção: se ela for alta, a cascata deve ser reportada como proposta rejeitada, e não como recomendação de projeto.
 
@@ -409,14 +409,10 @@ Por esse motivo, a taxa de contorno do estágio barato foi definida como a métr
 A terceira direção substitui o ensemble por um único modelo, treinado para reproduzir o escore do professor.
 Seja $g_{\phi}$ uma rede determinística que recebe a amostra normalizada e devolve um escore em um único passe, treinada sobre tráfego benigno para aproximar o escore do RePO+:
 \begin{equation}
-\begin{aligned}
-\mathcal{L}_{\text{dest}}(\phi) = {}
-& \mathbb{E}_{\tilde{\mathbf{x}} \sim \mathcal{D}_{\text{train}}}\left[ \left( g_{\phi}(\tilde{\mathbf{x}}) - S_{\text{RePO+}}(\tilde{\mathbf{x}}) \right)^{2} \right] \\
-& + \lambda \left( 1 - \rho_{s}\left(g_{\phi}, S_{\text{RePO+}}\right) \right),
-\end{aligned}
+\mathcal{L}_{\text{dest}}(\phi) = \mathbb{E}_{\tilde{\mathbf{x}} \sim \mathcal{D}_{\text{train}}}\left[ \left( g_{\phi}(\tilde{\mathbf{x}}) - S_{\text{RePO+}}(\tilde{\mathbf{x}}) \right)^{2} \right],
 \label{eq:destilacao}
 \end{equation}
-em que $\rho_s$ denota a correlação de postos entre aluno e professor e $\lambda$ pondera a fidelidade de ordenação.
+ao passo que a fidelidade de ordenação entre aluno e professor não entra na perda: ela é medida a posteriori pela correlação de postos $\rho_s$ entre os escores de ambos.
 A motivação é econômica: se um único passe reproduz o escore do ensemble, o custo de produção cai por um fator próximo de $100$, e a inferência deixa de depender de $100$ sorteios independentes.
 O risco é simétrico ao benefício: um modelo determinístico é justamente o alvo para o qual os ataques de evasão por gradiente foram concebidos, e a estocasticidade do professor era parte da defesa.
 Por isso a hipótese da direção é conservadora — esperava-se que a destilação preservasse a acurácia normal e \emph{não} preservasse a robustez adversarial —, e o experimento inclui um aluno de controle treinado com aumento de dados por mascaramento, de modo a separar duas explicações possíveis para uma eventual perda de robustez: o determinismo do aluno e o fato de ele nunca ter visto máscaras durante o treinamento.
