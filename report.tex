@@ -343,7 +343,7 @@ O Alg.~\ref{alg:repo_inferencia} formaliza o processo completo de pontuação e 
 
 O detector de referência classifica cada amostra pela agregação de $N = 100$ erros de reconstrução, um por máscara binária: em produção, isso significa $100$ passagens pelo autoencoder por amostra, ou $100$ vezes o custo de uma única inferência, e o custo cresce linearmente com $N$.
 O RePO+, em particular, precisa das $100$ máscaras para calcular os cinco mínimos de vinte que compõem seu escore.
-Diante disso, a proposta da equipe não é reduzir o número de máscaras para todas as amostras — uma decisão de hiperparâmetro em que uma amostra trivial e uma amostra ambígua pagam o mesmo orçamento —, mas alocar máscaras \emph{por amostra}: a maior parte do tráfego é fácil e um prefixo pequeno de máscaras já produz um escore distante do limiar, de modo que apenas as amostras difíceis precisam pagar o ensemble completo.
+Diante disso, a proposta da equipe não é reduzir o número de máscaras para todas as amostras (uma decisão de hiperparâmetro em que uma amostra trivial e uma amostra ambígua pagam o mesmo orçamento), mas alocar máscaras \emph{por amostra}: a maior parte do tráfego é fácil e um prefixo pequeno de máscaras já produz um escore distante do limiar, de modo que apenas as amostras difíceis precisam pagar o ensemble completo.
 Duas regras de alocação são propostas: a cascata \textit{cheap-first} e a decisão sequencial.
 A diferença de garantia entre essa abordagem e a redução estática é precisa: na redução estática o escore de toda amostra muda quando $N$ muda, inclusive o das amostras difíceis; na alocação por amostra, a amostra que não usa o atalho é julgada pelo mesmo RePO+ de $100$ máscaras do artigo, e só a região fácil é resolvida mais barato.
 
@@ -661,7 +661,7 @@ DDoS & $5.000$ & $0{,}5746$ & $0{,}5836$ & $+0{,}90$ & $-1{,}6\%$ \\
 \end{table}
 
 Depois do ataque, a detecção permanece acima do FPR de $10\%$ em oito das onze classes; o artigo reporta nove.
-A distribuição dos efeitos é desigual: o FTP-Patator concentra a única evasão massiva, com queda de $40{,}74$ pontos percentuais e queda condicional de $81{,}6\%$ — isto é, quatro de cada cinco fluxos que eram detectados deixaram de ser —, e é também o único ataque em que quase metade das amostras ($49{,}8\%$) recebeu uma modificação adversarial bem-sucedida.
+A distribuição dos efeitos é desigual: o FTP-Patator concentra a única evasão massiva, com queda de $40{,}74$ pontos percentuais e queda condicional de $81{,}6\%$ (quatro de cada cinco fluxos que eram detectados deixaram de ser), e é também o único ataque em que quase metade das amostras ($49{,}8\%$) recebeu uma modificação adversarial bem-sucedida.
 Nos ataques volumétricos, DoS Hulk, DoS Slowhttptest e slowloris continuam detectados com TPR entre $0{,}62$ e $0{,}94$, apesar de $17$ a $29\%$ das amostras terem sido modificadas com sucesso: a modificação não se converte em evasão.
 
 Dois ataques apresentaram TPR \emph{superior} depois da perturbação: PortScan ($+0{,}46$ ponto) e DDoS ($+0{,}90$ ponto).
@@ -676,7 +676,7 @@ Para o DDoS, a comparação no mesmo ponto de operação mostra $0{,}2890$ nas p
 A Tabela~\ref{tab:adv_pacotes} reporta a avaliação adversarial em pacotes, com $259.890$ janelas de vinte pacotes distribuídas nas onze classes.
 O TPR de vítima ponderado é de $0{,}5995$ e a média macro de $0{,}6020$, contra $0{,}6207$ publicados, o que corresponde a $-2{,}12$ e $-1{,}87$ ponto percentual, respectivamente.
 Como todas as classes têm pelo menos $9.890$ amostras nesta rodada, o filtro $n_c \ge 100$ não altera a média macro.
-A detecção permanece acima do FPR de $10\%$ em dez das onze classes, e a única exceção — Heartbleed — já tinha TPR normal de $0{,}0261$, de modo que sua queda condicional de $99{,}5\%$ descreve a perda de $2{,}6\%$ de uma base que o detector praticamente não reconhecia.
+A detecção permanece acima do FPR de $10\%$ em dez das onze classes, e a única exceção (Heartbleed) já tinha TPR normal de $0{,}0261$, de modo que sua queda condicional de $99{,}5\%$ descreve a perda de $2{,}6\%$ de uma base que o detector praticamente não reconhecia.
 
 \begin{table}[!t]
 \centering
@@ -744,12 +744,12 @@ Ponderada & --- & $0{,}0281$ & $0{,}0711$ & $0{,}5012$ & $0{,}7700$ \\
 \end{table}
 
 A leitura por classe mostra por que as duas médias divergem tanto.
-\textit{backdoor}, \textit{password}, \textit{injection} e \textit{ransomware} são bem detectados no FPR de $10\%$ ($0{,}92$ a $0{,}9957$), enquanto \textit{xss} — que concentra $60\%$ do conjunto de teste — fica em $0{,}7171$ e é o principal limitador da média ponderada.
+\textit{backdoor}, \textit{password}, \textit{injection} e \textit{ransomware} são bem detectados no FPR de $10\%$ ($0{,}92$ a $0{,}9957$), enquanto \textit{xss}, que concentra $60\%$ do conjunto de teste, fica em $0{,}7171$ e é o principal limitador da média ponderada.
 \textit{ddos} e \textit{dos} praticamente não são detectados em nenhum dos dois pontos de operação, com $202$ e $145$ amostras, respectivamente.
 Duas características da avaliação nesse conjunto ajudam a enquadrar esses números.
 A primeira é que \textit{ddos} e \textit{dos} têm $202$ e $145$ amostras, de modo que a estimativa é grosseira.
 A segunda é que oito dos $77$ atributos apresentam variância nula no conjunto de treinamento benigno e são normalizados apenas pela constante $\epsilon$ da Eq.~\eqref{eq:norm_fluxo} (Seção~\ref{sec:metodologia}); o efeito dessas coordenadas sobre os escores não foi isolado.
-Ainda assim, o salto entre os dois pontos de operação é grande — a média macro passa de $0{,}2013$ para $0{,}6349$ —, o que acompanha a cauda longa da distribuição de escores benignos: baixar o limiar de $0{,}0391$ para $0{,}0070$ triplica o TPR macro.
+Ainda assim, o salto entre os dois pontos de operação é grande (a média macro passa de $0{,}2013$ para $0{,}6349$), o que acompanha a cauda longa da distribuição de escores benignos: baixar o limiar de $0{,}0391$ para $0{,}0070$ triplica o TPR macro.
 
 \subsection{Cenário adversarial sobre o CIC-ToN-IoT}
 
@@ -829,14 +829,14 @@ Quanto à resolução das medidas, no conjunto adicional as diferenças entre o 
 Uma ressalva adicional diz respeito à ponderação no conjunto adicional: o TPR de vítima ponderado ($0{,}8539$) é medido sobre no máximo $5.000$ amostras por classe, enquanto \textit{xss} tem $2{,}15$ milhões de amostras no conjunto de teste completo, de modo que a ponderação da rodada adversarial não é a mesma da avaliação normal.
 
 Quanto à comparação com outros trabalhos, a reprodução preserva a ordenação qualitativa defendida no artigo: o RePO+ supera o RePO nos três conjuntos avaliados, e os valores absolutos do cenário normal ficam a menos de meio ponto percentual dos publicados.
-Como os detectores concorrentes — Kitsune, DAGMM e BiGAN — não foram retreinados neste trabalho, a comparação com eles permanece a reportada pelos autores originais, discutida na Seção~\ref{sec:sistema_referencia} e sintetizada na Tabela~\ref{tab:trabalhos-relacionados}; o que esta replicação acrescenta é a verificação de que a ordenação qualitativa do artigo se mantém nos três conjuntos avaliados.
+Como os detectores concorrentes (Kitsune, DAGMM e BiGAN) não foram retreinados neste trabalho, a comparação com eles permanece a reportada pelos autores originais, discutida na Seção~\ref{sec:sistema_referencia} e sintetizada na Tabela~\ref{tab:trabalhos-relacionados}; o que esta replicação acrescenta é a verificação de que a ordenação qualitativa do artigo se mantém nos três conjuntos avaliados.
 
 Por fim, as limitações que afetam a leitura dos números são as seguintes: as classes minoritárias do CICIDS2017 (Heartbleed, com $11$ fluxos, e Infiltration, com $36$) têm intervalos de confiança largos e foram mantidas nas médias macro por fidelidade ao protocolo; a seleção das primeiras $N$ amostras por classe introduz viés temporal, com o DDoS caindo de $0{,}3177$ para $0{,}1898$ no RePO e de $0{,}3974$ para $0{,}2890$ no RePO+; a reavaliação com uma única amostragem de máscaras limita a resolução a cerca de um ponto percentual; e a calibração do limiar adversarial em fluxos depende de um fator $0{,}8$ empírico, que funciona nos dados avaliados mas não é derivado de um princípio e exigiria recalibração em um modelo retreinado.
 
 \subsection{Proposta 1: cascata cheap-first}
 
 A Tabela~\ref{tab:cascata_normal} apresenta o custo e a acurácia das nove configurações de cascata avaliadas, além do detector de referência e da decisão sequencial.
-O resultado central é que as nove configurações têm a mesma TPR do RePO+ completo da mesma rodada — $0{,}2560$ de média macro e $0{,}1871$ ponderada, idênticas até a sexta casa decimal — com o mesmo $\text{FPR}$ de $1\%$ e o mesmo limiar final.
+O resultado central é que as nove configurações têm a mesma TPR do RePO+ completo da mesma rodada ($0{,}2560$ de média macro e $0{,}1871$ ponderada, idênticas até a sexta casa decimal), com o mesmo $\text{FPR}$ de $1\%$ e o mesmo limiar final.
 Não há ganho de acurácia; há ganho de custo, e ele vem de o limiar final ser calibrado sobre o escore cascateado e de nenhuma amostra descartada ter sido detectada.
 O melhor ponto da grade é o estágio barato com $10$ máscaras e orçamento de $1\%$ de falsos negativos: $60{,}80$ máscaras por amostra, redução de $39{,}2\%$ em relação às $100$, com $43{,}98\%$ dos benignos resolvidos pelo atalho.
 
@@ -907,8 +907,8 @@ DDoS & $1.000$ & $0{,}641$ & $0{,}0\%$ & $0{,}641$ & $0{,}0\%$ & $0{,}641$ & $0{
 A Tabela~\ref{tab:cascata_adv} reporta o ataque ao estágio barato em $9.047$ amostras.
 A taxa de contorno agregada é de $0{,}663\%$ com $5$ máscaras, $0{,}254\%$ com $10$ (intervalo de Wilson de $95\%$: $0{,}169$–$0{,}381\%$) e $0{,}022\%$ com $25$.
 Como $t_{\text{low}}$ é cerca de $60$ vezes menor que o limiar de decisão no caso de $10$ máscaras, todo escore abaixo dele também está abaixo de $\tau$; o contorno é, portanto, um \emph{limite inferior} da evasão, e não a taxa de evasão.
-Duas ressalvas de leitura acompanham o número: contornar o estágio barato não é o mesmo que perder a detecção — PortScan e Slowhttptest têm onze detecções perdidas com contorno nulo, ou seja, a perda ocorreu no escore completo e não no atalho —, e parte das amostras já era falso negativo antes de qualquer otimização (SSH-Patator: $993$ de $1.000$; Bot: $971$; PortScan: $888$).
-Excluindo o SSH-Patator, cujo TPR no ponto de operação é de $0{,}007$ e cujo contorno mede, portanto, cegueira preexistente — havia uma única detecção para perder, e ela foi contabilizada —, o contorno agregado cai para $0{,}09\%$, $0{,}04\%$ e $0{,}02\%$ nas três configurações.
+Duas ressalvas de leitura acompanham o número: contornar o estágio barato não é o mesmo que perder a detecção (PortScan e Slowhttptest têm onze detecções perdidas com contorno nulo, ou seja, a perda ocorreu no escore completo e não no atalho), e parte das amostras já era falso negativo antes de qualquer otimização (SSH-Patator: $993$ de $1.000$; Bot: $971$; PortScan: $888$).
+Excluindo o SSH-Patator, cujo TPR no ponto de operação é de $0{,}007$ e cujo contorno mede, portanto, cegueira preexistente (havia uma única detecção para perder, e ela foi contabilizada), o contorno agregado cai para $0{,}09\%$, $0{,}04\%$ e $0{,}02\%$ nas três configurações.
 Em Infiltration o contorno de $2{,}8\%$ com $10$ máscaras corresponde a um único evento em $36$ amostras, cujo intervalo de confiança de Wilson vai de $0{,}5\%$ a $14{,}2\%$.
 Vale registrar ainda que as TPRs dessa tabela são medidas no ponto de operação de $10\%$ de FPR e não correspondem à operação a $1\%$: no baseline, FTP-Patator tem TPR $0{,}0000$, SSH-Patator $0{,}0002$ e PortScan $0{,}0000$ nesse ponto.
 
@@ -938,16 +938,16 @@ O valor agregado só tem significado acompanhado da prevalência em que foi medi
 
 \subsection{Proposta 2: decisão sequencial}
 
-A decisão sequencial leva o custo a $5{,}32$ máscaras por amostra — redução de $94{,}7\%$ — mantendo $99{,}93\%$ de concordância com a decisão do RePO de $100$ máscaras e um FPR de $0{,}9916\%$, ligeiramente abaixo do alvo porque o intervalo de confiança às vezes decide "benigno" antes de a média cruzar o limiar.
-O preço aparece na acurácia: a TPR macro é de $0{,}2438$ e a ponderada de $0{,}1577$, contra $0{,}2560$ e $0{,}1871$ do RePO+ — uma perda de $1{,}2$ ponto percentual na média macro e de $2{,}9$ pontos na ponderada.
+A decisão sequencial leva o custo a $5{,}32$ máscaras por amostra (redução de $94{,}7\%$), mantendo $99{,}93\%$ de concordância com a decisão do RePO de $100$ máscaras e um FPR de $0{,}9916\%$, ligeiramente abaixo do alvo porque o intervalo de confiança às vezes decide "benigno" antes de a média cruzar o limiar.
+Contudo, o preço aparece na acurácia: a TPR macro é de $0{,}2438$ e a ponderada de $0{,}1577$, contra $0{,}2560$ e $0{,}1871$ do RePO+ — uma perda de $1{,}2$ ponto percentual na média macro e de $2{,}9$ pontos na ponderada.
 Parte dessa diferença é a troca de detector: a regra sequencial opera sobre a média (RePO) e não sobre o RePO+, porque é a média que admite estimador de intervalo; a coluna reportada é a do escore pontual do RePO, e como a regra decide o mesmo em $99{,}93\%$ dos casos, a TPR realizada fica a uma fração de ponto percentual desse valor.
-A avaliação adversarial dessa regra ainda não foi concluída: o ataque foi especificado e implementado para otimizar a estatística que a regra usa — o limite superior do intervalo do primeiro bloco —, mas a execução estava em andamento no fechamento desta versão, de modo que a comparação direta entre as duas propostas permanece aberta.
+A avaliação adversarial dessa regra ainda não foi concluída: o ataque foi especificado e implementado para otimizar a estatística que a regra usa (o limite superior do intervalo do primeiro bloco), mas a execução estava em andamento no fechamento desta versão, de modo que a comparação direta entre as duas propostas permanece aberta.
 
 \subsection{Síntese: custo $\times$ robustez das duas propostas}
 
 A Tabela~\ref{tab:custo_robustez} coloca as duas propostas lado a lado com o detector de referência.
 O resultado é consistente entre as duas propostas: a cascata reduz o custo ao preço de uma superfície de ataque nova, que é pequena no protocolo medido; a decisão sequencial reduz o custo em maior grau, mas troca de detector e ainda não foi atacada.
-Do ponto de vista de recomendação, o estágio barato de $10$ máscaras com orçamento de $1\%$ de falsos negativos é o ponto defensável da grade — é o menor custo medido, preserva a TPR do artigo e mantém a taxa de contorno agregada abaixo de $0{,}3\%$ —, com a ressalva de que qualquer afirmação sobre economia precisa vir acompanhada da prevalência (Tabela~\ref{tab:prevalencia}).
+Do ponto de vista de recomendação, o estágio barato de $10$ máscaras com orçamento de $1\%$ de falsos negativos é o ponto defensável da grade (é o menor custo medido, preserva a TPR do artigo e mantém a taxa de contorno agregada abaixo de $0{,}3\%$), com a ressalva de que qualquer afirmação sobre economia precisa vir acompanhada da prevalência (Tabela~\ref{tab:prevalencia}).
 
 \begin{table}[!t]
 \centering
@@ -970,7 +970,7 @@ sequencial (blocos de $5$) & $5{,}32$ & $0{,}2438$ & não avaliado \\
 
 \section{Conclusões e trabalhos futuros}
 
-Este trabalho reproduziu o método RePO/RePO+ com alta fidelidade nos dados do artigo — $0{,}2525$ de TPR em fluxos e $0{,}3472$ em pacotes no cenário normal, contra $0{,}2549$ e $0{,}3477$ publicados —, auditou o protocolo de avaliação, identificando o viés da seleção sequencial de amostras, o ruído da reavaliação com máscara única e o peso das classes minoritárias, e estendeu a avaliação a um conjunto de tráfego de Internet das Coisas, no qual a vantagem do RePO+ sobre o RePO se mantém e o ataque adversarial se mostra ineficaz.
+Este trabalho reproduziu o método RePO/RePO+ com alta fidelidade nos dados do artigo ($0{,}2525$ de TPR em fluxos e $0{,}3472$ em pacotes no cenário normal, contra $0{,}2549$ e $0{,}3477$ publicados), auditou o protocolo de avaliação, identificando o viés da seleção sequencial de amostras, o ruído da reavaliação com máscara única e o peso das classes minoritárias, e estendeu a avaliação a um conjunto de tráfego de Internet das Coisas, no qual a vantagem do RePO+ sobre o RePO se mantém e o ataque adversarial se mostra ineficaz.
 Sobre essa base, a contribuição que o trabalho defende é de outra natureza: \textbf{o gargalo de implantação de um detector como o RePO+ não é a acurácia, e sim o custo}.
 
 O detector de referência gasta $100$ passagens pelo autoencoder por amostra, porque o escore é um ensemble de $100$ erros de reconstrução, e esse custo cresce linearmente com o número de máscaras.
