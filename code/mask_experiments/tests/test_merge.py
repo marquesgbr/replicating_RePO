@@ -11,6 +11,7 @@ from mask_experiments.merge import (
     merge_adversarial,
     merge_cascade_attack,
     merge_distill_attack,
+    merge_sequential_attack,
     merge_variance,
 )
 
@@ -75,6 +76,43 @@ def test_merge_cascade_attack_combines_attacks(tmp_path):
     assert set(merged["attacks"]) == {"A", "B"}
     assert merged["configs"]["cheap5"]["n_cheap"] == 5
     assert merged["dataset"]["attacks"] == {"A": 2, "B": 2}
+
+
+def test_merge_sequential_attack_combines_blocks(tmp_path):
+    for attack, block in (("A", 5), ("B", 10)):
+        _write(
+            tmp_path / "sequential_attack" / f"{attack}-b{block}.json",
+            {
+                "dataset": {"name": "cicids2017-flow", "attacks": {attack: 3}},
+                "configs": {f"seq{block}": {"block": block}},
+                "attacks": {attack: {f"seq{block}": {"n": 3, "victim_tpr": 0.1}}},
+            },
+        )
+    merged = merge_sequential_attack(
+        tmp_path / "sequential_attack", tmp_path / "sequential_attack_all.json"
+    )
+    assert set(merged["configs"]) == {"seq5", "seq10"}
+    assert merged["dataset"]["attacks"] == {"A": 3, "B": 3}
+    assert merged["attacks"]["A"]["seq5"]["n"] == 3
+
+
+def test_merge_sequential_attack_merges_blocks_of_the_same_attack(tmp_path):
+    for block in (5, 10):
+        _write(
+            tmp_path / "sequential_attack" / f"A-b{block}.json",
+            {
+                "dataset": {"name": "cicids2017-flow", "attacks": {"A": 3}},
+                "configs": {f"seq{block}": {"block": block}},
+                "attacks": {"A": {f"seq{block}": {"n": 3}}},
+            },
+        )
+    merged = merge_sequential_attack(
+        tmp_path / "sequential_attack", tmp_path / "out.json"
+    )
+    assert set(merged["attacks"]["A"]) == {"seq5", "seq10"}
+    assert json.loads((tmp_path / "out.json").read_text())["configs"]["seq10"][
+        "block"
+    ] == 10
 
 
 def test_merge_distill_attack_combines_attacks(tmp_path):

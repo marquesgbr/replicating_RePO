@@ -20,6 +20,7 @@ __all__ = [
     "merge_adversarial",
     "merge_cascade_attack",
     "merge_distill_attack",
+    "merge_sequential_attack",
     "merge_variance",
     "main",
 ]
@@ -80,6 +81,37 @@ def merge_cascade_attack(directory: Path, out: Path) -> dict[str, Any]:
             merged["attacks"] = {}
         merged["configs"].update(data.get("configs", {}))
         merged["attacks"].update(data.get("attacks", {}))
+    if merged is None:
+        raise FileNotFoundError(f"no JSON files in {directory}")
+    merged["dataset"]["attacks"] = {
+        attack: next(iter(configs.values()))["n"]
+        for attack, configs in merged["attacks"].items()
+    }
+    write_json_atomic(out, merged)
+    return merged
+
+
+def merge_sequential_attack(directory: Path, out: Path) -> dict[str, Any]:
+    """Merge the per-attack ``sequential_attack/<attack>-b<blocks>.json`` files.
+
+    Each job writes one attack for a list of block sizes, and the two waves of
+    the study write different ``-b`` suffixes.  Both the configs (one per
+    block) and the per-attack results are therefore merged by key, so a wave
+    that adds blocks does not overwrite the previous one.
+    """
+    merged: dict[str, Any] | None = None
+    for path in _files(directory):
+        data = _load(path)
+        if merged is None:
+            merged = copy.deepcopy(data)
+            merged["configs"] = {}
+            merged["attacks"] = {}
+        for name, config in data.get("configs", {}).items():
+            if name in merged["configs"] and merged["configs"][name] != config:
+                raise ValueError(f"config {name} differs in {path}")
+            merged["configs"][name] = config
+        for attack, configs in data.get("attacks", {}).items():
+            merged["attacks"].setdefault(attack, {}).update(configs)
     if merged is None:
         raise FileNotFoundError(f"no JSON files in {directory}")
     merged["dataset"]["attacks"] = {
@@ -163,6 +195,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         ("adversarial", merge_adversarial, "adversarial_all.json"),
         ("cascade_attack", merge_cascade_attack, "cascade_attack_all.json"),
         ("distill_attack", merge_distill_attack, "distill_attack_all.json"),
+        ("sequential_attack", merge_sequential_attack, "sequential_attack_all.json"),
     ):
         directory = root / name
         if not directory.is_dir():
