@@ -63,6 +63,7 @@ Este trabalho realiza a reprodução experimental, a auditoria metodológica e a
 Os experimentos conduzidos sobre o conjunto de dados de referência nas granularidades de fluxos e de pacotes confirmam a alta fidelidade da reprodução em cenário normal, atingindo taxas médias de detecção de 25,25\% em fluxos e de 34,72\% em pacotes sob taxa de falsos positivos de 1\%, além de preservar a detecção acima da taxa de falsos positivos de 10\% em 9 de 11 ataques de fluxo e em 10 de 11 ataques de pacotes no cenário adversarial.
 Paralelamente, a investigação do protocolo original revela limitações metodológicas importantes ligadas ao viés de amostragem temporal e à variância da reavaliação estocástica com máscara única.
 Por fim, a aplicação da metodologia a um conjunto adicional de fluxos de Internet das Coisas evidencia que o ganho proporcionado pela agregação de observações parciais se mantém fora do domínio original, mas que a eficácia da evasão adversarial é fortemente dependente das características estatísticas do conjunto de dados.
+Complementarmente, o trabalho propõe e instrumenta três direções de melhoria de eficiência sobre o RePO+: a redução e a estruturação do orçamento de máscaras, a decisão em cascata com um estágio de baixo custo e a destilação do ensemble em um aluno determinístico de passe único, discutindo o custo computacional que motivou cada proposta e as razões pelas quais se esperava ganho em custo, acurácia e robustez adversarial.
 \end{abstract}
 
 \IEEEpeerreviewmaketitle
@@ -97,7 +98,8 @@ As principais contribuições deste trabalho são:
 \begin{itemize}
     \item Reproduzir integralmente e validar empiricamente os experimentos do artigo de referência \cite{hashemi2020} para detecção de intrusão baseada em fluxos e em pacotes sobre o conjunto de dados CICIDS2017 \cite{sharafaldin2018}, avaliando os modos RePO e RePO+ tanto no cenário normal ($\text{FPR} = 0{,}01$) quanto sob ataques adversariais ($\text{FPR} = 0{,}10$);
     \item Realizar uma auditoria metodológica e estatística rigorosa do protocolo experimental de referência, identificando e quantificando o impacto do viés de amostragem temporal na seleção sequencial de instâncias de ataque, da variância estocástica associada à reavaliação por máscara única e da desproporção amostral em classes minoritárias;
-    \item Estender a avaliação do método RePO/RePO+ e do ataque adversarial de fluxo para um novo conjunto de dados de tráfego de Internet das Coisas (CIC-ToN-IoT), demonstrando que a vantagem da agregação por mínimos por grupo se mantém em um novo domínio, ao passo que a transferibilidade e o sucesso do ataque adversarial dependem fortemente da distribuição dos atributos e da escala dos escores de reconstrução.
+    \item Estender a avaliação do método RePO/RePO+ e do ataque adversarial de fluxo para um novo conjunto de dados de tráfego de Internet das Coisas (CIC-ToN-IoT), demonstrando que a vantagem da agregação por mínimos por grupo se mantém em um novo domínio, ao passo que a transferibilidade e o sucesso do ataque adversarial dependem fortemente da distribuição dos atributos e da escala dos escores de reconstrução;
+    \item Propor e instrumentar três direções de melhoria de eficiência sobre o RePO+ — redução e estruturação do orçamento de máscaras, decisão em cascata com estágio de baixo custo e destilação do ensemble em um aluno determinístico de passe único —, explicitando os critérios de projeto, as hipóteses de ganho e o custo computacional que motivou cada proposta.
 \end{itemize}
 
 \section{Trabalhos relacionados}
@@ -230,7 +232,7 @@ Caso a otimização conjunta não reduza o escore RePO+ abaixo de $\tau$ — ou 
 Na injeção, o pacote sintético $\mathbf{p}_{\text{fake}}$ é inserido imediatamente antes de $\mathbf{x}_T$, dando origem a duas janelas consecutivas observadas pelo NIDS: $\mathbf{X}^{(1)} = [\mathbf{x}_1, \dots, \mathbf{x}_{19}, \mathbf{p}_{\text{fake}}]^{\top}$ e $\mathbf{X}^{(2)} = [\mathbf{x}_2, \dots, \mathbf{x}_{19}, \mathbf{p}_{\text{fake}}, \mathbf{x}_{20}]^{\top}$.
 O atacante otimiza $\mathbf{p}_{\text{fake}}$ por até $300$ iterações ($\eta = 0{,}1$) minimizando a soma conjunta dos erros de reconstrução de $\mathbf{X}^{(1)}$ e $\mathbf{X}^{(2)}$, considerando a evasão bem-sucedida somente se ambas as janelas atingirem simultaneamente escore RePO+ inferior ao limiar $\tau$.
 
-\section{Sistema proposto pelo artigo de referência}
+\section{Sistema proposto pelo artigo de referência}\label{sec:sistema_referencia}
 
 Para mitigar simultaneamente a supergeneralização de modelos reconstrutivos convencionais e a vulnerabilidade a exemplos adversariais, Hashemi e Keller \cite{hashemi2020} propuseram a arquitetura \textit{Reconstruction from Partial Observation} (RePO) e sua variante aprimorada RePO+.
 
@@ -337,11 +339,118 @@ O Alg.~\ref{alg:repo_inferencia} formaliza o processo completo de pontuação e 
 \end{algorithmic}
 \end{algorithm}
 
+\section{Solução proposta pela equipe}\label{sec:proposta}
+
+A reprodução do sistema descrito na Seção~\ref{sec:sistema_referencia} evidenciou que o custo de inferência é o principal obstáculo prático à operação do RePO+.
+Cada amostra avaliada exige $M = 100$ passagens diretas pela rede neural, e o ataque adversarial correspondente soma a esse custo até $300$ iterações de otimização por pacote e até $540$ iterações por fluxo, cada uma delas calculada sobre as $100$ máscaras.
+No protocolo de referência, essa combinação resulta em dezenas de horas de GPU apenas para reproduzir a rodada adversarial de um único conjunto de dados, o que torna proibitiva a avaliação repetida de variantes do detector sob o mesmo protocolo.
+
+O custo não é, contudo, a única consequência do ensemble de máscaras.
+A mesma estocasticidade que sustenta a robustez do RePO+ introduz um piso de ruído na medição: como a avaliação de cada amostra depende de um sorteio independente de $100$ máscaras, reavaliações sucessivas do mesmo tráfego alteram o escore o suficiente para mover a taxa de detecção em frações de ponto percentual a poucos pontos percentuais.
+Durante a reprodução, esse efeito foi observado diretamente em ataques cujo TPR \emph{aumentou} após a perturbação adversarial, indicando que variações dessa ordem de grandeza não podem ser interpretadas como efeito do ataque sem repetições e comparação pareada.
+Ambas as observações — custo e ruído — apontam para a mesma direção: o orçamento de máscaras deve ser tratado como um recurso de projeto explícito, e não como uma constante herdada do artigo de referência.
+
+Sob essa ótica, a proposta da equipe consiste em investigar se o mesmo desempenho de detecção, ou um desempenho próximo, pode ser obtido com uma fração do custo de mascaramento, e em verificar se essa economia preserva ou deteriora a robustez adversarial que justifica o método.
+A investigação foi organizada em três direções complementares, descritas a seguir, juntamente com as hipóteses que motivaram cada uma.
+
+\subsection{Formulação do problema de eficiência}
+
+Seja $\pi$ uma política de mascaramento e $n$ o número de máscaras avaliadas por amostra.
+O custo de produção do detector é proporcional ao produto $n \cdot c_f$, em que $c_f$ é o custo de uma passagem direta pela rede, e o custo do atacante é proporcional ao número de avaliações que ele precisa realizar por amostra, também governado por $n$ e pelo número de iterações da otimização.
+A busca por eficiência é formulada como um problema restrito, no qual se deseja minimizar o custo sujeito à preservação da acurácia em tráfego normal e de uma fração da detecção sob ataque:
+\begin{equation}
+\begin{aligned}
+\min_{n,\,\pi}\quad & n \, c_f \\
+\text{s.a.}\quad & \text{TPR}_{\text{norm}}(n,\pi) \;\ge\; \text{TPR}_{\text{ref}} - \varepsilon, \\
+& \text{TPR}_{\text{vít}}(n,\pi) \;\ge\; \rho \, \text{TPR}_{\text{norm}}(n,\pi),
+\end{aligned}
+\label{eq:eficiencia}
+\end{equation}
+em que $\text{TPR}_{\text{ref}} = \text{TPR}_{\text{norm}}(100, \text{iid})$ é o desempenho do protocolo de referência, $\varepsilon$ é a perda tolerada em pontos percentuais no cenário normal e $\rho \in (0,1]$ é a fração da detecção que se exige preservar sob ataque.
+Como ambos os critérios dependem do limiar operacional, cada variante tem seu limiar recalibrado no mesmo alvo de $\text{FPR}$, de modo que a comparação não seja contaminada por pontos de operação distintos.
+O custo do ataque é contabilizado separadamente: avaliar uma variante barata contra um atacante que gasta o mesmo número de avaliações que gastaria contra o RePO+ integral não é uma comparação justa, e a diferença precisa aparecer explicitamente nos resultados.
+
+\subsection{Direção A: orçamento reduzido e máscaras estruturadas}
+
+A primeira direção ataca o custo pela raiz, reduzindo $n$ e controlando quais atributos cada máscara preserva.
+Além da política original do artigo, cada coordenada é preservada de forma independente e identicamente distribuída com probabilidade $0{,}25$, como na Eq.~\eqref{eq:bernoulli_mask}.
+Foram consideradas duas políticas estruturadas:
+\begin{itemize}
+    \item \textbf{Balanceada:} cada máscara preserva exatamente $\lfloor d/4 \rfloor$ coordenadas sorteadas sem reposição, evitando que uma máscara revele muito mais atributos que as demais;
+    \item \textbf{Cobertura:} as máscaras de cada grupo $\mathcal{G}_g$ do RePO+ cobrem, em conjunto, todas as $d$ coordenadas, de modo que o mínimo por grupo seja calculado sobre uma observação do vetor inteiro.
+\end{itemize}
+Com $d = 77$ e máscaras que preservam $19$ atributos, cobrir um grupo exige $K \ge 5$ máscaras, isto é, $n \ge 25$; abaixo desse orçamento a política de cobertura degenera para a balanceada, o que é uma propriedade estrutural do problema e não uma escolha de implementação.
+
+A hipótese que motivou essa direção é dupla.
+Do lado defensivo, esperava-se encontrar um joelho de custo: a partir de certo $n$, a curva de TPR deveria saturar, de modo que $20$ a $25$ máscaras produzissem a mesma detecção que $100$ por uma fração do custo.
+Do lado ofensivo, esperava-se que menos máscaras também reduzissem a superfície de ataque, pois cada máscara adicional é um novo sorteio que o atacante pode explorar para obter uma reconstrução favorável; nessa leitura, o ensemble grande que aumenta a acurácia também ampliaria a exposição ao ataque.
+
+\subsection{Direção B: cascata e decisão sequencial}
+
+A segunda direção mantém o ensemble completo, mas evita cobrá-lo de amostras que já se mostram benignas com poucas máscaras.
+A política de cascata avalia primeiro um estágio barato com $n_{\text{cheap}} \in \{5, 10, 25\}$ máscaras e decide em dois limiares:
+\begin{equation}
+\hat{y}(\tilde{\mathbf{x}}) =
+\begin{cases}
+0, & \text{se } S_{\text{cheap}}(\tilde{\mathbf{x}}) \le \tau_{\text{low}}, \\
+\mathbb{I}\left[S_{\text{RePO+}}(\tilde{\mathbf{x}}) > \tau\right], & \text{caso contrário},
+\end{cases}
+\label{eq:cascata}
+\end{equation}
+em que o primeiro ramo significa declarar a amostra benigna sem avaliar o ensemble completo, e $\tau_{\text{low}}$ é calibrado no tráfego benigno para respeitar um orçamento explícito de falsos negativos do estágio barato.
+Uma variante mais agressiva, a decisão sequencial, acumula máscaras uma a uma e interrompe a avaliação assim que o escore parcial permite decidir, sem nunca completar as $100$ máscaras.
+
+A expectativa era de que a maior parte do tráfego legítimo — que domina o volume em uma rede real — fosse descartada no estágio barato, produzindo economia de $30$ a $40\%$ das máscaras sem perda de TPR.
+O risco identificado de antemão é específico e mensurável: um atacante que descubra o limiar do estágio barato pode tentar empurrar a amostra maliciosa para baixo de $\tau_{\text{low}}$ e, com isso, nunca ser submetido ao ensemble completo.
+Por esse motivo, a taxa de contorno do estágio barato foi definida como a métrica de segurança da direção: se ela for alta, a cascata deve ser reportada como proposta rejeitada, e não como recomendação de projeto.
+
+\subsection{Direção C: destilação do ensemble}
+
+A terceira direção substitui o ensemble por um único modelo, treinado para reproduzir o escore do professor.
+Seja $g_{\phi}$ uma rede determinística que recebe a amostra normalizada e devolve um escore em um único passe, treinada sobre tráfego benigno para aproximar o escore do RePO+:
+\begin{equation}
+\begin{aligned}
+\mathcal{L}_{\text{dest}}(\phi) = {}
+& \mathbb{E}_{\tilde{\mathbf{x}} \sim \mathcal{D}_{\text{train}}}\left[ \left( g_{\phi}(\tilde{\mathbf{x}}) - S_{\text{RePO+}}(\tilde{\mathbf{x}}) \right)^{2} \right] \\
+& + \lambda \left( 1 - \rho_{s}\left(g_{\phi}, S_{\text{RePO+}}\right) \right),
+\end{aligned}
+\label{eq:destilacao}
+\end{equation}
+em que $\rho_s$ denota a correlação de postos entre aluno e professor e $\lambda$ pondera a fidelidade de ordenação.
+A motivação é econômica: se um único passe reproduz o escore do ensemble, o custo de produção cai por um fator próximo de $100$, e a inferência deixa de depender de $100$ sorteios independentes.
+O risco é simétrico ao benefício: um modelo determinístico é justamente o alvo para o qual os ataques de evasão por gradiente foram concebidos, e a estocasticidade do professor era parte da defesa.
+Por isso a hipótese da direção é conservadora — esperava-se que a destilação preservasse a acurácia normal e \emph{não} preservasse a robustez adversarial —, e o experimento inclui um aluno de controle treinado com aumento de dados por mascaramento, de modo a separar duas explicações possíveis para uma eventual perda de robustez: o determinismo do aluno e o fato de ele nunca ter visto máscaras durante o treinamento.
+
+\subsection{Protocolo de avaliação e hipóteses}
+
+As três direções compartilham um mesmo protocolo, derivado do protocolo de referência e executado pelo mesmo 	extit{runner}: amostragem aleatória por classe em vez das primeiras $N$ instâncias, $5.000$ amostras por ataque, limiares recalibrados no alvo de $\text{FPR}$ de $1\%$ no cenário normal e de $10\%$ no cenário adversarial, e o mesmo ataque baseado em gradiente com projeção de viabilidade.
+Para cada célula são registrados o TPR normal, o TPR de vítima, a taxa de amostras efetivamente modificadas, a taxa de amostras que já eram classificadas como benignas antes do ataque e o custo em máscaras avaliadas, tanto do detector quanto do atacante.
+O protocolo é protegido por três critérios de aceitação: a reprodução do baseline deve coincidir com os resultados da replicação dentro do ruído; uma variante que perca mais de um ponto percentual de TPR normal deve ser reavaliada após retreino com a nova política antes de ser descartada; e uma variante de cascata com contorno elevado do estágio barato deve ser reportada como resultado negativo.
+
+As hipóteses testadas podem ser resumidas em quatro afirmações: (H1) $25$ máscaras estruturadas substituem $100$ máscaras independentes com perda inferior a um ponto percentual de TPR; (H2) a redução do número de máscaras aumenta a retenção de detecção sob ataque, por diminuir a superfície de exploração do atacante; (H3) a cascata reduz o custo de produção em cerca de um terço sem perda de TPR, ao preço de um orçamento controlado de falsos negativos; e (H4) a destilação preserva o desempenho normal com um único passe, mas perde robustez adversarial.
+
+\subsection{Custo de execução e estado atual da avaliação}
+
+A matriz experimental necessária para sustentar essas hipóteses é extensa e foi executada em um cluster compartilhado com GPUs A100 e RTX 3090.
+A curva de variância exige $6$ orçamentos de máscaras $\times$ $3$ políticas $\times$ $5$ repetições, isto é, $90$ passagens completas sobre a amostra de avaliação, sendo as repetições obrigatórias porque o próprio escore é estocástico.
+A avaliação adversarial da Direção A cresce de forma combinatória: $9$ variantes $\times$ $11$ ataques $\times$ $5.000$ amostras, o que corresponde a aproximadamente $495.000$ execuções do ataque, cada uma envolvendo centenas de iterações sobre $100$ máscaras.
+Somam-se a isso a cascata e sua variante sequencial, a destilação com $40$ épocas sobre $100$ mil amostras e as rodadas adversariais contra o aluno e contra o estágio barato.
+Para calibrar a ordem de grandeza, a rodada adversarial de pacotes do protocolo de referência consumiu cerca de $109$ horas de GPU, e a rodada adversarial no conjunto de dados de Internet das Coisas consumiu $7{,}29$ segundos por amostra; o estudo de eficiência replica essa escala para cada variante.
+
+A esse custo computacional somaram-se dois fatores de atraso que não estavam previstos no cronograma.
+O primeiro foi a necessidade de código novo para duas células do desenho: o aluno de controle com aumento de dados por mascaramento e a variante adversarial em nível de pacotes, nenhuma delas disponível na implementação de referência.
+O segundo foi a descoberta, durante a reprodução, de falhas que invalidavam medições já realizadas — rótulos de pacotes armazenados como ponto flutuante, métrica adversarial que reportava o TPR anterior ao ataque e ausência de semente fixa nos 	extit{notebooks} —, o que obrigou a refazer rodadas para que os números comparados pertencessem ao mesmo protocolo.
+
+No fechamento desta versão, a matriz completa das três direções ainda estava em execução no cluster.
+Por esse motivo, a Seção~\ref{sec:resultados} reporta apenas os resultados da reprodução do sistema de referência e da avaliação no conjunto de dados adicional, e os resultados da proposta da equipe serão incorporados ao relatório quando a execução for concluída.
+A discussão apresentada nesta seção cumpre, portanto, o papel de registrar o desenho, as hipóteses e o custo da proposta, sem antecipar conclusões que os dados ainda não sustentam.
+
 \section{Metodologia}
 
-A metodologia experimental deste trabalho foi estruturada em duas frentes complementares.
+A metodologia experimental deste trabalho foi estruturada em três frentes complementares.
 A primeira consiste na reprodução fiel e na auditoria metodológica dos experimentos de detecção normal e de robustez adversarial originalmente propostos por Hashemi e Keller \cite{hashemi2020} nas granularidades de fluxos e de pacotes.
 A segunda consiste na extensão desse protocolo experimental para um novo domínio de tráfego de rede voltado à Internet das Coisas, mantendo inalteradas a arquitetura do detector e a mecânica de geração de exemplos adversariais a fim de isolar o efeito da mudança de domínio sobre a eficácia do método.
+A terceira consiste na avaliação da proposta de eficiência da equipe descrita na Seção~\ref{sec:proposta}, que reutiliza o mesmo executor, a mesma amostragem aleatória por classe e o mesmo protocolo de máscaras, recalibrando os limiares para cada variante a fim de manter comparáveis os pontos de operação.
 
 \subsection{Dados usados pelo artigo de referência}
 
