@@ -605,6 +605,26 @@ FN de 1 % é o ponto defensável da grade: é o menor custo medido, mantém a TP
 agregado abaixo de 0,3 %.  Se o ambiente tem prevalência de ataque muito maior que 1 %, o ganho
 encolhe e a decisão deve ser reavaliada com a fórmula de §8.1.
 
+### 10.1 A decisão sequencial sob ataque (fecha a ressalva acima)
+
+O ataque ao sequencial foi executado e está em `MASK_EFFICIENCY_SEQUENTIAL.md`.  O resultado
+resolve a pendência desta seção:
+
+- **A regra é frágil onde o TPR normal importa**: macro de 0,480 → 0,275 nos 11 ataques
+  (−42,7 %), ou 0,392 → 0,151 nos 9 com n = 1.000 (−61,5 %).  Hulk cai de 0,657 para 0,017;
+  GoldenEye, de 0,399 para 0,056.
+- **A causa não é a parada antecipada**: devolver 100 máscaras à mesma regra não recupera a
+  detecção (a média de 100 máscaras sobre as mesmas vítimas dá 0,018 em Hulk).  A causa é a
+  estatística — a média.  O RePO+ de 100 máscaras sobre **as mesmas vítimas** recupera 0,991.
+- **A comparação B1 × B2 fica fechada**: a cascata preserva o agregado por mínimos na decisão
+  final e calibra a saída barata por orçamento de FN; o sequencial abre mão das duas coisas em
+  troca de 11× mais economia (60,8 → 5,32 máscaras).  A mitigação que ataca a causa — decidir
+  por mínimos com parada antecipada — custa 25–35 máscaras, isto é, converge para a cascata.
+
+Ressalva: o ataque foi otimizado para a média, então a vantagem do RePO+ nessa comparação é
+parcialmente transferência.  Atacado diretamente (direção A), o RePO+ cai ~15 pontos em Hulk
+(1,000 → 0,851), não 97.
+
 ---
 
 ## 11. Reprodutibilidade
