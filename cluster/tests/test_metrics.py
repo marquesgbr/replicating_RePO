@@ -44,7 +44,7 @@ def test_aggregate_mask_errors_repo_and_plus():
     )
     repo = metrics.aggregate_mask_errors(errors, mode="repo")
     plus = metrics.aggregate_mask_errors(errors, mode="repo_plus", groups=5)
-    np.testing.assert_allclose(repo, [3.0, 2.0])
+    np.testing.assert_allclose(repo, [1.0, 2.0])
     np.testing.assert_allclose(plus, [15.0, 10.0])
 
 

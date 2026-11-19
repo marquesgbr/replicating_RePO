@@ -4,7 +4,7 @@ The scoring follows the reference implementation of the Apuana runner
 (``cluster/metrics.py``) so the results of the new dataset evaluation use the
 very same protocol as the flow/packet replications:
 
-* **RePO** -- the mean of the per-mask reconstruction errors;
+* **RePO** -- the reconstruction error of a single random mask per sample;
 * **RePO+** -- the per-mask errors are split into five groups, the minimum of
   every group is taken and the five minima are summed (100 masks -> five
   groups of 20);
@@ -140,12 +140,12 @@ def _as_error_matrix(errors: np.ndarray) -> np.ndarray:
 
 
 def repo_scores(errors: np.ndarray) -> np.ndarray:
-    """Return the RePO score of every sample (the mean of its mask errors).
+    """Return the RePO score of every sample (the first random mask error).
 
     ``errors`` has shape ``(n_samples, n_masks)``; the result has shape
     ``(n_samples,)``.
     """
-    return _as_error_matrix(errors).mean(axis=1)
+    return _as_error_matrix(errors)[:, 0]
 
 
 def repo_plus_scores(errors: np.ndarray) -> np.ndarray:

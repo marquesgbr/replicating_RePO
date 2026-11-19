@@ -21,9 +21,9 @@ from new_data_eval.scoring import (
 )
 
 
-def test_repo_score_is_mean_of_mask_errors():
+def test_repo_score_is_single_mask_error():
     errors = np.array([[1.0, 3.0], [2.0, 4.0]])
-    np.testing.assert_allclose(repo_scores(errors), [2.0, 3.0])
+    np.testing.assert_allclose(repo_scores(errors), [1.0, 2.0])
 
 
 def test_repo_plus_uses_five_groups_of_twenty():
@@ -44,7 +44,7 @@ def test_threshold_at_fpr_rejects_empty_benign():
 
 
 def test_repo_scores_accepts_a_single_sample_row():
-    np.testing.assert_allclose(repo_scores(np.array([1.0, 3.0])), [2.0])
+    np.testing.assert_allclose(repo_scores(np.array([1.0, 3.0])), [1.0])
 
 
 def test_repo_plus_rejects_mask_count_not_divisible_by_five():

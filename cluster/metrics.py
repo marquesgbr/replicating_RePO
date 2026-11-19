@@ -243,10 +243,11 @@ def aggregate_mask_errors(
 ) -> np.ndarray:
     """Aggregate per-mask reconstruction errors into one score per sample.
 
-    ``errors`` must have shape ``(n_samples, n_masks)``.  ``repo`` is the mean
-    over all masks (the original RePO score); ``repo_plus`` splits the masks
-    into ``groups`` groups, takes the minimum in each group and sums the
-    minima (the original RePO+ score).
+    ``errors`` must have shape ``(n_samples, n_masks)``.  ``repo`` returns the
+    single-mask reconstruction error (``errors[:, 0]``, matching the original
+    RePO formulation); ``repo_plus`` splits the masks into ``groups`` groups,
+    takes the minimum in each group and sums the minima (the original RePO+
+    score).
     """
 
     array = np.asarray(errors, dtype=np.float64)
@@ -258,7 +259,7 @@ def aggregate_mask_errors(
         raise ValueError("errors must contain at least one mask")
 
     if mode == "repo":
-        return array.mean(axis=1)
+        return array[:, 0]
     if mode in {"repo_plus", "plus"}:
         if array.shape[1] % groups != 0:
             raise ValueError(

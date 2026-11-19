@@ -194,7 +194,7 @@ def test_reconstruction_errors_match_the_reference_numbers():
     np.testing.assert_allclose(errors, expected_errors, rtol=0.0, atol=1e-8)
     np.testing.assert_allclose(
         scoring.score_from_errors(errors, "repo"),
-        [0.19371817, 0.20914353, 0.19647459],
+        [0.20063573, 0.21521296, 0.17890240],
         rtol=0.0,
         atol=1e-8,
     )

@@ -7,11 +7,11 @@ Subcomandos:
   smoke        valida dados, modelo e GPU com poucas amostras
   manifest     imprime o manifesto do ambiente
 
-O runner preserva as fórmulas dos notebooks de referência:
-  * fluxo: 77 features, 100 máscaras, 5 grupos de 20, mínimo por grupo e soma;
+O runner preserva as fórmulas do artigo e dos notebooks de referência:
+  * fluxo: 77 features; no RePO+ são 100 máscaras em 5 grupos de 20;
   * pacotes: janelas de 20 pacotes, 29 features, mesma agregação;
-  * RePO: média dos erros das 100 máscaras;
-  * RePO+: mínimo por grupo e soma dos mínimos.
+  * RePO: erro de reconstrução sob uma única máscara aleatória por amostra;
+  * RePO+: mínimo por grupo e soma dos mínimos sobre 100 máscaras.
 
 Diferenças deliberadas em relação aos notebooks:
   * o notebook normal de fluxo pontua dados sem normalizar (bug); aqui a
@@ -394,8 +394,9 @@ def score_samples(
     n_masks: int = 100,
     batch_size: int = 100,
 ) -> np.ndarray:
+    effective_masks = 1 if mode == "repo" else n_masks
     errors = reconstruction_errors(
-        model, x, train_min, train_max, n_masks=n_masks, batch_size=batch_size
+        model, x, train_min, train_max, n_masks=effective_masks, batch_size=batch_size
     )
     return score_from_errors(errors, mode)
 
@@ -412,8 +413,9 @@ def score_single(
 ) -> float:
     t = tf()
     t.random.set_seed(int(seed))
+    effective_masks = 1 if mode == "repo" else n_masks
     errors = reconstruction_errors(
-        model, sample[None], train_min, train_max, n_masks=n_masks, batch_size=1
+        model, sample[None], train_min, train_max, n_masks=effective_masks, batch_size=1
     )
     return float(score_from_errors(errors, mode)[0])
 
