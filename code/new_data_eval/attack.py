@@ -537,12 +537,15 @@ class FlowAttack:
                 f"unknown phase: {phase!r}; expected one of {list(PHASES)}"
             )
         batch = self._as_sample(sample)[None, :]
+        # FlowAttack with `score_mode="repo"` scores the block mean across `n_masks`
+        # (used by the sequential CI study), whereas paper RePO uses 1 mask.
+        scoring_mode = "mean" if self.score_mode == "repo" else self.score_mode
         scores = score_samples(
             self.model,
             batch,
             self.train_min,
             self.train_max,
-            mode=self.score_mode,
+            mode=scoring_mode,
             n_masks=self.n_masks,
             seed=self.seed,
             phase=phase,

@@ -14,6 +14,7 @@ from new_data_eval.scoring import (
     PHASE_ATTACK,
     PHASE_ORIGINAL,
     PHASE_VICTIM,
+    mean_scores,
     repo_plus_scores,
     repo_scores,
     score_from_errors,
@@ -24,6 +25,11 @@ from new_data_eval.scoring import (
 def test_repo_score_is_single_mask_error():
     errors = np.array([[1.0, 3.0], [2.0, 4.0]])
     np.testing.assert_allclose(repo_scores(errors), [1.0, 2.0])
+
+
+def test_mean_scores_is_average_across_masks():
+    errors = np.array([[1.0, 3.0], [2.0, 4.0]])
+    np.testing.assert_allclose(mean_scores(errors), [2.0, 3.0])
 
 
 def test_repo_plus_uses_five_groups_of_twenty():
@@ -63,6 +69,7 @@ def test_repo_plus_matches_the_reference_aggregation():
 def test_score_from_errors_dispatches_on_mode():
     errors = np.arange(100, dtype=float).reshape(1, 100)
     np.testing.assert_allclose(score_from_errors(errors, "repo"), repo_scores(errors))
+    np.testing.assert_allclose(score_from_errors(errors, "mean"), mean_scores(errors))
     np.testing.assert_allclose(
         score_from_errors(errors, "repo_plus"), repo_plus_scores(errors)
     )

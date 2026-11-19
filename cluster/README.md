@@ -379,9 +379,10 @@ thresholds sem repetir a avaliação.
    lote parcial de 50 janelas; o runner pontua todas as janelas. A diferença é
    de no máximo 49 janelas em ~2,2 milhões.
 6. **Máscaras por janela de pacotes.** O notebook de pacotes dependia de um
-   broadcasting implícito entre o lote e as 100 máscaras; o runner aplica
-   explicitamente 100 máscaras por janela, que é o procedimento descrito no
-   artigo.
+   broadcasting implícito entre o lote e as 100 máscaras; no RePO+, o runner
+   aplica explicitamente 100 máscaras por janela (5 grupos de 20), que é o
+   procedimento descrito no artigo (enquanto o RePO base avalia apenas 1 máscara
+   aleatória por amostra).
 
 ## 14. Diagnóstico
 

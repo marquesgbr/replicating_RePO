@@ -41,9 +41,9 @@ from new_data_eval.scoring import (
     PHASE_ORIGINAL,
     PHASE_VICTIM,
     ScoringCost,
+    mean_scores as mask_mean_scores,
     reconstruction_errors,
     repo_plus_scores,
-    repo_scores,
     threshold_at_fpr,
 )
 
@@ -226,7 +226,7 @@ def run_sequential_attack(
         mask_policy=policy,
         cost=cost,
     )
-    mean_scores = repo_scores(errors)
+    mean_scores = mask_mean_scores(errors)
     plus_scores = repo_plus_scores(errors)
     decimal = [
         index
@@ -344,7 +344,9 @@ def run_sequential_attack(
                 victim=victim,
                 rows=np.arange(len(rows)),
                 block=block,
-                transfer_tpr=float(np.mean(repo_scores(errors_victim) >= threshold)),
+                transfer_tpr=float(
+                    np.mean(mask_mean_scores(errors_victim) >= threshold)
+                ),
                 repo_plus_tpr=float(
                     np.mean(repo_plus_scores(errors_victim) >= plus_threshold)
                 ),

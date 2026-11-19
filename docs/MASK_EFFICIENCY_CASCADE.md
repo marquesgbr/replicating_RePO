@@ -137,8 +137,11 @@ o **intervalo de confiança de 95 %** da média exclui o threshold.
 - No limite de 100 máscaras, decide pela média pontual.
 
 É o análogo de um teste sequencial: amostras fáceis (média longe do threshold, variância baixa)
-param cedo; amostras ambíguas pagam até 100.  O escore usado é a **média (RePO)**, porque é a
-média que tem intervalo de confiança simples; o RePO+ (soma de mínimos) não tem esse estimador.
+param cedo; amostras ambíguas pagam até 100.  O escore usado neste estudo de melhoria é a
+**média aritmética das máscaras (chamada de `RePO` médio nos logs do estudo)**,
+porque é a média que tem intervalo de confiança simples (ao contrário do RePO do
+artigo original, que avalia apenas 1 máscara aleatória por amostra); o RePO+
+(soma de mínimos) não tem esse estimador.
 
 ### 3.4 Diagramas
 

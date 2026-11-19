@@ -144,7 +144,7 @@ def score_matrix(
             x_raw,
             train_min,
             train_max,
-            mode=mode,
+            mode="mean" if mode == "repo" else mode,
             n_masks=n_masks,
             batch_size=batch_size,
             seed=seed,

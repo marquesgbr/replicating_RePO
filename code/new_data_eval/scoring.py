@@ -65,6 +65,7 @@ __all__ = [
     "REPO_PLUS_GROUPS",
     "ScoringCost",
     "load_model",
+    "mean_scores",
     "reconstruction_errors",
     "reconstruction_error_repeats",
     "repo_plus_scores",
@@ -148,6 +149,15 @@ def repo_scores(errors: np.ndarray) -> np.ndarray:
     return _as_error_matrix(errors)[:, 0]
 
 
+def mean_scores(errors: np.ndarray) -> np.ndarray:
+    """Return the mean reconstruction error across masks for every sample.
+
+    Used by the sequential/mask-efficiency baseline and confidence-interval
+    rules that explicitly aggregate all evaluated masks by their sample mean.
+    """
+    return _as_error_matrix(errors).mean(axis=1)
+
+
 def repo_plus_scores(errors: np.ndarray) -> np.ndarray:
     """Return the RePO+ score of every sample.
 
@@ -171,11 +181,14 @@ def repo_plus_scores(errors: np.ndarray) -> np.ndarray:
 def score_from_errors(errors: np.ndarray, mode: str) -> np.ndarray:
     """Return the scores of ``errors`` for the requested ``mode``.
 
-    ``mode="repo"`` returns the RePO scores and ``mode="repo_plus"`` the
-    RePO+ scores; every other mode raises a :class:`ValueError`.
+    ``mode="repo"`` returns the RePO scores (first mask), ``mode="mean"``
+    returns the per-sample mean across masks, and ``mode="repo_plus"`` returns
+    the RePO+ scores; every other mode raises a :class:`ValueError`.
     """
     if mode == "repo":
         return repo_scores(errors)
+    if mode == "mean":
+        return mean_scores(errors)
     if mode == "repo_plus":
         return repo_plus_scores(errors)
     raise ValueError(f"unknown score mode: {mode!r}")
@@ -664,7 +677,7 @@ def score_samples(
     and the resulting scores are averaged -- the noise analysis of the
     methodology.
     """
-    if mode not in ("repo", "repo_plus"):
+    if mode not in ("repo", "mean", "repo_plus"):
         raise ValueError(f"unknown score mode: {mode!r}")
     if mode == "repo_plus" and n_masks % REPO_PLUS_GROUPS != 0:
         raise ValueError(

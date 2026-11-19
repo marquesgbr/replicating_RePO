@@ -187,7 +187,12 @@ def _score_tensor(
     )
     return {
         mode: np.stack(
-            [score_from_errors(errors[repeat], mode) for repeat in range(repeats)]
+            [
+                score_from_errors(
+                    errors[repeat], "mean" if mode == "repo" else mode
+                )
+                for repeat in range(repeats)
+            ]
         )
         for mode in ("repo", "repo_plus")
     }

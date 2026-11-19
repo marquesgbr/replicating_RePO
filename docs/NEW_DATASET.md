@@ -166,8 +166,8 @@ dados/modelo, commit e versões do ambiente.
   menos, usa todas);
 - lê o threshold de FPR 10% do `normal/repo_plus.json` (se o JSON não existir,
   recalcula e registra aviso);
-- otimiza a loss RePO (soma dos 100 erros médios), mas mede sucesso e TPR da
-  vítima com o agregado RePO+;
+- otimiza a perda de reconstrução somada sobre 100 máscaras aleatórias, mas
+  mede sucesso e TPR da vítima com o agregado RePO+;
 - grava checkpoint a cada 50 amostras e retoma sem duplicar amostras;
 - usa o índice global da linha no CSV como `sample_index`, então as máscaras
   de uma amostra não dependem do tamanho da amostra sorteada nem do chunk.

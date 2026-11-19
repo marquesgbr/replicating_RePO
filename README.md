@@ -1,6 +1,6 @@
 # replicating_RePO
 
-Reprodução e extensão dos experimentos de robustez contra exemplos adversariais em Sistemas de Detecção de Intrusão de Rede (NIDS) baseados em autoencoders (*RePO* e *RePO+*), incluindo avaliação em um conjunto de dados adicional (CIC-ToN-IoT).
+Reprodução e extensão dos experimentos de robustez contra exemplos adversariais em Sistemas de Detecção de Intrusão de Rede (NIDS) baseados em autoencoders (*RePO* e *RePO+*), incluindo avaliação em um conjunto de dados adicional (CIC-ToN-IoT) e propostas de redução do custo de inferência por alocação dinâmica de máscaras por amostra.
 
 - **Artigo original:** [Enhancing Robustness Against Adversarial Examples in Network Intrusion Detection Systems](https://arxiv.org/abs/2008.03677)
 - **Repositório original:** [s-mohammad-hashemi/repo](https://github.com/s-mohammad-hashemi/repo)
@@ -9,7 +9,7 @@ Reprodução e extensão dos experimentos de robustez contra exemplos adversaria
 
 ## Visão Geral e Stack Tecnológica
 
-O projeto reproduz o protocolo *RePO/RePO+* nos cenários baseados em **fluxos** e **pacotes** do CICIDS2017 e estende a avaliação para o dataset **CIC-ToN-IoT** (`data/new_data/`).
+O projeto reproduz o protocolo *RePO/RePO+* nos cenários baseados em **fluxos** e **pacotes** do CICIDS2017, estende a avaliação para o dataset **CIC-ToN-IoT** (`data/new_data/`) e propõe duas regras de alocação de máscaras por amostra para reduzir o custo de inferência do *RePO+* (**cascata *cheap-first*** e **decisão sequencial** com parada antecipada por intervalo de confiança).
 
 | Componente | Especificação |
 | --- | --- |
@@ -98,7 +98,9 @@ Para compreender e reproduzir o fluxo completo do pipeline, siga esta sequência
    - Fluxos: `code/Flow_based_RePO_Adversarial.ipynb`
    - Pacotes: `code/Packet_based_RePO_Adversarial.ipynb`
    - Novo dataset: `code/new_data_RePO_Adversarial.ipynb` (ou `PYTHONPATH=code python -m new_data_eval adversarial`)
-6. **Agregação e Figuras**: `cluster/aggregate_results.py`, `cluster/aggregate_new_data.py` e `code/generate_report_figures.py`.
+6. **Experimentos de Eficiência e Alocação de Máscaras** *(proposta da equipe)*:
+   - Execução no cluster via `bash cluster/run_mask_study.sh` ou etapas individuais com `bash cluster/submit.sh mask-exp <etapa>` (`baseline`, `variance`, `cascade`, `cascade-attack`, `distill`, `distill-attack`, `sequential-attack`, `packet`, `aggregate`), ou localmente via `PYTHONPATH=code python -m mask_experiments.<módulo>`.
+7. **Agregação e Figuras**: `cluster/aggregate_results.py`, `cluster/aggregate_new_data.py`, `code/mask_experiments/aggregate.py` e `code/generate_report_figures.py`.
 
 ---
 
@@ -113,6 +115,32 @@ PYTHONPATH=code python -m new_data_eval validate
 ```
 
 Para o passo a passo completo de **como executar os testes do novo dataset em cada um dos 3 ambientes** (Local, Colab no VS Code e Cluster Apuana), consulte [docs/NEW_DATASET.md](./docs/NEW_DATASET.md).
+
+---
+
+## Melhoria Proposta: Alocação de Máscaras por Amostra (`code/mask_experiments/`)
+
+Para mitigar o custo de 100 passagens por amostra do *RePO+*, a equipe implementou e avaliou duas regras de alocação dinâmica de máscaras em `code/mask_experiments/` (junto às direções comparativas de redução estática e destilação):
+
+- **Proposta 1 — Cascata *cheap-first*** ([`cascade.py`](./code/mask_experiments/cascade.py), [`cascade_attack.py`](./code/mask_experiments/cascade_attack.py)): resolve amostras benignas inequívocas com um prefixo barato de máscaras ($n_{\text{cheap}} \in \{5, 10, 25\}$) e encaminha apenas as amostras ambíguas ao *RePO+* completo de 100 máscaras.
+- **Proposta 2 — Decisão sequencial** ([`decision.py`](./code/new_data_eval/decision.py), [`sequential_attack.py`](./code/mask_experiments/sequential_attack.py)): revela máscaras em blocos e interrompe a inferência quando o intervalo de confiança de 95% da média amostral exclui o limiar $\tau$, além de avaliar o ataque adversarial direcionado ao limite superior desse intervalo (`--loss ci` em [`attack.py`](./code/new_data_eval/attack.py)).
+- **Direções comparativas:** curva de variância e redução estática ([`variance.py`](./code/mask_experiments/variance.py), [`adversarial.py`](./code/mask_experiments/adversarial.py)), destilação em aluno de passe único ([`distill.py`](./code/mask_experiments/distill.py), [`distill_attack.py`](./code/mask_experiments/distill_attack.py)) e confirmação em pacotes ([`packet.py`](./code/mask_experiments/packet.py)).
+
+Para executar os experimentos localmente (a partir da raiz, com `.venv` ativo) ou no Cluster Apuana:
+
+```bash
+# Execução local de uma etapa (ex.: cascata ou ataque sequencial)
+PYTHONPATH=code python -m mask_experiments.cascade
+PYTHONPATH=code python -m mask_experiments.sequential_attack --help
+
+# No Cluster Apuana (cadeia completa ou etapa isolada)
+bash cluster/run_mask_study.sh
+bash cluster/submit.sh mask-exp cascade
+bash cluster/submit.sh mask-exp cascade-attack all
+bash cluster/submit.sh mask-exp sequential-attack all
+```
+
+As análises detalhadas estão documentadas em [`docs/MASK_EFFICIENCY_CASCADE.md`](./docs/MASK_EFFICIENCY_CASCADE.md), [`docs/MASK_EFFICIENCY_SEQUENTIAL.md`](./docs/MASK_EFFICIENCY_SEQUENTIAL.md), [`docs/MASK_EFFICIENCY_RESULTS.md`](./docs/MASK_EFFICIENCY_RESULTS.md), [`docs/MASK_EFFICIENCY_INTERIM.md`](./docs/MASK_EFFICIENCY_INTERIM.md) e [`docs/MASK_EFFICIENCY_RUNS.md`](./docs/MASK_EFFICIENCY_RUNS.md).
 
 ---
 
@@ -153,19 +181,30 @@ Escolha o procedimento correspondente ao seu ambiente:
    bash cluster/submit.sh new-data normal
    bash cluster/submit.sh new-data adversarial all primary
    ```
+3. Para os experimentos da melhoria proposta (alocação e eficiência de máscaras):
+   ```bash
+   bash cluster/run_mask_study.sh
+   bash cluster/submit.sh mask-exp cascade
+   bash cluster/submit.sh mask-exp cascade-attack all
+   bash cluster/submit.sh mask-exp sequential-attack all
+   ```
 
 ---
 
 ## Resultados e Relatório
 
-Para consultar os **resultados consolidados, tabelas comparativas, análises estatísticas e discussões**, consulte primariamente o relatório final em LaTeX ([`report.tex`](./report.tex) / PDF compilado).
+Para consultar os **resultados consolidados, tabelas comparativas, análises estatísticas e discussões**, consulte primariamente o relatório final em LaTeX ([`report.tex`](./report.tex) e [`report.pdf`](./report.pdf)).
 
 Caso deseje inspecionar os **artefatos brutos** produzidos pelas execuções:
 
-- **Pasta `results/`:** contém os arquivos `.json` gerados pelas execuções locais e via extensão do **Colab no VS Code** (ex.: `flow_based_adversarial_results.json`, `packet_based_adversarial_results.json`).
-- **Documentos `*_ANALYSIS.md` em `docs/`:** consolidam os resultados completos executados no **Cluster Apuana** (cujos scripts de execução e agregação estão em `cluster/`):
+- **Pasta `results/`:**
+  - Raiz de `results/`: contém os `.json` gerados pelas execuções locais e via extensão do **Colab no VS Code** (`flow_based_adversarial_results.json`, `packet_based_adversarial_results.json`).
+  - Subpasta [`results/mask_efficiency/`](./results/mask_efficiency/): contém os `.json` dos experimentos da melhoria proposta pela equipe (`cascade_flow.json`, `cascade_attack.json`, `variance_flow.json`, `distillation_flow.json`, `distill_attack.json`, `adversarial_pilot.json`, `packet_normal.json`, `baseline_flow_smoke.json`).
+- **Documentos de análise em `docs/`:** consolidam os resultados executados no **Cluster Apuana** (cujos scripts de execução e agregação estão em `cluster/` e `code/mask_experiments/`):
   - [`docs/REPLICATION_ANALYSIS.md`](./docs/REPLICATION_ANALYSIS.md) — replicação em fluxos e pacotes (CICIDS2017).
   - [`docs/NEW_DATASET_ANALYSIS.md`](./docs/NEW_DATASET_ANALYSIS.md) — avaliação no novo dataset (CIC-ToN-IoT).
+  - [`docs/MASK_EFFICIENCY_CASCADE.md`](./docs/MASK_EFFICIENCY_CASCADE.md) e [`docs/MASK_EFFICIENCY_SEQUENTIAL.md`](./docs/MASK_EFFICIENCY_SEQUENTIAL.md) — resultados e análises das propostas de cascata *cheap-first* e decisão sequencial.
+  - [`docs/MASK_EFFICIENCY_RESULTS.md`](./docs/MASK_EFFICIENCY_RESULTS.md), [`docs/MASK_EFFICIENCY_INTERIM.md`](./docs/MASK_EFFICIENCY_INTERIM.md) e [`docs/MASK_EFFICIENCY_RUNS.md`](./docs/MASK_EFFICIENCY_RUNS.md) — consolidação geral, achados intermediários e matriz de execuções do estudo de máscaras.
 
 ---
 
@@ -191,7 +230,7 @@ Alternativamente, se não quiser instalar nada na máquina, pode-se compilar usa
 
 ---
 
-## Estrutura do Repositório
+## Estrutura Relevante do Repositório
 
 ```text
 replicating_RePO/
@@ -201,12 +240,16 @@ replicating_RePO/
 ├── extract_packet_data.sh
 ├── extract_new_data.sh
 ├── report.tex
+├── report.pdf
 ├── report_template.tex
+├── images/                             # Figuras geradas para o relatório
 ├── cluster/                            # Scripts SLURM, runner, treino e agregação no Apuana
 │   ├── README.md
 │   ├── requirements-cluster.txt
 │   ├── setup_env.sh
 │   ├── submit.sh
+│   ├── run_mask_study.sh
+│   ├── slurm/
 │   ├── train.py
 │   ├── repo_runner.py
 │   ├── metrics.py
@@ -216,7 +259,7 @@ replicating_RePO/
 │   ├── analyze_sampling.py
 │   ├── lfs_fetch.py
 │   └── tests/
-├── code/                               # Notebooks, adaptadores, treino e pacote new_data_eval
+├── code/                               # Notebooks, adaptadores, treino e pacotes de avaliação
 │   ├── Colab_Setup.ipynb
 │   ├── Flow_based_RePO_Normal_Test.ipynb
 │   ├── Flow_based_RePO_Adversarial.ipynb
@@ -230,6 +273,7 @@ replicating_RePO/
 │   ├── train_packet_based_model.py
 │   ├── train_new_data_model.py
 │   ├── generate_report_figures.py
+│   ├── mask_experiments/               # Experimentos de alocação e eficiência de máscaras
 │   └── new_data_eval/                  # Pacote de avaliação e testes do novo dataset
 ├── data/
 │   ├── flow_based/                     # ZIPs CICIDS2017 (fluxo) e x_train_meta/
@@ -241,11 +285,17 @@ replicating_RePO/
 │   ├── NEW_DATASET.md
 │   ├── REPLICATION_ANALYSIS.md
 │   ├── NEW_DATASET_ANALYSIS.md
+│   ├── MASK_EFFICIENCY_CASCADE.md
+│   ├── MASK_EFFICIENCY_SEQUENTIAL.md
+│   ├── MASK_EFFICIENCY_RESULTS.md
+│   ├── MASK_EFFICIENCY_INTERIM.md
+│   ├── MASK_EFFICIENCY_RUNS.md
 │   ├── PROJECT_TASKS.md
 │   └── REPORT_REQUIREMENTS.md
 ├── models/
 │   ├── flw_model/
 │   ├── pkt_model/
 │   └── new_data_model/
-└── results/                            # JSONs das execuções locais e Colab VS Code
+└── results/                            # JSONs das execuções locais, Colab VS Code e mask_efficiency/
+    └── mask_efficiency/                # JSONs dos experimentos de eficiência de máscaras
 ```

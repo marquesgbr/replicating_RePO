@@ -115,7 +115,7 @@ def run_cascade(
     benign = labels == BENIGN_LABEL
 
     full_repo = np.stack(
-        [score_from_errors(errors[repeat], "repo") for repeat in range(repeats)]
+        [score_from_errors(errors[repeat], "mean") for repeat in range(repeats)]
     )
     full_plus = np.stack(
         [score_from_errors(errors[repeat], "repo_plus") for repeat in range(repeats)]

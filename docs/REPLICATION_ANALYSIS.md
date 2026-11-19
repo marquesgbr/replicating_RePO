@@ -12,8 +12,9 @@
 - A avaliação **normal** (FPR alvo de 0,01) reproduziu o RePO+ com alta
   fidelidade: **0,2525** no fluxo (artigo: 0,2549) e **0,3472** nos pacotes
   (artigo: 0,3477).
-- O RePO (sem agregação por grupos) ficou **acima** do artigo nos dois modelos,
-  o que reduz o ganho atribuído ao RePO+ nesta replicação.
+- Na rodada do cluster aqui consolidada, o RePO foi avaliado com média sobre
+  100 máscaras e ficou **acima** do artigo nos dois modelos (enquanto no artigo
+  o RePO sem `+` utiliza apenas 1 máscara aleatória por amostra).
 - Os thresholds adversariais publicados (0,016235… no fluxo e 0,081066… nos
   pacotes) reproduziram **FPR ≈ 0,10** nos nossos dados (0,1005 e 0,0997),
   validando a calibração do artigo.
@@ -186,10 +187,11 @@ milhões), mas é uma fonte silenciosa de diferença entre execuções.
 ### 4.6 Broadcasting implícito nas máscaras de pacotes
 
 O notebook de pacotes depende de broadcasting entre o lote e as 100 máscaras,
-o que produz um número de máscaras efetivas diferente do declarado. O runner
-aplica explicitamente 100 máscaras por janela, como descrito no artigo. Essa é
-uma diferença de implementação que pode explicar parte da diferença de TPR
-entre o notebook e o artigo.
+o que produz um número de máscaras efetivas diferente do declarado. No RePO+,
+o runner aplica explicitamente 100 máscaras por janela (5 grupos de 20), como
+descrito no artigo (já no RePO base, o protocolo do artigo utiliza apenas 1
+máscara aleatória por janela). Essa é uma diferença de implementação que pode
+explicar parte da diferença de TPR entre o notebook e o artigo.
 
 ### 4.7 Threshold adversarial do fluxo tem fator 0,8 arbitrário
 
@@ -418,9 +420,10 @@ variação de GPU e do custo por ataque também afeta os tempos da tabela.
 
 1. **O RePO+ é reproduzível**: os dois números centrais do artigo bateram com
    erro abaixo de 0,3 ponto percentual.
-2. **O RePO puro ficou acima do artigo**, reduzindo o ganho do RePO+. Isso
-   merece discussão no relatório: o benefício do RePO+ não é uniforme entre
-   modelos e conjunto de teste.
+2. **O RePO desta rodada no cluster usou média de 100 máscaras** e por isso
+   ficou acima do artigo (no protocolo original do artigo, o RePO base usa
+   apenas 1 máscara aleatória por amostra, enquanto o RePO+ usa 100 máscaras
+   em 5 grupos de 20).
 3. **Os thresholds publicados são válidos**: reproduziram FPR = 0,10, o que
    sustenta a comparação adversarial.
 4. **O procedimento de amostragem "primeiras N" é uma fragilidade

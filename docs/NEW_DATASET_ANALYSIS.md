@@ -9,8 +9,9 @@
 ## 1. Resumo executivo
 
 - O protocolo RePO/RePO+ foi aplicado ao dataset adicional (`data/new_data/`)
-  com o modelo pré-treinado dos autores, 100 máscaras por amostra e 75% das
-  features mascaradas, sem alterar o fluxo de avaliação do artigo.
+  com o modelo pré-treinado dos autores, 1 máscara por amostra no RePO, 100
+  máscaras por amostra no RePO+ e 75% das features mascaradas, sem alterar o
+  fluxo de avaliação do artigo.
 - A avaliação **normal** percorreu **3.590.733 amostras válidas** de teste em
   **45,8 min** e calibrou os thresholds nos 754.209 benignos.
 - No **FPR de 10%**, o RePO+ obteve **TPR macro 0,6349** e **ponderado 0,7700**,
