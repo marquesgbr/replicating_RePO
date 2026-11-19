@@ -6,7 +6,7 @@
 >
 > **Status (19/11, 11:40).** O bloco 5 está **completo** (11 ataques) e é o
 > resultado principal. A varredura de blocos 10 e 25 está **parcial**: DDoS
-> completo e Hulk em bloco 10; a seção §7.1 é explicitamente marcada como
+> completo e Hulk em bloco 10; a seção §8 é explicitamente marcada como
 > preliminar.
 
 ## 1. Resumo executivo
@@ -38,7 +38,7 @@ Infiltration): **0,480 → 0,275 (−42,7 %)**.
 
 Sensibilidade ao bloco (10 e 25) está **parcial**: no DDoS, mais máscaras não
 recuperam a robustez (−12,6 % e −17,2 %); no Hulk, o bloco 10 barrou o ataque.
-Ver §7.1 — os dados não sustentam uma regra única ainda.
+Ver §8 — os dados não sustentam uma regra única ainda.
 
 ## 2. O que é atacável na regra sequencial
 
@@ -189,7 +189,7 @@ agregado pelo mais frágil. Para o artigo, isso posiciona a cascata como a
 melhoria defensável e a sequencial como um limite inferior de custo com um preço
 adversarial mensurável.
 
-### 7.1 Sensibilidade ao bloco (preliminar)
+## 8. Sensibilidade ao bloco (preliminar)
 
 A regra sequencial não exige um bloco de 5; `min_masks` é um parâmetro. A
 pergunta natural é se **ler mais máscaras antes de decidir** mitiga o ataque.
@@ -224,14 +224,14 @@ O que **não** se pode afirmar com os dados parciais: que aumentar `min_masks` �
 uma mitigação — o DDoS diz o contrário e o Hulk diz o contrário do DDoS. A
 afirmação defensável hoje é só a do bloco 5, que está completa.
 
-## 8. Ameaças à validade
+## 9. Ameaças à validade
 
 - **1.000 amostras por ataque**; Heartbleed (11) e Infiltration (36) têm taxas
   instáveis.
 - **O atacante para no critério pontual** (`média < τ`), enquanto a regra exige
   o limite superior do IC abaixo de `τ`. Logo, `early_stop_rate` é um **limite
   inferior**: um atacante disposto a otimizar até o IC fechar pararia ainda mais.
-- **Blocos 10 e 25 estão parciais** (§7.1): DDoS completo, Hulk só o bloco 10,
+- **Blocos 10 e 25 estão parciais** (§8): DDoS completo, Hulk só o bloco 10,
   nove ataques na fila. A primeira tentativa dessa varredura foi descartada por
   um erro de escala do ataque (usava o agregado RePO+ como critério de sucesso,
   que só coincide com a média quando `b = 5`); a rodada corrigida usa
@@ -242,7 +242,7 @@ afirmação defensável hoje é só a do bloco 5, que está completa.
   escolha de máscara a corromper.
 - **Uma perturbação por amostra**, não um ataque de conjunto.
 
-## 9. Reprodutibilidade
+## 10. Reprodutibilidade
 
 ```
 # bloco 5 (headline) — 11 ataques x 1.000
@@ -269,7 +269,7 @@ Custo da execução (bloco 5, por ataque): 55 s a 91 min; o total da onda foi
 ~1,5 h, dominado pelo DDoS (91 min — o único em que o atacante falhou em 46 % das
 amostras e gastou o orçamento inteiro).
 
-## 10. Checagem de números
+## 11. Checagem de números
 
 1. **Macros**: média simples das colunas `normal` e `victim`. Nos 9 ataques com
    n = 1.000, (0,018+0,681+0,399+0,657+0,405+0,347+0,020+0,997+0,004)/9 = 0,3918
