@@ -3,6 +3,11 @@
 > Documento companheiro de `MASK_EFFICIENCY_CASCADE.md`. Aquele consolida a
 > cascata *cheap-first* e a decisão sequencial no cenário **normal**; este mede
 > o que acontece quando o atacante mira a **regra de parada**.
+>
+> **Status (19/11, 11:40).** O bloco 5 está **completo** (11 ataques) e é o
+> resultado principal. A varredura de blocos 10 e 25 está **parcial**: DDoS
+> completo e Hulk em bloco 10; a seção §7.1 é explicitamente marcada como
+> preliminar.
 
 ## 1. Resumo executivo
 
@@ -30,6 +35,10 @@ O gargalo é o escore médio, não o IC.
 Macro nos 9 ataques com n = 1.000: **0,392 → 0,151 (−61,5 %)**.
 Macro nos 11 ataques (convenção do estudo, incluindo Heartbleed e
 Infiltration): **0,480 → 0,275 (−42,7 %)**.
+
+Sensibilidade ao bloco (10 e 25) está **parcial**: no DDoS, mais máscaras não
+recuperam a robustez (−12,6 % e −17,2 %); no Hulk, o bloco 10 barrou o ataque.
+Ver §7.1 — os dados não sustentam uma regra única ainda.
 
 ## 2. O que é atacável na regra sequencial
 
@@ -180,6 +189,41 @@ agregado pelo mais frágil. Para o artigo, isso posiciona a cascata como a
 melhoria defensável e a sequencial como um limite inferior de custo com um preço
 adversarial mensurável.
 
+### 7.1 Sensibilidade ao bloco (preliminar)
+
+A regra sequencial não exige um bloco de 5; `min_masks` é um parâmetro. A
+pergunta natural é se **ler mais máscaras antes de decidir** mitiga o ataque.
+A rodada corrigida (`32212`) responde isso para blocos 10 e 25, mas ainda está
+em execução — só o DDoS completou e o Hulk imprimiu o bloco 10.
+
+| ataque | config | normal | vítima | queda | parada 1º bloco | RePO+ nas vítimas |
+|---|---|---|---|---|---|---|
+| DDoS | bloco 5 | 0,681 | 0,611 | −10,3 % | 19,8 % | 0,667 |
+| DDoS | bloco 10 | 0,681 | 0,595 | −12,6 % | 18,8 % | 0,651 |
+| DDoS | bloco 25 | 0,685 | 0,567 | −17,2 % | 22,7 % | 0,644 |
+| DoS Hulk | bloco 5 | 0,657 | 0,017 | −97,4 % | 97,1 % | 0,991 |
+| DoS Hulk | bloco 10 | 0,659 | 0,660 | 0,0 % | 33,2 %¹ | 0,991 |
+
+¹ igual à taxa benigna normal do Hulk nesse ponto: o ataque **não** produziu
+nenhuma parada nova (`fooled = 1/1000`).
+
+Leitura honesta do que já existe:
+
+- **No DDoS, mais máscaras não ajudam** — a queda passa de 10 % (5) para 13 %
+  (10) e 17 % (25). A estatística continua sendo a média, e o atacante continua
+  encontrando amostras com média baixa em qualquer prefixo.
+- **No Hulk, o bloco 10 barrou o ataque** (`victim_tpr` 0,66 contra 0,659
+  normal), o que é um resultado **qualitativamente diferente** do bloco 5
+  (0,017). Não é o que se previa, e a rodada completa é necessária para saber se
+  é um caso isolado ou um padrão.
+- Em ambas as linhas o `transfer_full100_tpr` acompanha a vítima e o RePO+
+  permanece em 0,64–0,99, então o mecanismo (média vs piso) continua visível
+  mesmo quando o ataque falha.
+
+O que **não** se pode afirmar com os dados parciais: que aumentar `min_masks` é
+uma mitigação — o DDoS diz o contrário e o Hulk diz o contrário do DDoS. A
+afirmação defensável hoje é só a do bloco 5, que está completa.
+
 ## 8. Ameaças à validade
 
 - **1.000 amostras por ataque**; Heartbleed (11) e Infiltration (36) têm taxas
@@ -187,10 +231,11 @@ adversarial mensurável.
 - **O atacante para no critério pontual** (`média < τ`), enquanto a regra exige
   o limite superior do IC abaixo de `τ`. Logo, `early_stop_rate` é um **limite
   inferior**: um atacante disposto a otimizar até o IC fechar pararia ainda mais.
-- **Blocos 10 e 25** foram executados; os números constam na seção 9 quando a
-  rodada corrigida fechar (a primeira tentativa usou o agregado RePO+ como
-  critério de sucesso, estatística diferente da média para `b > 5`, e foi
-  descartada).
+- **Blocos 10 e 25 estão parciais** (§7.1): DDoS completo, Hulk só o bloco 10,
+  nove ataques na fila. A primeira tentativa dessa varredura foi descartada por
+  um erro de escala do ataque (usava o agregado RePO+ como critério de sucesso,
+  que só coincide com a média quando `b = 5`); a rodada corrigida usa
+  `score_mode="repo"` e é a que está em execução.
 - **O threshold é de 10 % de FPR**, o protocolo de ataque da linha B; os números
   normais a 1 % estão no documento da cascata.
 - **Sem ataque às máscaras em si**: elas são iid e derivadas de semente, não há
@@ -213,7 +258,9 @@ MASK_ATTACK_SET=... bash cluster/submit.sh mask-exp sequential-attack all
 bash cluster/submit.sh mask-exp merge
 ```
 
-Jobs: bloco 5 = `32174` (array 0-10); blocos 10/25 = `32212` (array 0-10).
+Jobs: bloco 5 = `32174` (array 0-10, concluído em 18/11 21:00); blocos 10/25 =
+`32212` (array 0-10, **em execução** desde 19/11 08:40; DDoS concluído, Hulk em
+andamento).
 Código: `mask_experiments/sequential_attack.py`; objetivo e escala em
 `new_data_eval/attack.py` (`ci_objective`, `score_mode`); limite do IC
 compartilhado em `new_data_eval/decision.py` (`mean_confidence_bounds`).
