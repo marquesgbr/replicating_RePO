@@ -172,11 +172,11 @@ Caso deseje inspecionar os **artefatos brutos** produzidos pelas execuções:
 ## Escrita e Compilação do Relatório
 
 O documento principal é [`report.tex`](./report.tex), estruturado a partir de [`report_template.tex`](./report_template.tex) e dos requisitos em [`docs/REPORT_REQUIREMENTS.md`](./docs/REPORT_REQUIREMENTS.md).
+É necessário instalar uma distribuição LaTeX com `latexmk` no `PATH` (**TeX Live** funciona bem no Linux, Windows e macOS, **MiKTeX** no Windows ou **MacTeX** no macOS) e os pacotes `IEEEtran`, `graphicx`, `amsmath`, `algorithm` e `algpseudocode`.
 
 ### Compilação pelo VS Code
 
 1. Instale a extensão **LaTeX Workshop** (`james-yu.latex-workshop`).
-2. Instale uma distribuição LaTeX com `latexmk` no `PATH` (**TeX Live** recomendado no Linux/Windows, **MiKTeX** no Windows ou **MacTeX** no macOS) e os pacotes `IEEEtran`, `graphicx`, `amsmath`, `algorithm` e `algpseudocode`.
 3. Abra `report.tex` e execute `Build LaTeX project` (`Ctrl+Alt+B`).
 
 ### Compilação manual via terminal
@@ -186,6 +186,8 @@ latexmk -pdf -interaction=nonstopmode -halt-on-error report.tex
 ```
 
 *(Arquivos auxiliares como `.aux`, `.log`, `.fls`, `.fdb_latexmk` e `.out` são produtos locais de compilação.)*
+
+Alternativamente, se não quiser instalar nada na máquina, pode-se compilar usando serviços online como Overleaf.
 
 ---
 
