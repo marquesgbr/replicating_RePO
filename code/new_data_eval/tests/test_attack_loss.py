@@ -5,7 +5,11 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from new_data_eval.attack import ci_objective, validate_objective
+from new_data_eval.attack import (
+    ci_objective,
+    validate_objective,
+    validate_score_mode,
+)
 from new_data_eval.decision import mean_confidence_bounds
 
 
@@ -41,3 +45,10 @@ def test_ci_objective_matches_the_point_sum_without_spread():
     got = float(ci_objective(tf.constant(values, dtype=tf.float32), 1.96).numpy())
 
     assert got == pytest.approx(15.0)
+
+
+def test_validate_score_mode_rejects_an_unknown_mode():
+    with pytest.raises(ValueError, match="score_mode"):
+        validate_score_mode("mean")
+    validate_score_mode("repo")
+    validate_score_mode("repo_plus")

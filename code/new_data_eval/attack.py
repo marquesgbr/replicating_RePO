@@ -51,8 +51,10 @@ __all__ = [
     "ITERATIONS",
     "LEARNING_RATES",
     "LOSSES",
+    "SCORE_MODES",
     "ci_objective",
     "validate_objective",
+    "validate_score_mode",
 ]
 
 LOG = logging.getLogger(__name__)
@@ -169,6 +171,25 @@ def _tensorflow():
     return _TF
 
 
+SCORE_MODES: tuple[str, ...] = ("repo_plus", "repo")
+
+
+def validate_score_mode(mode: str) -> None:
+    """Reject a score mode the attack cannot classify the victim with.
+
+    ``repo_plus`` is the aggregate of the paper (the minimum of every group of
+    masks, summed).  ``repo`` is the plain mean of the per-mask errors, which
+    is the statistic the sequential decision rule uses.  The two coincide only
+    when every group holds a single mask (``n_masks=5``); using ``repo_plus``
+    to judge an attack tuned for the mean makes the success test compare
+    different statistics, so the mode is explicit.
+    """
+    if mode not in SCORE_MODES:
+        raise ValueError(
+            f"score_mode must be one of {list(SCORE_MODES)}, got {mode!r}"
+        )
+
+
 def validate_objective(loss: str, n_masks: int) -> None:
     """Reject an objective the attack cannot optimize with ``n_masks`` masks.
 
@@ -267,6 +288,7 @@ class FlowAttack:
         mask_policy: MaskPolicy | None = None,
         loss: str = "sum",
         ci_z: float = 1.96,
+        score_mode: str = "repo_plus",
     ) -> None:
         num_input = int(num_input)
         if num_input != N_FEATURES:
@@ -286,6 +308,7 @@ class FlowAttack:
                 f"score_repeats must be positive, got {score_repeats}"
             )
         validate_objective(loss, n_masks)
+        validate_score_mode(score_mode)
         ci_z = float(ci_z)
         if not np.isfinite(ci_z) or ci_z < 0.0:
             raise ValueError(f"ci_z must be finite and non negative, got {ci_z!r}")
@@ -295,6 +318,7 @@ class FlowAttack:
         self.n_masks = n_masks
         self.loss = loss
         self.ci_z = ci_z
+        self.score_mode = score_mode
         self.score_repeats = score_repeats
         self.paired_seed = None if paired_seed is None else int(paired_seed)
         self.seed = int(seed)
@@ -518,7 +542,7 @@ class FlowAttack:
             batch,
             self.train_min,
             self.train_max,
-            mode="repo_plus",
+            mode=self.score_mode,
             n_masks=self.n_masks,
             seed=self.seed,
             phase=phase,

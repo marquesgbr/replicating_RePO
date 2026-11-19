@@ -105,3 +105,16 @@ def test_restrict_result_aligns_the_normal_decisions_with_the_victims():
     assert restricted.masks_used.tolist() == [5, 25]
     # The caller's result is untouched.
     assert normal.decision.tolist() == [True, False, True, False]
+
+
+def test_repo_plus_is_five_times_the_mean_only_for_five_masks():
+    """Why the block-5 study needed no score-mode fix, and 10/25 did."""
+    from new_data_eval.scoring import repo_plus_scores
+
+    errors = np.array([[0.1, 0.2, 0.3, 0.4, 0.9], [1.0, 2.0, 3.0, 4.0, 5.0]])
+    np.testing.assert_allclose(
+        repo_plus_scores(errors), 5.0 * errors.mean(axis=1)
+    )
+
+    wider = np.repeat(errors, 2, axis=1)  # 10 masks, groups of 2
+    assert not np.allclose(repo_plus_scores(wider), 10.0 * wider.mean(axis=1))

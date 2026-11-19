@@ -274,7 +274,9 @@ def run_sequential_attack(
             "z": float(z),
             "max_masks": int(max_masks),
             "loss": loss,
+            "score_mode": "repo",
             "threshold": float(threshold),
+            "attack_threshold": float(threshold),
             "repo_plus_threshold": float(plus_threshold),
             "normal_fpr": float(normal.decision[benign].mean()),
             "normal_tpr_macro": _macro_tpr(
@@ -285,22 +287,26 @@ def run_sequential_attack(
         }
 
         for attack_name, rows in selected.items():
-            # `FlowAttack.score` returns the RePO+ sum over `block` masks,
-            # which is `block * mean`; scaling the rule's threshold by the
-            # block size keeps both criteria in the same units.
+            # The sequential rule decides on the **mean** of the per-mask
+            # errors, so the attack must be classified by the same statistic:
+            # `score_mode="repo"` makes `FlowAttack.score` return the mean over
+            # the block and the threshold is the rule's own `threshold` for
+            # every block size.  (With the default RePO+ aggregate the two
+            # coincide only for 5 masks, where every group has one mask.)
             runner = FlowAttack(
                 model,
                 train_min,
                 train_max,
                 decimal,
                 x.shape[1],
-                block * threshold,
-                block * threshold,
+                threshold,
+                threshold,
                 seed=seed,
                 n_masks=block,
                 mask_policy=policy,
                 loss=loss,
                 ci_z=z,
+                score_mode="repo",
             )
             outcomes = []
             victims = []
