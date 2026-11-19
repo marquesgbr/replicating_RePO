@@ -36,7 +36,9 @@ if [[ "${TASK}" == mask_* ]]; then
   MASK_VARIANTS="${MASK_VARIANTS//+/,}"
   MASK_CHEAP_ATTACK="${MASK_CHEAP_ATTACK:-}"
   MASK_CHEAP_ATTACK="${MASK_CHEAP_ATTACK//+/,}"
-  export MASK_VARIANTS MASK_CHEAP_ATTACK
+  MASK_SEQ_BLOCKS="${MASK_SEQ_BLOCKS:-}"
+  MASK_SEQ_BLOCKS="${MASK_SEQ_BLOCKS//+/,}"
+  export MASK_VARIANTS MASK_CHEAP_ATTACK MASK_SEQ_BLOCKS
 fi
 
 print_runtime_env
@@ -399,6 +401,45 @@ case "${TASK}" in
       MASK_ARGS+=(--cache "${MASK_CACHE}")
     fi
     exec "${PY}" -m mask_experiments.cascade_attack "${MASK_ARGS[@]}"
+    ;;
+  mask_sequential_attack)
+    MASK_RESULTS="${MASK_RESULTS:-${RESULTS_ROOT}/mask_efficiency}"
+    MASK_MODEL_DIR="${MASK_MODEL_DIR:-${REPO_ROOT}/models/flw_model}"
+    ATTACK="${ATTACK:-}"
+    if [[ -z "${ATTACK}" && -n "${ATTACK_LIST_FILE:-}" ]]; then
+      if [[ -z "${SLURM_ARRAY_TASK_ID:-}" ]]; then
+        echo "[error] ATTACK_LIST_FILE exige um job array (SLURM_ARRAY_TASK_ID)" >&2
+        exit 2
+      fi
+      ATTACK="$(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" "${ATTACK_LIST_FILE}")"
+      ATTACK="${ATTACK%$'\r'}"
+    fi
+    if [[ -z "${ATTACK}" ]]; then
+      echo "[error] defina ATTACK ou ATTACK_LIST_FILE" >&2
+      exit 2
+    fi
+    mkdir -p "${MASK_RESULTS}/sequential_attack"
+    MASK_BLOCKS="${MASK_SEQ_BLOCKS:-5,10,25}"
+    MASK_ARGS=(
+      --data-dir "${REPO_ROOT}/data"
+      --model-dir "${MASK_MODEL_DIR}"
+      --max-benign "${MASK_MAX_BENIGN:-100000}"
+      --max-per-attack "${MASK_MAX_PER_ATTACK:-5000}"
+      --per-attack "${MASK_PER_ATTACK:-5000}"
+      --attacks "${ATTACK}"
+      --blocks "${MASK_BLOCKS}"
+      --z "${MASK_SEQ_Z:-1.96}"
+      --loss "${MASK_SEQ_LOSS:-ci}"
+      --max-masks "${MASK_SEQ_MAX_MASKS:-100}"
+      --fpr "${MASK_CASCADE_FPR:-0.10}"
+      --batch-size "${MASK_BATCH_SIZE:-1024}"
+      --seed "${SEED}"
+      --out "${MASK_RESULTS}/sequential_attack/${ATTACK}-b${MASK_BLOCKS//,/-}.json"
+    )
+    if [[ -n "${MASK_CACHE:-}" ]]; then
+      MASK_ARGS+=(--cache "${MASK_CACHE}")
+    fi
+    exec "${PY}" -m mask_experiments.sequential_attack "${MASK_ARGS[@]}"
     ;;
   mask_distill)
     MASK_RESULTS="${MASK_RESULTS:-${RESULTS_ROOT}/mask_efficiency}"

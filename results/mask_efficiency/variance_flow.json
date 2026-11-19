@@ -1,0 +1,4831 @@
+{
+  "dataset": {
+    "counts": {
+      "BENIGN": 5000,
+      "Bot": 300,
+      "DDoS": 300,
+      "DoS GoldenEye": 300,
+      "DoS Hulk": 300,
+      "DoS Slowhttptest": 300,
+      "DoS slowloris": 300,
+      "FTP-Patator": 300,
+      "Heartbleed": 11,
+      "Infiltration": 36,
+      "PortScan": 300,
+      "SSH-Patator": 300,
+      "Web Attack": 300
+    },
+    "days": [
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday"
+    ],
+    "n_samples": 8047,
+    "name": "cicids2017-flow",
+    "sampling": {
+      "max_benign": 5000,
+      "max_per_attack": 300,
+      "seed": 2019
+    }
+  },
+  "experiment": "variance",
+  "results": {
+    "balanced": {
+      "10": {
+        "cost": {
+          "masked_rows": 241410,
+          "mean_call_ms": 1.35,
+          "model_calls": 2415,
+          "model_seconds": 3.259253,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.010463792377783184,
+          "score_std_across_repeats": 0.0014460985346008578,
+          "score_std_p95": 0.004742024386762881,
+          "spearman_vs_reference": 0.8990643859816864,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.34
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.17333333333333334
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6655555555555556
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.10666666666666667
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.16777777777777778
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.4444444444444445
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.035988014644996034,
+              "threshold_std": 0.0007563864900806867,
+              "tpr": {
+                "macro": 0.2643434343434343,
+                "macro_std": 0.005264813390946753,
+                "weighted": 0.16963960684382964,
+                "weighted_std": 0.004213992319909072
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.011111111111111112
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.6744444444444443
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.3888888888888889
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7244444444444444
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.4566666666666667
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.3788888888888889
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.10111111111111111
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.7129629629629629
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.9366666666666666
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0022222222222222222
+                }
+              },
+              "threshold_mean": 0.016209593383938927,
+              "threshold_std": 8.210568443975857e-05,
+              "tpr": {
+                "macro": 0.4897643097643098,
+                "macro_std": 0.0023068273579744864,
+                "weighted": 0.4146341463414634,
+                "weighted_std": 0.003724307548409854
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.04030426901102611,
+          "score_std_across_repeats": 0.005517701468550959,
+          "score_std_p95": 0.024540011744918284,
+          "spearman_vs_reference": 0.9383700152429548,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.36999999999999994
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.18555555555555556
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.67
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.10222222222222221
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.16333333333333336
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.3888888888888889
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.007777777777777778
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.1439636443135562,
+              "threshold_std": 0.0008857379743255099,
+              "tpr": {
+                "macro": 0.2634343434343434,
+                "macro_std": 0.0022145567208626833,
+                "weighted": 0.17388666423977672,
+                "weighted_std": 0.0006187379582080838
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.015555555555555553
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.7600000000000001
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.4477777777777778
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7344444444444443
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.4822222222222223
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.35999999999999993
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.1411111111111111
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6666666666666666
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.8555555555555556
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0022222222222222222
+                }
+              },
+              "threshold_mean": 0.051143118472964245,
+              "threshold_std": 0.0008884231401676438,
+              "tpr": {
+                "macro": 0.4968686868686869,
+                "macro_std": 0.00608077452254236,
+                "weighted": 0.4276180075233588,
+                "weighted_std": 0.006941074940456304
+              }
+            }
+          }
+        }
+      },
+      "100": {
+        "cost": {
+          "masked_rows": 2414100,
+          "mean_call_ms": 1.214,
+          "model_calls": 24141,
+          "model_seconds": 29.30983,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.010493611287700063,
+          "score_std_across_repeats": 0.00047609647213170544,
+          "score_std_p95": 0.0015225548387528506,
+          "spearman_vs_reference": 0.9067258878856813,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.35555555555555557
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.17888888888888888
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6677777777777778
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.17666666666666667
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.17
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.4259259259259259
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.03364283513997027,
+              "threshold_std": 0.0003106613955283945,
+              "tpr": {
+                "macro": 0.2713468013468013,
+                "macro_std": 0.0012678902615328518,
+                "weighted": 0.17983254459410267,
+                "weighted_std": 0.0002972321008109636
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.6422222222222221
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.38000000000000006
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7233333333333333
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.43222222222222223
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.34555555555555556
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0044444444444444444
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.7685185185185185
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.9988888888888888
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0011111111111111111
+                }
+              },
+              "threshold_mean": 0.01751788414048206,
+              "threshold_std": 0.0001052222647355275,
+              "tpr": {
+                "macro": 0.4823905723905724,
+                "macro_std": 0.00169491083483545,
+                "weighted": 0.4004368401892974,
+                "weighted_std": 0.0007864022204110852
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.026569670145291775,
+          "score_std_across_repeats": 0.000736964434806944,
+          "score_std_p95": 0.0036492674481470623,
+          "spearman_vs_reference": 0.9992675172803136,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.4066666666666667
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.2866666666666667
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.67
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.21777777777777776
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.16666666666666666
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.25
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.09659388964044634,
+              "threshold_std": 0.00040982758759583677,
+              "tpr": {
+                "macro": 0.2734343434343434,
+                "macro_std": 0.0008689217441457233,
+                "weighted": 0.19924766411843223,
+                "weighted_std": 0.0010438448327924495
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.02
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.61
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.6788888888888889
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.9966666666666667
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.9133333333333334
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.7033333333333335
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.47666666666666674
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6851851851851851
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.13666666666666666
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.01
+                }
+              },
+              "threshold_mean": 0.016916396181648974,
+              "threshold_std": 4.106912688114869e-06,
+              "tpr": {
+                "macro": 0.5664309764309765,
+                "macro_std": 0.001356028994316668,
+                "weighted": 0.5094041985195972,
+                "weighted_std": 0.00045402953364568423
+              }
+            }
+          }
+        }
+      },
+      "20": {
+        "cost": {
+          "masked_rows": 482820,
+          "mean_call_ms": 1.275,
+          "model_calls": 4830,
+          "model_seconds": 6.155967,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.01048185670857378,
+          "score_std_across_repeats": 0.0010453504189841642,
+          "score_std_p95": 0.0034677871713094323,
+          "spearman_vs_reference": 0.9019889699589138,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.3422222222222222
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.17333333333333334
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6666666666666666
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.12333333333333334
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.1688888888888889
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.425925925925926
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.035314729937270715,
+              "threshold_std": 0.0011873069738948165,
+              "tpr": {
+                "macro": 0.2645791245791246,
+                "macro_std": 0.004361276744905166,
+                "weighted": 0.17170246329328967,
+                "weighted_std": 0.003991477782647375
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.6677777777777778
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.3788888888888889
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7233333333333333
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.43333333333333335
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.3666666666666667
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.052222222222222225
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.75
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.971111111111111
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0011111111111111111
+                }
+              },
+              "threshold_mean": 0.016640298940812575,
+              "threshold_std": 0.0003302577160078809,
+              "tpr": {
+                "macro": 0.48676767676767674,
+                "macro_std": 0.004577886542878654,
+                "weighted": 0.4074748210168669,
+                "weighted_std": 0.005499463265926305
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.03335143118271294,
+          "score_std_across_repeats": 0.0034948563055683564,
+          "score_std_p95": 0.01787270318717528,
+          "spearman_vs_reference": 0.9637291351685302,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.3866666666666667
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.20777777777777776
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.67
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.20555555555555557
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.17222222222222225
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.28703703703703703
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.007777777777777778
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.11491725681458802,
+              "threshold_std": 0.0016566689647784295,
+              "tpr": {
+                "macro": 0.26791245791245794,
+                "macro_std": 0.003580123771318454,
+                "weighted": 0.1890547263681592,
+                "weighted_std": 0.0019339130506624426
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.022222222222222223
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.73
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.5922222222222223
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7655555555555557
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.688888888888889
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.6866666666666666
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.47666666666666674
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.5925925925925927
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.7766666666666667
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.013333333333333334
+                }
+              },
+              "threshold_mean": 0.030801586638301407,
+              "threshold_std": 0.00010380676397840788,
+              "tpr": {
+                "macro": 0.5768013468013469,
+                "macro_std": 0.004077550899771339,
+                "weighted": 0.5307608299963597,
+                "weighted_std": 0.0036524492035656616
+              }
+            }
+          }
+        }
+      },
+      "25": {
+        "cost": {
+          "masked_rows": 603525,
+          "mean_call_ms": 1.256,
+          "model_calls": 6036,
+          "model_seconds": 7.582729,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.010484287798537684,
+          "score_std_across_repeats": 0.0009381848472237171,
+          "score_std_p95": 0.0030875866446978826,
+          "spearman_vs_reference": 0.9026118899388256,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.3444444444444444
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.17444444444444443
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6666666666666666
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.11555555555555556
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.1711111111111111
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.4537037037037037
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.035029486724129644,
+              "threshold_std": 0.0009887149465978155,
+              "tpr": {
+                "macro": 0.2669023569023569,
+                "macro_std": 0.006528167164119684,
+                "weighted": 0.1718238077903167,
+                "weighted_std": 0.005079104365114998
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.6722222222222222
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.3788888888888889
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7233333333333333
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.43555555555555553
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.3622222222222222
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.044444444444444446
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.7685185185185185
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.9855555555555555
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0011111111111111111
+                }
+              },
+              "threshold_mean": 0.01660885745149558,
+              "threshold_std": 0.0001753813248652678,
+              "tpr": {
+                "macro": 0.4892592592592592,
+                "macro_std": 0.0016989193012179223,
+                "weighted": 0.40868826598713753,
+                "weighted_std": 0.0020232170853698613
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.03173142104860457,
+          "score_std_across_repeats": 0.0029626928900712913,
+          "score_std_p95": 0.015060739985106026,
+          "spearman_vs_reference": 0.9714705548487215,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.4055555555555556
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.21
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.67
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.2088888888888889
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.17
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.28703703703703703
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.1092837186458102,
+              "threshold_std": 0.001496851549415525,
+              "tpr": {
+                "macro": 0.2692255892255892,
+                "macro_std": 0.0031191610984561582,
+                "weighted": 0.19063220482951096,
+                "weighted_std": 0.0012012492339050613
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.022222222222222223
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.7244444444444444
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.6177777777777778
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7822222222222223
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.8633333333333333
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.6955555555555556
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.47666666666666674
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.5925925925925927
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.7444444444444445
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.013333333333333334
+                }
+              },
+              "threshold_mean": 0.027184730095186033,
+              "threshold_std": 0.00021569717383716224,
+              "tpr": {
+                "macro": 0.5938720538720538,
+                "macro_std": 0.0045505645301055645,
+                "weighted": 0.5512680499939328,
+                "weighted_std": 0.0029772707550989753
+              }
+            }
+          }
+        }
+      },
+      "5": {
+        "cost": {
+          "masked_rows": 120705,
+          "mean_call_ms": 1.536,
+          "model_calls": 1209,
+          "model_seconds": 1.857293,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.010485303798857114,
+          "score_std_across_repeats": 0.002033000177842994,
+          "score_std_p95": 0.00687657190929925,
+          "spearman_vs_reference": 0.8937029314927758,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.33666666666666667
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.1722222222222222
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6644444444444445
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.08
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.16888888888888887
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.4444444444444444
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0033333333333333335
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.0377479559300822,
+              "threshold_std": 0.00024302737813098918,
+              "tpr": {
+                "macro": 0.2618181818181818,
+                "macro_std": 0.003453107779681175,
+                "weighted": 0.16660599441815316,
+                "weighted_std": 0.0023087365113991496
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.015555555555555553
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.7111111111111111
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.3933333333333333
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7244444444444444
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.49666666666666665
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.41111111111111115
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.15444444444444444
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6851851851851851
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.8788888888888889
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0022222222222222222
+                }
+              },
+              "threshold_mean": 0.015742193758910752,
+              "threshold_std": 8.596178872752544e-05,
+              "tpr": {
+                "macro": 0.49754208754208756,
+                "macro_std": 0.005125592222559762,
+                "weighted": 0.4266472515471424,
+                "weighted_std": 0.0028354135288309445
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.05242651899428557,
+          "score_std_across_repeats": 0.010165000889214968,
+          "score_std_p95": 0.034382859546496246,
+          "spearman_vs_reference": 0.8937029314927758,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.33666666666666667
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.1722222222222222
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6644444444444445
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.08
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.16888888888888887
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.4444444444444444
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0033333333333333335
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.188739779650411,
+              "threshold_std": 0.0012151368906549427,
+              "tpr": {
+                "macro": 0.2618181818181818,
+                "macro_std": 0.003453107779681175,
+                "weighted": 0.16660599441815316,
+                "weighted_std": 0.0023087365113991496
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.015555555555555553
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.7111111111111111
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.3933333333333333
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7244444444444444
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.49666666666666665
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.41111111111111115
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.15444444444444444
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6851851851851851
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.8788888888888889
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0022222222222222222
+                }
+              },
+              "threshold_mean": 0.07871096879455376,
+              "threshold_std": 0.00042980894363762876,
+              "tpr": {
+                "macro": 0.49754208754208756,
+                "macro_std": 0.005125592222559762,
+                "weighted": 0.4266472515471424,
+                "weighted_std": 0.0028354135288309445
+              }
+            }
+          }
+        }
+      },
+      "50": {
+        "cost": {
+          "masked_rows": 1207050,
+          "mean_call_ms": 1.252,
+          "model_calls": 12072,
+          "model_seconds": 15.112693,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.01048824600096782,
+          "score_std_across_repeats": 0.0006732134724530642,
+          "score_std_p95": 0.002188238586302783,
+          "spearman_vs_reference": 0.9049142777906177,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.3511111111111111
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.18000000000000002
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6666666666666666
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.15222222222222223
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.17333333333333334
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.46296296296296297
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.034025438909915696,
+              "threshold_std": 0.00012920152891923665,
+              "tpr": {
+                "macro": 0.2723905723905724,
+                "macro_std": 0.002292036690251505,
+                "weighted": 0.17752699915058853,
+                "weighted_std": 0.0015252766763713733
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.6577777777777777
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.37777777777777777
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7233333333333333
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.43222222222222223
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.3511111111111111
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.013333333333333334
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.7777777777777778
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.9966666666666666
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0011111111111111111
+                }
+              },
+              "threshold_mean": 0.017236867526217076,
+              "threshold_std": 1.5697028848590867e-05,
+              "tpr": {
+                "macro": 0.4855555555555555,
+                "macro_std": 0.0025831741116251567,
+                "weighted": 0.40334910811794683,
+                "weighted_std": 0.003103194236753913
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.028275056322435245,
+          "score_std_across_repeats": 0.0015636684853845733,
+          "score_std_p95": 0.00905339984968609,
+          "spearman_vs_reference": 0.9917568233128488,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.4077777777777778
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.22222222222222224
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.67
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.2111111111111111
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.17
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.25
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.10056786122358345,
+              "threshold_std": 0.0008751875278319802,
+              "tpr": {
+                "macro": 0.26737373737373743,
+                "macro_std": 0.0008689217441457255,
+                "weighted": 0.19196699429680864,
+                "weighted_std": 0.0010438448327924612
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.02
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.6377777777777778
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.6533333333333333
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.8988888888888887
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.9244444444444445
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.6988888888888889
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.47666666666666674
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6666666666666666
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.34888888888888886
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.011111111111111112
+                }
+              },
+              "threshold_mean": 0.01998614656927306,
+              "threshold_std": 0.00022460465230631752,
+              "tpr": {
+                "macro": 0.576060606060606,
+                "macro_std": 0.001714198257421918,
+                "weighted": 0.5227520931925738,
+                "weighted_std": 0.00205928440098012
+              }
+            }
+          }
+        }
+      }
+    },
+    "covering": {
+      "10": {
+        "cost": {
+          "masked_rows": 241410,
+          "mean_call_ms": 1.394,
+          "model_calls": 2415,
+          "model_seconds": 3.36583,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.010463792377783184,
+          "score_std_across_repeats": 0.0014460985346008578,
+          "score_std_p95": 0.004742024386762881,
+          "spearman_vs_reference": 0.8990643859816864,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.34
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.17333333333333334
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6655555555555556
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.10666666666666667
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.16777777777777778
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.4444444444444445
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.035988014644996034,
+              "threshold_std": 0.0007563864900806867,
+              "tpr": {
+                "macro": 0.2643434343434343,
+                "macro_std": 0.005264813390946753,
+                "weighted": 0.16963960684382964,
+                "weighted_std": 0.004213992319909072
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.011111111111111112
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.6744444444444443
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.3888888888888889
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7244444444444444
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.4566666666666667
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.3788888888888889
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.10111111111111111
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.7129629629629629
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.9366666666666666
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0022222222222222222
+                }
+              },
+              "threshold_mean": 0.016209593383938927,
+              "threshold_std": 8.210568443975857e-05,
+              "tpr": {
+                "macro": 0.4897643097643098,
+                "macro_std": 0.0023068273579744864,
+                "weighted": 0.4146341463414634,
+                "weighted_std": 0.003724307548409854
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.04030426901102611,
+          "score_std_across_repeats": 0.005517701468550959,
+          "score_std_p95": 0.024540011744918284,
+          "spearman_vs_reference": 0.9383700152429548,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.36999999999999994
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.18555555555555556
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.67
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.10222222222222221
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.16333333333333336
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.3888888888888889
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.007777777777777778
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.1439636443135562,
+              "threshold_std": 0.0008857379743255099,
+              "tpr": {
+                "macro": 0.2634343434343434,
+                "macro_std": 0.0022145567208626833,
+                "weighted": 0.17388666423977672,
+                "weighted_std": 0.0006187379582080838
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.015555555555555553
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.7600000000000001
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.4477777777777778
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7344444444444443
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.4822222222222223
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.35999999999999993
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.1411111111111111
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6666666666666666
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.8555555555555556
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0022222222222222222
+                }
+              },
+              "threshold_mean": 0.051143118472964245,
+              "threshold_std": 0.0008884231401676438,
+              "tpr": {
+                "macro": 0.4968686868686869,
+                "macro_std": 0.00608077452254236,
+                "weighted": 0.4276180075233588,
+                "weighted_std": 0.006941074940456304
+              }
+            }
+          }
+        }
+      },
+      "100": {
+        "cost": {
+          "masked_rows": 2414100,
+          "mean_call_ms": 1.239,
+          "model_calls": 24141,
+          "model_seconds": 29.921323,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.010493946880901417,
+          "score_std_across_repeats": 0.00047542120246274184,
+          "score_std_p95": 0.001509241801713359,
+          "spearman_vs_reference": 0.9067777747242873,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.35555555555555557
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.17888888888888888
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6677777777777778
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.17777777777777778
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.17
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.4259259259259259
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.033642501880762204,
+              "threshold_std": 0.0003108160216970053,
+              "tpr": {
+                "macro": 0.27144781144781144,
+                "macro_std": 0.0012158565713985122,
+                "weighted": 0.17995388909112972,
+                "weighted_std": 0.00034321406683001564
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.6422222222222221
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.38000000000000006
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7233333333333333
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.43222222222222223
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.3444444444444444
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0044444444444444444
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.7685185185185185
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.9988888888888888
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0011111111111111111
+                }
+              },
+              "threshold_mean": 0.017545679077111714,
+              "threshold_std": 7.944650008568849e-05,
+              "tpr": {
+                "macro": 0.48228956228956227,
+                "macro_std": 0.001637762492527306,
+                "weighted": 0.4003154956922703,
+                "weighted_std": 0.0007480177166568221
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.026546965175650052,
+          "score_std_across_repeats": 0.0007028766459756989,
+          "score_std_p95": 0.003442690866673814,
+          "spearman_vs_reference": 0.9990439816588718,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.4066666666666667
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.2866666666666667
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.67
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.21777777777777776
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.16666666666666666
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.24074074074074073
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.09659388964044634,
+              "threshold_std": 0.00040982758759583677,
+              "tpr": {
+                "macro": 0.27259259259259255,
+                "macro_std": 0.0015304132225405285,
+                "weighted": 0.19912631962140517,
+                "weighted_std": 0.0010716855801878172
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.02
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.61
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.68
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.9966666666666667
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.9155555555555556
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.7033333333333335
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.47666666666666674
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6851851851851851
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.12444444444444445
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.01
+                }
+              },
+              "threshold_mean": 0.016864350800895146,
+              "threshold_std": 1.955402129799512e-05,
+              "tpr": {
+                "macro": 0.5656228956228956,
+                "macro_std": 0.001215856571398512,
+                "weighted": 0.5084334425433806,
+                "weighted_std": 0.0003432140668300025
+              }
+            }
+          }
+        }
+      },
+      "20": {
+        "cost": {
+          "masked_rows": 482820,
+          "mean_call_ms": 1.337,
+          "model_calls": 4830,
+          "model_seconds": 6.455601,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.01048185670857378,
+          "score_std_across_repeats": 0.0010453504189841642,
+          "score_std_p95": 0.0034677871713094323,
+          "spearman_vs_reference": 0.9019889699589138,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.3422222222222222
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.17333333333333334
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6666666666666666
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.12333333333333334
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.1688888888888889
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.425925925925926
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.035314729937270715,
+              "threshold_std": 0.0011873069738948165,
+              "tpr": {
+                "macro": 0.2645791245791246,
+                "macro_std": 0.004361276744905166,
+                "weighted": 0.17170246329328967,
+                "weighted_std": 0.003991477782647375
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.6677777777777778
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.3788888888888889
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7233333333333333
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.43333333333333335
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.3666666666666667
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.052222222222222225
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.75
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.971111111111111
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0011111111111111111
+                }
+              },
+              "threshold_mean": 0.016640298940812575,
+              "threshold_std": 0.0003302577160078809,
+              "tpr": {
+                "macro": 0.48676767676767674,
+                "macro_std": 0.004577886542878654,
+                "weighted": 0.4074748210168669,
+                "weighted_std": 0.005499463265926305
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.03335143118271294,
+          "score_std_across_repeats": 0.0034948563055683564,
+          "score_std_p95": 0.01787270318717528,
+          "spearman_vs_reference": 0.9637291351685302,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.3866666666666667
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.20777777777777776
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.67
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.20555555555555557
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.17222222222222225
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.28703703703703703
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.007777777777777778
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.11491725681458802,
+              "threshold_std": 0.0016566689647784295,
+              "tpr": {
+                "macro": 0.26791245791245794,
+                "macro_std": 0.003580123771318454,
+                "weighted": 0.1890547263681592,
+                "weighted_std": 0.0019339130506624426
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.022222222222222223
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.73
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.5922222222222223
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7655555555555557
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.688888888888889
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.6866666666666666
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.47666666666666674
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.5925925925925927
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.7766666666666667
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.013333333333333334
+                }
+              },
+              "threshold_mean": 0.030801586638301407,
+              "threshold_std": 0.00010380676397840788,
+              "tpr": {
+                "macro": 0.5768013468013469,
+                "macro_std": 0.004077550899771339,
+                "weighted": 0.5307608299963597,
+                "weighted_std": 0.0036524492035656616
+              }
+            }
+          }
+        }
+      },
+      "25": {
+        "cost": {
+          "masked_rows": 603525,
+          "mean_call_ms": 2.187,
+          "model_calls": 6036,
+          "model_seconds": 13.199096,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.01049388563491435,
+          "score_std_across_repeats": 0.0007437173280238279,
+          "score_std_p95": 0.002347369392042945,
+          "spearman_vs_reference": 0.9033003901855111,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.3511111111111111
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.17888888888888888
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6677777777777778
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.16
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.17111111111111113
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.4537037037037037
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.03386955302378503,
+              "threshold_std": 0.0006598856809585947,
+              "tpr": {
+                "macro": 0.27205387205387205,
+                "macro_std": 0.0030194343059185614,
+                "weighted": 0.17801237713869678,
+                "weighted_std": 0.004614283058325821
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.6699999999999999
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.3788888888888889
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7222222222222223
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.43555555555555553
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.3544444444444445
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.7685185185185185
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.9977777777777778
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0011111111111111111
+                }
+              },
+              "threshold_mean": 0.017214809457304883,
+              "threshold_std": 0.00020607380860419587,
+              "tpr": {
+                "macro": 0.4862289562289562,
+                "macro_std": 0.0027158174855320735,
+                "weighted": 0.4050479310763257,
+                "weighted_std": 0.0020232170853698864
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.02919432011806072,
+          "score_std_across_repeats": 0.001269700371005054,
+          "score_std_p95": 0.005263656790663501,
+          "spearman_vs_reference": 0.9927712941925969,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.4033333333333333
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.21
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.67
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.1988888888888889
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.17
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.25925925925925924
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.10829407694928772,
+              "threshold_std": 0.0024991736659577195,
+              "tpr": {
+                "macro": 0.26558922558922554,
+                "macro_std": 0.0030396414284962546,
+                "weighted": 0.18893338187113215,
+                "weighted_std": 0.0024329496002625283
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.02
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.61
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.6555555555555556
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.8966666666666666
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.9322222222222223
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.6999999999999998
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.47666666666666674
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6944444444444445
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.1511111111111111
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.01
+                }
+              },
+              "threshold_mean": 0.020652247752772943,
+              "threshold_std": 6.853066241138733e-05,
+              "tpr": {
+                "macro": 0.5587878787878787,
+                "macro_std": 0.0020913400879824387,
+                "weighted": 0.49933260526635115,
+                "weighted_std": 0.000955467525059093
+              }
+            }
+          }
+        }
+      },
+      "5": {
+        "cost": {
+          "masked_rows": 120705,
+          "mean_call_ms": 1.614,
+          "model_calls": 1209,
+          "model_seconds": 1.951004,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.010485303798857114,
+          "score_std_across_repeats": 0.002033000177842994,
+          "score_std_p95": 0.00687657190929925,
+          "spearman_vs_reference": 0.8937029314927758,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.33666666666666667
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.1722222222222222
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6644444444444445
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.08
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.16888888888888887
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.4444444444444444
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0033333333333333335
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.0377479559300822,
+              "threshold_std": 0.00024302737813098918,
+              "tpr": {
+                "macro": 0.2618181818181818,
+                "macro_std": 0.003453107779681175,
+                "weighted": 0.16660599441815316,
+                "weighted_std": 0.0023087365113991496
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.015555555555555553
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.7111111111111111
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.3933333333333333
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7244444444444444
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.49666666666666665
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.41111111111111115
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.15444444444444444
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6851851851851851
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.8788888888888889
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0022222222222222222
+                }
+              },
+              "threshold_mean": 0.015742193758910752,
+              "threshold_std": 8.596178872752544e-05,
+              "tpr": {
+                "macro": 0.49754208754208756,
+                "macro_std": 0.005125592222559762,
+                "weighted": 0.4266472515471424,
+                "weighted_std": 0.0028354135288309445
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.05242651899428557,
+          "score_std_across_repeats": 0.010165000889214968,
+          "score_std_p95": 0.034382859546496246,
+          "spearman_vs_reference": 0.8937029314927758,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.33666666666666667
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.1722222222222222
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6644444444444445
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.08
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.16888888888888887
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.4444444444444444
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0033333333333333335
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.188739779650411,
+              "threshold_std": 0.0012151368906549427,
+              "tpr": {
+                "macro": 0.2618181818181818,
+                "macro_std": 0.003453107779681175,
+                "weighted": 0.16660599441815316,
+                "weighted_std": 0.0023087365113991496
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.015555555555555553
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.7111111111111111
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.3933333333333333
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7244444444444444
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.49666666666666665
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.41111111111111115
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.15444444444444444
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6851851851851851
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.8788888888888889
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0022222222222222222
+                }
+              },
+              "threshold_mean": 0.07871096879455376,
+              "threshold_std": 0.00042980894363762876,
+              "tpr": {
+                "macro": 0.49754208754208756,
+                "macro_std": 0.005125592222559762,
+                "weighted": 0.4266472515471424,
+                "weighted_std": 0.0028354135288309445
+              }
+            }
+          }
+        }
+      },
+      "50": {
+        "cost": {
+          "masked_rows": 1207050,
+          "mean_call_ms": 1.506,
+          "model_calls": 12072,
+          "model_seconds": 18.174478,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.01048872085758248,
+          "score_std_across_repeats": 0.000645602569617029,
+          "score_std_p95": 0.0020648958052109723,
+          "spearman_vs_reference": 0.9050708273495149,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.3522222222222222
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.18111111111111108
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6666666666666666
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.16555555555555557
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.17444444444444443
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.4537037037037037
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.03395810700375225,
+              "threshold_std": 0.00016290300572831745,
+              "tpr": {
+                "macro": 0.27306397306397306,
+                "macro_std": 0.0015436893449626307,
+                "weighted": 0.17922582210896734,
+                "weighted_std": 0.0007480177166568326
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.648888888888889
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.37777777777777777
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7233333333333333
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.43333333333333335
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.35333333333333333
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.007777777777777778
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.7592592592592592
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.9966666666666666
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.017353212448495896,
+              "threshold_std": 4.263982172707599e-05,
+              "tpr": {
+                "macro": 0.4827609427609428,
+                "macro_std": 0.0012625140241920817,
+                "weighted": 0.40177162965659513,
+                "weighted_std": 0.0027617538349086214
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.027748332076227046,
+          "score_std_across_repeats": 0.0009713631853124523,
+          "score_std_p95": 0.004363249501498688,
+          "spearman_vs_reference": 0.9966144484412542,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.41
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.24111111111111114
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.67
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.21555555555555558
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.1688888888888889
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.25
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.09916806581043769,
+              "threshold_std": 0.0004338323262748336,
+              "tpr": {
+                "macro": 0.2695959595959596,
+                "macro_std": 0.001169276454827303,
+                "weighted": 0.19463657323140396,
+                "weighted_std": 0.0014046641066363488
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.021111111111111112
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.61
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.6622222222222223
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.9711111111111111
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.9288888888888889
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.7033333333333335
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.47666666666666674
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6851851851851851
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.13444444444444445
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.01
+                }
+              },
+              "threshold_mean": 0.018586686639378236,
+              "threshold_std": 7.018414585499997e-05,
+              "tpr": {
+                "macro": 0.5639057239057239,
+                "macro_std": 0.001925973016306413,
+                "weighted": 0.5063705860939206,
+                "weighted_std": 0.0015728044408221703
+              }
+            }
+          }
+        }
+      }
+    },
+    "iid": {
+      "10": {
+        "cost": {
+          "masked_rows": 241410,
+          "mean_call_ms": 1.243,
+          "model_calls": 2415,
+          "model_seconds": 3.001902,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.010575050387728368,
+          "score_std_across_repeats": 0.0015395753852078871,
+          "score_std_p95": 0.0049940718409875,
+          "spearman_vs_reference": 0.8953639308735586,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.3377777777777778
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.1688888888888889
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6655555555555556
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.08555555555555555
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.16777777777777778
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.40740740740740744
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.03733398129625562,
+              "threshold_std": 0.0004921185977803475,
+              "tpr": {
+                "macro": 0.25845117845117843,
+                "macro_std": 0.0019953578976469977,
+                "weighted": 0.16612061643004492,
+                "weighted_std": 0.00181611813458267
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.6944444444444443
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.4000000000000001
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7266666666666667
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.4711111111111111
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.38666666666666666
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.11666666666666665
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.75
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.9422222222222222
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0011111111111111111
+                }
+              },
+              "threshold_mean": 0.016009077454895417,
+              "threshold_std": 0.00011578895468270799,
+              "tpr": {
+                "macro": 0.49989898989898984,
+                "macro_std": 0.0025606940527719197,
+                "weighted": 0.4232496056303847,
+                "weighted_std": 0.0009080590672913338
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.04038347740597795,
+          "score_std_across_repeats": 0.0056409739029192225,
+          "score_std_p95": 0.024560399445686196,
+          "spearman_vs_reference": 0.9384863378881645,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.3688888888888889
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.18555555555555556
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.67
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.10444444444444445
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.16444444444444445
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.3796296296296296
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.007777777777777778
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.14348088871285322,
+              "threshold_std": 0.0019021200750335382,
+              "tpr": {
+                "macro": 0.2627946127946128,
+                "macro_std": 0.0008818721113608674,
+                "weighted": 0.1740080087368038,
+                "weighted_std": 0.003215056740563461
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01888888888888889
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.7488888888888888
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.4477777777777778
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7344444444444443
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.5033333333333334
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.36000000000000004
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.15444444444444444
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6944444444444443
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.851111111111111
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0022222222222222222
+                }
+              },
+              "threshold_mean": 0.0506115495029007,
+              "threshold_std": 0.001004576414742577,
+              "tpr": {
+                "macro": 0.5014141414141414,
+                "macro_std": 0.008785362850498748,
+                "weighted": 0.4304089309549812,
+                "weighted_std": 0.007135634232733477
+              }
+            }
+          }
+        }
+      },
+      "100": {
+        "cost": {
+          "masked_rows": 2414100,
+          "mean_call_ms": 1.204,
+          "model_calls": 24141,
+          "model_seconds": 29.055458,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.010598366936178537,
+          "score_std_across_repeats": 0.0004968705918874662,
+          "score_std_p95": 0.00155121906439058,
+          "spearman_vs_reference": 0.9050687118392093,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.35777777777777775
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.17888888888888888
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6677777777777778
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.1877777777777778
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.16888888888888887
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.4351851851851852
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.03386793050552276,
+              "threshold_std": 0.0004669065790879756,
+              "tpr": {
+                "macro": 0.2732996632996633,
+                "macro_std": 0.003582023209300515,
+                "weighted": 0.18128867855842737,
+                "weighted_std": 0.003131534498377372
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.6433333333333334
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.38000000000000006
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7233333333333333
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.43333333333333335
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.34
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0033333333333333335
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.7685185185185185
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.9977777777777778
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.017539710736341235,
+              "threshold_std": 0.00015804385892152667,
+              "tpr": {
+                "macro": 0.4817845117845118,
+                "macro_std": 0.002518284437887578,
+                "weighted": 0.3997087732071351,
+                "weighted_std": 0.0020806247056767693
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.026532588175436172,
+          "score_std_across_repeats": 0.0007403043121958519,
+          "score_std_p95": 0.0035477459302405852,
+          "spearman_vs_reference": 1.0,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.4066666666666667
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.2866666666666667
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.67
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.21333333333333335
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.16666666666666666
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.25
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.09647843557022157,
+              "threshold_std": 0.00037617476780209687,
+              "tpr": {
+                "macro": 0.27303030303030296,
+                "macro_std": 0.0008920970572048576,
+                "weighted": 0.19876228613032398,
+                "weighted_std": 0.0010716855801878266
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.02
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.611111111111111
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.6755555555555556
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.9966666666666667
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.9222222222222222
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.7022222222222222
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.47666666666666674
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6944444444444443
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.13555555555555557
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.01
+                }
+              },
+              "threshold_mean": 0.01686435662461733,
+              "threshold_std": 9.20409474296617e-05,
+              "tpr": {
+                "macro": 0.5676767676767677,
+                "macro_std": 0.0007422696190252103,
+                "weighted": 0.5100109210047324,
+                "weighted_std": 0.000891696302432902
+              }
+            }
+          }
+        }
+      },
+      "20": {
+        "cost": {
+          "masked_rows": 482820,
+          "mean_call_ms": 1.211,
+          "model_calls": 4830,
+          "model_seconds": 5.850364,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.010583867506012935,
+          "score_std_across_repeats": 0.0011107569150745236,
+          "score_std_p95": 0.0035034126328667755,
+          "spearman_vs_reference": 0.8989301719116006,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.34111111111111114
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.17333333333333334
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6666666666666666
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.12444444444444445
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.1711111111111111
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.4351851851851852
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.03582095682403343,
+              "threshold_std": 0.001111563555942993,
+              "tpr": {
+                "macro": 0.2656228956228956,
+                "macro_std": 0.0033423338676709397,
+                "weighted": 0.17206649678437083,
+                "weighted_std": 0.004164786385567407
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.6666666666666666
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.38222222222222224
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7233333333333333
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.43333333333333335
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.3622222222222222
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.05333333333333334
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.7685185185185185
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.9711111111111111
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0011111111111111111
+                }
+              },
+              "threshold_mean": 0.01671231616226754,
+              "threshold_std": 0.00015205314501904013,
+              "tpr": {
+                "macro": 0.4883501683501683,
+                "macro_std": 0.00188130842352848,
+                "weighted": 0.407596165513894,
+                "weighted_std": 0.002761753834908632
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.033295346347349,
+          "score_std_across_repeats": 0.0034650065923078357,
+          "score_std_p95": 0.01755562661686902,
+          "spearman_vs_reference": 0.9640953141767573,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.39333333333333337
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.20888888888888887
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.67
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.20666666666666667
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.17222222222222225
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.27777777777777773
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.007777777777777778
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.1135688200308424,
+              "threshold_std": 0.0006315441190915083,
+              "tpr": {
+                "macro": 0.2678787878787879,
+                "macro_std": 0.004292632194116307,
+                "weighted": 0.18990413784734864,
+                "weighted_std": 0.0019790688545443563
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.023333333333333334
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.7266666666666666
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.5955555555555555
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7655555555555554
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.7344444444444443
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.6877777777777778
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.47666666666666674
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.5925925925925927
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.7799999999999999
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.013333333333333334
+                }
+              },
+              "threshold_mean": 0.030393529833710606,
+              "threshold_std": 0.0005323343804679206,
+              "tpr": {
+                "macro": 0.5814478114478114,
+                "macro_std": 0.006368355544445116,
+                "weighted": 0.5363426768596044,
+                "weighted_std": 0.008898780302050296
+              }
+            }
+          }
+        }
+      },
+      "25": {
+        "cost": {
+          "masked_rows": 603525,
+          "mean_call_ms": 1.203,
+          "model_calls": 6036,
+          "model_seconds": 7.263343,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.010586066991325973,
+          "score_std_across_repeats": 0.0009962184457053907,
+          "score_std_p95": 0.0031400565494498337,
+          "spearman_vs_reference": 0.9000013513040279,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.3433333333333333
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.17555555555555555
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6666666666666666
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.12444444444444443
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.17
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.4444444444444444
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.035283961768200756,
+              "threshold_std": 0.0010267833272397324,
+              "tpr": {
+                "macro": 0.2667676767676767,
+                "macro_std": 0.004015919076201106,
+                "weighted": 0.1725518747724791,
+                "weighted_std": 0.004378502257655313
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.648888888888889
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.3788888888888889
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7233333333333333
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.43
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.36000000000000004
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.04222222222222222
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.7777777777777778
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.9855555555555555
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.016836086204523083,
+              "threshold_std": 9.124416999064749e-05,
+              "tpr": {
+                "macro": 0.486969696969697,
+                "macro_std": 0.0008689217441457255,
+                "weighted": 0.4050479310763257,
+                "weighted_std": 0.0010438448327924495
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.031676235165914696,
+          "score_std_across_repeats": 0.0029578657558712454,
+          "score_std_p95": 0.015352748916133922,
+          "spearman_vs_reference": 0.972668072340659,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.40111111111111114
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.21
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.67
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.20111111111111113
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.1688888888888889
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.2777777777777778
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0022222222222222222
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.10975412139791929,
+              "threshold_std": 0.0015391397459595727,
+              "tpr": {
+                "macro": 0.2673737373737373,
+                "macro_std": 0.0021569855054608695,
+                "weighted": 0.18929741536221334,
+                "weighted_std": 0.002591209380422594
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.021111111111111112
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.7133333333333333
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.6222222222222222
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7888888888888889
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.8688888888888888
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.6944444444444445
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.47666666666666674
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6018518518518519
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.7366666666666667
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.013333333333333334
+                }
+              },
+              "threshold_mean": 0.026882996383097862,
+              "threshold_std": 0.00018626722503562005,
+              "tpr": {
+                "macro": 0.5943097643097643,
+                "macro_std": 0.002306827357974529,
+                "weighted": 0.5509040165028516,
+                "weighted_std": 0.0016901332698925078
+              }
+            }
+          }
+        }
+      },
+      "5": {
+        "cost": {
+          "masked_rows": 120705,
+          "mean_call_ms": 1.336,
+          "model_calls": 1209,
+          "model_seconds": 1.614924,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.01059255264184834,
+          "score_std_across_repeats": 0.0021437262536842597,
+          "score_std_p95": 0.007196611406658124,
+          "spearman_vs_reference": 0.8896879542452252,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.33666666666666667
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.16222222222222224
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6644444444444445
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.08111111111111112
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.17555555555555555
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.39814814814814814
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0022222222222222222
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.039185139689875526,
+              "threshold_std": 0.0010255332664424986,
+              "tpr": {
+                "macro": 0.2573063973063973,
+                "macro_std": 0.008557621753028523,
+                "weighted": 0.16563523844193664,
+                "weighted_std": 0.005786491453739288
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.016666666666666666
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.7011111111111111
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.40111111111111114
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7233333333333333
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.5133333333333333
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.40444444444444444
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.14777777777777776
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6759259259259259
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.8888888888888888
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0022222222222222222
+                }
+              },
+              "threshold_mean": 0.01576389552414637,
+              "threshold_std": 0.00023681616343529562,
+              "tpr": {
+                "macro": 0.4977104377104377,
+                "macro_std": 0.004048252758300111,
+                "weighted": 0.4277393520203859,
+                "weighted_std": 0.0030889266014701797
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.0529627632092417,
+          "score_std_across_repeats": 0.010718631268421298,
+          "score_std_p95": 0.03598305703329062,
+          "spearman_vs_reference": 0.8896879542452252,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.33666666666666667
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.16222222222222224
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6644444444444445
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.08111111111111112
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.17555555555555555
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.39814814814814814
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0022222222222222222
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.19592569844937766,
+              "threshold_std": 0.005127666332212501,
+              "tpr": {
+                "macro": 0.2573063973063973,
+                "macro_std": 0.008557621753028523,
+                "weighted": 0.16563523844193664,
+                "weighted_std": 0.005786491453739288
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.016666666666666666
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.7011111111111111
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.40111111111111114
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7233333333333333
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.5133333333333333
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.40444444444444444
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.14777777777777776
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6759259259259259
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.8888888888888888
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0022222222222222222
+                }
+              },
+              "threshold_mean": 0.07881947762073187,
+              "threshold_std": 0.0011840808171764761,
+              "tpr": {
+                "macro": 0.4977104377104377,
+                "macro_std": 0.004048252758300111,
+                "weighted": 0.4277393520203859,
+                "weighted_std": 0.0030889266014701797
+              }
+            }
+          }
+        }
+      },
+      "50": {
+        "cost": {
+          "masked_rows": 1207050,
+          "mean_call_ms": 1.188,
+          "model_calls": 12072,
+          "model_seconds": 14.338771,
+          "samples": 8047
+        },
+        "repo": {
+          "score_mean": 0.010598265399053723,
+          "score_std_across_repeats": 0.0007067245952013172,
+          "score_std_p95": 0.002203279010588304,
+          "spearman_vs_reference": 0.9030913808900753,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.34555555555555556
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.17888888888888888
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.6666666666666666
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.1322222222222222
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.17
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.4351851851851852
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.03513581401325049,
+              "threshold_std": 0.0009033346969466713,
+              "tpr": {
+                "macro": 0.2671380471380471,
+                "macro_std": 0.005053422277578653,
+                "weighted": 0.17388666423977672,
+                "weighted_std": 0.004814181391791627
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.6555555555555556
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.38222222222222224
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.7222222222222223
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.43111111111111117
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.34555555555555556
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.016666666666666666
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.7685185185185185
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.9955555555555556
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.017128795294245835,
+              "threshold_std": 8.02202632055456e-05,
+              "tpr": {
+                "macro": 0.4843097643097643,
+                "macro_std": 0.0017962260832793755,
+                "weighted": 0.40274238563281156,
+                "weighted_std": 0.002190931936083957
+              }
+            }
+          }
+        },
+        "repo_plus": {
+          "score_mean": 0.028198783774968875,
+          "score_std_across_repeats": 0.0015387784169398342,
+          "score_std_p95": 0.008658628775407365,
+          "spearman_vs_reference": 0.993014095599799,
+          "thresholds": {
+            "fpr_0.01": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.01
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.01
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.4066666666666667
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.21666666666666667
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.67
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.2122222222222222
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.17
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.25
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.0
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.0
+                }
+              },
+              "threshold_mean": 0.10128115622714613,
+              "threshold_std": 3.380340253429969e-05,
+              "tpr": {
+                "macro": 0.26686868686868687,
+                "macro_std": 0.0003779451905832288,
+                "weighted": 0.19136027181167334,
+                "weighted_std": 0.0004540295336456669
+              }
+            },
+            "fpr_0.1": {
+              "class_rates": {
+                "BENIGN": {
+                  "n": 5000,
+                  "rate": 0.10000000000000002
+                },
+                "Bot": {
+                  "n": 300,
+                  "rate": 0.021111111111111112
+                },
+                "DDoS": {
+                  "n": 300,
+                  "rate": 0.6322222222222222
+                },
+                "DoS GoldenEye": {
+                  "n": 300,
+                  "rate": 0.6533333333333333
+                },
+                "DoS Hulk": {
+                  "n": 300,
+                  "rate": 0.9088888888888889
+                },
+                "DoS Slowhttptest": {
+                  "n": 300,
+                  "rate": 0.9233333333333333
+                },
+                "DoS slowloris": {
+                  "n": 300,
+                  "rate": 0.6977777777777779
+                },
+                "FTP-Patator": {
+                  "n": 300,
+                  "rate": 0.47666666666666674
+                },
+                "Heartbleed": {
+                  "n": 11,
+                  "rate": 1.0
+                },
+                "Infiltration": {
+                  "n": 36,
+                  "rate": 0.6666666666666666
+                },
+                "PortScan": {
+                  "n": 300,
+                  "rate": 0.34111111111111114
+                },
+                "SSH-Patator": {
+                  "n": 300,
+                  "rate": 0.01
+                }
+              },
+              "threshold_mean": 0.019854144677400837,
+              "threshold_std": 0.00023094510887536885,
+              "tpr": {
+                "macro": 0.5755555555555555,
+                "macro_std": 0.0022450616940295804,
+                "weighted": 0.5221453707074384,
+                "weighted_std": 0.002697016232361683
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "runtime_seconds": 342.3913028500001,
+  "schema_version": "mask_exp_v1",
+  "scoring": {
+    "batch_size": 100,
+    "n_masks": [
+      5,
+      10,
+      20,
+      25,
+      50,
+      100
+    ],
+    "policies": [
+      "iid",
+      "balanced",
+      "covering"
+    ],
+    "score_repeats": 3,
+    "seed": 2019
+  }
+}

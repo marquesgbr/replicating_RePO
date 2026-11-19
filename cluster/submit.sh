@@ -444,6 +444,12 @@ task_new_data_export_job() {
 
 mask_attack_set() {
   local set="${1:-pilot}"
+  # Permite passar um arquivo com um ataque por linha (usado para retomar um
+  # array que perdeu algumas tarefas por time limit).
+  if [[ -f "${set}" ]]; then
+    cat "${set}"
+    return 0
+  fi
   PYTHONPATH="${REPO_ROOT}/code" "${VENV}/bin/python" - "${set}" <<'PY'
 import sys
 
@@ -506,6 +512,7 @@ task_mask_attack() {
     adversarial) task="mask_adversarial" ;;
     cascade-attack) task="mask_cascade_attack" ;;
     distill-attack) task="mask_distill_attack" ;;
+    sequential-attack) task="mask_sequential_attack" ;;
     *) echo "[error] kind inválido: ${kind}" >&2; exit 2 ;;
   esac
   if [[ "${kind}" == "distill-attack" \
@@ -545,6 +552,15 @@ task_mask_attack() {
   fi
   if [[ -n "${MASK_CASCADE_FPR:-}" ]]; then
     extra+=",MASK_CASCADE_FPR=${MASK_CASCADE_FPR}"
+  fi
+  if [[ -n "${MASK_SEQ_BLOCKS:-}" ]]; then
+    extra+=",MASK_SEQ_BLOCKS=${MASK_SEQ_BLOCKS//,/+}"
+  fi
+  if [[ -n "${MASK_SEQ_Z:-}" ]]; then
+    extra+=",MASK_SEQ_Z=${MASK_SEQ_Z}"
+  fi
+  if [[ -n "${MASK_SEQ_LOSS:-}" ]]; then
+    extra+=",MASK_SEQ_LOSS=${MASK_SEQ_LOSS}"
   fi
   local job_name="repo-mask-${kind}"
   if [[ "${attack,,}" != "all" ]]; then
@@ -592,6 +608,7 @@ Máscaras (eficiência do RePO):
   mask-exp cascade-attack <ataque|all>
   mask-exp distill
   mask-exp distill-attack <ataque|all>
+  mask-exp sequential-attack <ataque|all>
   mask-exp packet
   mask-exp merge
   mask-exp aggregate
@@ -602,7 +619,7 @@ Variáveis: PARTITION, CPUS_PER_TASK, MEM, GRES, CONCURRENCY,
   CHECKPOINT_EVERY, SMOKE=1, DEPENDENCY=afterok:<jobid>.
   Máscaras: MASK_MAX_BENIGN, MASK_MAX_PER_ATTACK, MASK_PER_ATTACK,
   MASK_VARIANTS, MASK_CHEAP_ATTACK, MASK_CASCADE_FN, MASK_CASCADE_FPR,
-  MASK_ATTACK_SET=pilot|all.
+  MASK_SEQ_BLOCKS, MASK_SEQ_Z, MASK_SEQ_LOSS, MASK_ATTACK_SET=pilot|all.
 EOF
 }
 
@@ -665,6 +682,10 @@ case "${command}" in
       distill-attack)
         [[ $# -ge 1 ]] || { usage; exit 2; }
         task_mask_attack distill-attack "$1"
+        ;;
+      sequential-attack)
+        [[ $# -ge 1 ]] || { usage; exit 2; }
+        task_mask_attack sequential-attack "$1"
         ;;
       aggregate) task_mask_aggregate ;;
       *) usage; exit 2 ;;

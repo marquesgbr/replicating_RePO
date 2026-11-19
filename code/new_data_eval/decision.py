@@ -31,6 +31,7 @@ __all__ = [
     "cascade_decisions",
     "cascade_threshold",
     "cheap_repo_plus",
+    "mean_confidence_bounds",
     "sequential_repo_decisions",
 ]
 
@@ -127,6 +128,38 @@ def cascade_decisions(
     )
 
 
+def mean_confidence_bounds(
+    sample: np.ndarray, z: float = 1.96
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return the two-sided confidence interval of the mean of every row.
+
+    ``sample`` is a ``(n_samples, n_masks)`` block: its rows are the errors of
+    the masks revealed so far.  The interval is
+    ``mean -/+ z * std(ddof=1) / sqrt(n_masks)``; a single mask has no spread,
+    so its interval collapses to the point estimate.
+
+    This is the statistic the sequential rule compares with its threshold, and
+    the same bound the adversarial attack minimizes -- sharing the function is
+    what keeps the attack objective and the decision rule identical.
+    """
+    array = np.asarray(sample, dtype=np.float64)
+    if array.ndim != 2:
+        raise ValueError(f"sample must be 2-D, got shape {array.shape}")
+    if array.shape[1] < 1:
+        raise ValueError("sample must contain at least one mask")
+    z_value = float(z)
+    if not np.isfinite(z_value) or z_value < 0.0:
+        raise ValueError(f"z must be finite and non negative, got {z!r}")
+
+    mean = array.mean(axis=1)
+    if array.shape[1] > 1:
+        standard_error = array.std(axis=1, ddof=1) / np.sqrt(array.shape[1])
+    else:
+        standard_error = np.zeros(array.shape[0])
+    margin = z_value * standard_error
+    return mean - margin, mean + margin
+
+
 def sequential_repo_decisions(
     errors: np.ndarray,
     *,
@@ -161,13 +194,7 @@ def sequential_repo_decisions(
         if rows.size == 0:
             break
         sample = array[rows, :count]
-        mean = sample.mean(axis=1)
-        if count > 1:
-            standard_error = sample.std(axis=1, ddof=1) / np.sqrt(count)
-        else:
-            standard_error = np.zeros(rows.size)
-        low = mean - z * standard_error
-        high = mean + z * standard_error
+        low, high = mean_confidence_bounds(sample, z)
 
         decided_high = low >= threshold
         decided_low = high < threshold

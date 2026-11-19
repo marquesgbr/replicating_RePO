@@ -1,0 +1,37 @@
+{
+  "dataset": {
+    "n_samples": 8047,
+    "n_test": 2414,
+    "n_train": 5633,
+    "name": "cicids2017-flow",
+    "seed": 2019
+  },
+  "experiment": "distillation",
+  "runtime_seconds": 21.152068487999713,
+  "schema_version": "mask_exp_v1",
+  "student": {
+    "adversarial_evaluated": false,
+    "architecture": "77-256-256-128-1",
+    "epochs": 40,
+    "final_train_loss": 2.0228870198479854e-05,
+    "mae": 0.0073983592830426,
+    "path": "../results/mask_efficiency/distillation_student.keras",
+    "rmse": 0.010917192814763438,
+    "single_pass_forward": true,
+    "spearman": 0.9478039744471708,
+    "threshold_fpr_0.01": 0.09863723069429398,
+    "tpr": {
+      "macro": 0.27612488521579426,
+      "weighted": 0.2087378640776699
+    }
+  },
+  "teacher": {
+    "n_masks": 100,
+    "policy": "iid",
+    "threshold_fpr_0.01": 0.08917391304894379,
+    "tpr": {
+      "macro": 0.27511478420569324,
+      "weighted": 0.20752427184466019
+    }
+  }
+}

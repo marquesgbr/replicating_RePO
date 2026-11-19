@@ -9,6 +9,7 @@ from new_data_eval.decision import (
     cascade_decisions,
     cascade_threshold,
     cheap_repo_plus,
+    mean_confidence_bounds,
     sequential_repo_decisions,
 )
 
@@ -76,3 +77,42 @@ def test_sequential_rule_stops_early_on_clear_samples():
     assert result.masks_used[0] == 5
     assert result.masks_used[1] == 5
     assert result.masks_used[2] > 5
+
+
+def test_mean_confidence_bounds_match_the_stopping_rule():
+    errors = np.array([[0.0, 10.0, 0.0, 10.0, 0.0]])
+    low, high = mean_confidence_bounds(errors, z=1.96)
+    mean = 4.0
+    se = errors[0].std(ddof=1) / np.sqrt(5)
+    assert low[0] == pytest.approx(mean - 1.96 * se)
+    assert high[0] == pytest.approx(mean + 1.96 * se)
+
+    decided = sequential_repo_decisions(
+        errors, threshold=float(high[0]) + 1e-9, block=5, min_masks=5
+    )
+    assert decided.decision.tolist() == [False]
+    assert decided.masks_used.tolist() == [5]
+
+
+def test_sequential_rule_falls_back_to_the_point_estimate_on_a_tie():
+    # Every block straddles a threshold placed exactly on the mean, so the
+    # interval never decides and the rule spends the whole budget.
+    errors = np.tile([0.0, 10.0, 0.0, 10.0, 0.0], 20)[None, :]
+    result = sequential_repo_decisions(
+        errors, threshold=4.0, block=5, min_masks=5
+    )
+    assert result.masks_used.tolist() == [100]
+    assert result.decision.tolist() == [True]
+
+
+def test_mean_confidence_bounds_have_no_spread_with_a_single_mask():
+    low, high = mean_confidence_bounds(np.array([[3.0], [7.0]]), z=1.96)
+    assert low.tolist() == [3.0, 7.0]
+    assert high.tolist() == [3.0, 7.0]
+
+
+def test_sequential_rule_uses_every_mask_when_block_is_the_whole_budget():
+    errors = np.full((2, 100), 10.0)
+    result = sequential_repo_decisions(errors, threshold=5.0, block=100, min_masks=100)
+    assert result.decision.tolist() == [True, True]
+    assert result.masks_used.tolist() == [100, 100]

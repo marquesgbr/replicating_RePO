@@ -1,0 +1,139 @@
+{
+  "cascade": {
+    "cheap10_fn0.0": {
+      "benign_skip_rate": 0.3958,
+      "cheap_false_negative_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "masks_used_mix": 64.73422,
+      "n_cheap": 10,
+      "t_low_mean": 0.00043968120374995395,
+      "threshold_mean": 0.09647843557022157,
+      "tpr_macro_mean": 0.27303030303030296,
+      "tpr_weighted_mean": 0.19876228613032398
+    },
+    "cheap10_fn0.001": {
+      "benign_skip_rate": 0.4046,
+      "cheap_false_negative_rate": 0.0013127666557269442,
+      "false_negative_rate": 0.001,
+      "masks_used_mix": 63.948958510009845,
+      "n_cheap": 10,
+      "t_low_mean": 0.000543246820124024,
+      "threshold_mean": 0.09647843557022157,
+      "tpr_macro_mean": 0.27303030303030296,
+      "tpr_weighted_mean": 0.19876228613032398
+    },
+    "cheap10_fn0.01": {
+      "benign_skip_rate": 0.43019999999999997,
+      "cheap_false_negative_rate": 0.01017394158188382,
+      "false_negative_rate": 0.01,
+      "masks_used_mix": 61.660023452576304,
+      "n_cheap": 10,
+      "t_low_mean": 0.0014167481994262444,
+      "threshold_mean": 0.09647843557022157,
+      "tpr_macro_mean": 0.27303030303030296,
+      "tpr_weighted_mean": 0.19876228613032398
+    },
+    "cheap25_fn0.0": {
+      "benign_skip_rate": 0.39966666666666667,
+      "cheap_false_negative_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "masks_used_mix": 70.32475,
+      "n_cheap": 25,
+      "t_low_mean": 0.00031556324076289827,
+      "threshold_mean": 0.09647843557022157,
+      "tpr_macro_mean": 0.27303030303030296,
+      "tpr_weighted_mean": 0.19876228613032398
+    },
+    "cheap25_fn0.001": {
+      "benign_skip_rate": 0.40913333333333335,
+      "cheap_false_negative_rate": 0.0013127666557269442,
+      "false_negative_rate": 0.001,
+      "masks_used_mix": 69.6208654250082,
+      "n_cheap": 25,
+      "t_low_mean": 0.0003614074161037093,
+      "threshold_mean": 0.09647843557022157,
+      "tpr_macro_mean": 0.27303030303030296,
+      "tpr_weighted_mean": 0.19876228613032398
+    },
+    "cheap25_fn0.01": {
+      "benign_skip_rate": 0.41673333333333334,
+      "cheap_false_negative_rate": 0.01017394158188382,
+      "false_negative_rate": 0.01,
+      "masks_used_mix": 69.0499195438136,
+      "n_cheap": 25,
+      "t_low_mean": 0.00043442310980995087,
+      "threshold_mean": 0.09647843557022157,
+      "tpr_macro_mean": 0.27303030303030296,
+      "tpr_weighted_mean": 0.19876228613032398
+    },
+    "cheap5_fn0.0": {
+      "benign_skip_rate": 0.30119999999999997,
+      "cheap_false_negative_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "masks_used_mix": 71.67214,
+      "n_cheap": 5,
+      "t_low_mean": 0.0005349686247358181,
+      "threshold_mean": 0.09647843557022157,
+      "tpr_macro_mean": 0.27303030303030296,
+      "tpr_weighted_mean": 0.19876228613032398
+    },
+    "cheap5_fn0.001": {
+      "benign_skip_rate": 0.3407333333333334,
+      "cheap_false_negative_rate": 0.0013127666557269442,
+      "false_negative_rate": 0.001,
+      "masks_used_mix": 67.95278287167706,
+      "n_cheap": 5,
+      "t_low_mean": 0.0014332524779215464,
+      "threshold_mean": 0.09647843557022157,
+      "tpr_macro_mean": 0.27303030303030296,
+      "tpr_weighted_mean": 0.19876228613032398
+    },
+    "cheap5_fn0.01": {
+      "benign_skip_rate": 0.37179999999999996,
+      "cheap_false_negative_rate": 0.01017394158188382,
+      "false_negative_rate": 0.01,
+      "masks_used_mix": 65.02254475549722,
+      "n_cheap": 5,
+      "t_low_mean": 0.0028037248196551372,
+      "threshold_mean": 0.09647843557022157,
+      "tpr_macro_mean": 0.27303030303030296,
+      "tpr_weighted_mean": 0.19876228613032398
+    }
+  },
+  "cost": {
+    "masked_rows": 2414100,
+    "mean_call_ms": 1.938,
+    "model_calls": 24141,
+    "model_seconds": 46.788258
+  },
+  "dataset": {
+    "n_attack": 3047,
+    "n_benign": 5000,
+    "n_samples": 8047,
+    "name": "cicids2017-flow",
+    "seed": 2019
+  },
+  "experiment": "cascade",
+  "full_repo_plus": {
+    "masks_used": 100,
+    "threshold_mean": 0.09647843557022157,
+    "tpr_macro_mean": 0.27303030303030296,
+    "tpr_weighted_mean": 0.19876228613032398
+  },
+  "runtime_seconds": 58.40732812400029,
+  "schema_version": "mask_exp_v1",
+  "scoring": {
+    "batch_size": 100,
+    "n_masks": 100,
+    "policy": "iid",
+    "score_repeats": 3
+  },
+  "sequential_repo": {
+    "agreement_with_full": 0.9966032890103973,
+    "fpr_mean": 0.0102,
+    "masks_used_mix": 5.551340121430916,
+    "threshold_mean": 0.03386793050552276,
+    "tpr_macro_mean": 0.2732996632996633,
+    "tpr_weighted_mean": 0.18128867855842737
+  }
+}

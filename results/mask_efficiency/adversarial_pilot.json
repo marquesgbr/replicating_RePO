@@ -1,0 +1,3170 @@
+{
+  "dataset": {
+    "attack_factor": 0.8,
+    "attacks": {
+      "DDoS": 20,
+      "DoS Hulk": 20,
+      "DoS slowloris": 20,
+      "FTP-Patator": 20
+    },
+    "fpr": 0.1,
+    "n_benign": 5000,
+    "name": "cicids2017-flow",
+    "seed": 2019
+  },
+  "experiment": "adversarial_pilot",
+  "runtime_seconds": 625.9907751429996,
+  "schema_version": "mask_exp_v1",
+  "variants": {
+    "balanced-25": {
+      "attack_threshold": 0.02241601704907943,
+      "attacks": {
+        "DDoS": {
+          "fooled": 3,
+          "kinds": {
+            "backup": 1,
+            "evaded": 2,
+            "no_change": 2,
+            "not_fooled": 15
+          },
+          "n": 20,
+          "normal_tpr": 0.9,
+          "outcomes": [
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1908279,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1655728,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1886622,
+              "score": null
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 6775,
+              "model_calls": 271,
+              "sample_index": 1725795,
+              "score": 0.01230834794249907
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1660704,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1920098,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 1725786,
+              "score": 0.004366361408164441
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1841849,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1849605,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 1741164,
+              "score": 0.015008182394712901
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1807458,
+              "score": null
+            },
+            {
+              "kind": "backup",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1882222,
+              "score": 0.026482826736150638
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1815869,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1895151,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1696625,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1629180,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1905506,
+              "score": null
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 725,
+              "model_calls": 29,
+              "sample_index": 1921909,
+              "score": 0.0219979083263051
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1630243,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1645707,
+              "score": null
+            }
+          ],
+          "victim_tpr": 0.85
+        },
+        "DoS Hulk": {
+          "fooled": 2,
+          "kinds": {
+            "backup": 0,
+            "evaded": 2,
+            "no_change": 2,
+            "not_fooled": 16
+          },
+          "n": 20,
+          "normal_tpr": 0.85,
+          "outcomes": [
+            {
+              "kind": "evaded",
+              "masks_evaluated": 125,
+              "model_calls": 5,
+              "sample_index": 647652,
+              "score": 0.019906508864568722
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 623580,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 528704,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 686230,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 580607,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 600583,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 584230,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 511186,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 632191,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 610828,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 602909,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 689790,
+              "score": 0.020920461088354075
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 504649,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 534509,
+              "score": null
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 75,
+              "model_calls": 3,
+              "sample_index": 500226,
+              "score": 0.01886822236535319
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 621319,
+              "score": 0.022042139438358387
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 535994,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 593911,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 575323,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 602454,
+              "score": null
+            }
+          ],
+          "victim_tpr": 0.85
+        },
+        "DoS slowloris": {
+          "fooled": 9,
+          "kinds": {
+            "backup": 2,
+            "evaded": 7,
+            "no_change": 7,
+            "not_fooled": 4
+          },
+          "n": 20,
+          "normal_tpr": 0.65,
+          "outcomes": [
+            {
+              "kind": "evaded",
+              "masks_evaluated": 20225,
+              "model_calls": 809,
+              "sample_index": 693533,
+              "score": 0.02227806693121033
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 21375,
+              "model_calls": 855,
+              "sample_index": 729006,
+              "score": 0.0223987952398114
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 20475,
+              "model_calls": 819,
+              "sample_index": 725661,
+              "score": 0.02240425084920515
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 738117,
+              "score": 0.008467160361967952
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 701176,
+              "score": 0.009780659871236838
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 20375,
+              "model_calls": 815,
+              "sample_index": 708008,
+              "score": 0.022363879875581968
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1625,
+              "model_calls": 65,
+              "sample_index": 679125,
+              "score": 0.02223988773237853
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1175,
+              "model_calls": 47,
+              "sample_index": 677462,
+              "score": 0.022161828101784773
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 668888,
+              "score": 0.0062864302037681135
+            },
+            {
+              "kind": "backup",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 671441,
+              "score": 0.02285762028321048
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 704465,
+              "score": 0.012858827025240408
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 676449,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 481150,
+              "score": null
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 5125,
+              "model_calls": 205,
+              "sample_index": 678765,
+              "score": 0.013995492784561421
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 485591,
+              "score": 0.008401992426925053
+            },
+            {
+              "kind": "backup",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 714579,
+              "score": 0.02733336307963291
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 697545,
+              "score": 0.009830552284085274
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 678807,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 700567,
+              "score": 0.009638249597216734
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 673659,
+              "score": null
+            }
+          ],
+          "victim_tpr": 0.45
+        },
+        "FTP-Patator": {
+          "fooled": 9,
+          "kinds": {
+            "backup": 0,
+            "evaded": 9,
+            "no_change": 11,
+            "not_fooled": 0
+          },
+          "n": 20,
+          "normal_tpr": 0.45,
+          "outcomes": [
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 29487,
+              "score": 0.005660550010177962
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 30696,
+              "score": 0.004066755019529723
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1575,
+              "model_calls": 63,
+              "sample_index": 33995,
+              "score": 0.018118717881841946
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1625,
+              "model_calls": 65,
+              "sample_index": 33034,
+              "score": 0.021487591416154285
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1575,
+              "model_calls": 63,
+              "sample_index": 36337,
+              "score": 0.01797963485599446
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1625,
+              "model_calls": 65,
+              "sample_index": 36850,
+              "score": 0.007424083108554427
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 3575,
+              "model_calls": 143,
+              "sample_index": 35322,
+              "score": 0.016468123143168558
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 28749,
+              "score": 0.004056084590088506
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1575,
+              "model_calls": 63,
+              "sample_index": 36576,
+              "score": 0.021900165033691254
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 34885,
+              "score": 0.0030045989125096146
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 34060,
+              "score": 0.004166911033017716
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 35081,
+              "score": 0.0038911761840894755
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1675,
+              "model_calls": 67,
+              "sample_index": 32140,
+              "score": 0.020537031924458885
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 27910,
+              "score": 0.004035481082964507
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 27697,
+              "score": 0.004290006476549002
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 34219,
+              "score": 0.003737421671303655
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1775,
+              "model_calls": 71,
+              "sample_index": 28462,
+              "score": 0.007576618646825755
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1625,
+              "model_calls": 65,
+              "sample_index": 34784,
+              "score": 0.022119915708479133
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 31610,
+              "score": 0.0031775186975507796
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 28201,
+              "score": 0.0037864972313627716
+            }
+          ],
+          "victim_tpr": 0.25
+        }
+      },
+      "cost": {
+        "masked_rows": 4000,
+        "mean_call_ms": 1.561,
+        "model_calls": 40,
+        "model_seconds": 0.06245
+      },
+      "n_masks": 25,
+      "policy": "balanced",
+      "real_threshold": 0.02802002131134929
+    },
+    "covering-25": {
+      "attack_threshold": 0.01642447697842214,
+      "attacks": {
+        "DDoS": {
+          "fooled": 0,
+          "kinds": {
+            "backup": 0,
+            "evaded": 0,
+            "no_change": 4,
+            "not_fooled": 16
+          },
+          "n": 20,
+          "normal_tpr": 0.8,
+          "outcomes": [
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1908279,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1655728,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1886622,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 1725795,
+              "score": 0.00500432642085023
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1660704,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1920098,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 1725786,
+              "score": 0.006855816744745465
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1841849,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1849605,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 1741164,
+              "score": 0.01530949693066306
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1807458,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1882222,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1815869,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1895151,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1696625,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1629180,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1905506,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 1921909,
+              "score": 0.006261166317864759
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1630243,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1645707,
+              "score": null
+            }
+          ],
+          "victim_tpr": 0.8
+        },
+        "DoS Hulk": {
+          "fooled": 4,
+          "kinds": {
+            "backup": 0,
+            "evaded": 4,
+            "no_change": 0,
+            "not_fooled": 16
+          },
+          "n": 20,
+          "normal_tpr": 1.0,
+          "outcomes": [
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1675,
+              "model_calls": 67,
+              "sample_index": 647652,
+              "score": 0.0159633158326475
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 623580,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 528704,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 686230,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 580607,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 600583,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 584230,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 511186,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 632191,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 610828,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 602909,
+              "score": null
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 625,
+              "model_calls": 25,
+              "sample_index": 689790,
+              "score": 0.01576880050597797
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 504649,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 534509,
+              "score": null
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1675,
+              "model_calls": 67,
+              "sample_index": 500226,
+              "score": 0.009936401596025372
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 525,
+              "model_calls": 21,
+              "sample_index": 621319,
+              "score": 0.015831987483657908
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 535994,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 593911,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 575323,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 602454,
+              "score": null
+            }
+          ],
+          "victim_tpr": 0.85
+        },
+        "DoS slowloris": {
+          "fooled": 7,
+          "kinds": {
+            "backup": 3,
+            "evaded": 4,
+            "no_change": 7,
+            "not_fooled": 6
+          },
+          "n": 20,
+          "normal_tpr": 0.65,
+          "outcomes": [
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 693533,
+              "score": null
+            },
+            {
+              "kind": "backup",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 729006,
+              "score": 0.020381204376168374
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 725661,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 738117,
+              "score": 0.0097121985609973
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 701176,
+              "score": 0.009893302134646956
+            },
+            {
+              "kind": "backup",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 708008,
+              "score": 0.02028523316765086
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1575,
+              "model_calls": 63,
+              "sample_index": 679125,
+              "score": 0.013467056536934585
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 925,
+              "model_calls": 37,
+              "sample_index": 677462,
+              "score": 0.01597023441386281
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 668888,
+              "score": 0.0034939518670988965
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 22425,
+              "model_calls": 897,
+              "sample_index": 671441,
+              "score": 0.015603389656520781
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 704465,
+              "score": 0.010902074231426391
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 676449,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 481150,
+              "score": null
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 2725,
+              "model_calls": 109,
+              "sample_index": 678765,
+              "score": 0.015055107626981602
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 485591,
+              "score": 0.009912147586152978
+            },
+            {
+              "kind": "backup",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 714579,
+              "score": 0.020511501542243533
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 697545,
+              "score": 0.009340750420039207
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 678807,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 700567,
+              "score": 0.008922126126888304
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 673659,
+              "score": null
+            }
+          ],
+          "victim_tpr": 0.55
+        },
+        "FTP-Patator": {
+          "fooled": 9,
+          "kinds": {
+            "backup": 0,
+            "evaded": 9,
+            "no_change": 11,
+            "not_fooled": 0
+          },
+          "n": 20,
+          "normal_tpr": 0.45,
+          "outcomes": [
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 29487,
+              "score": 0.004248118530025854
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 30696,
+              "score": 0.003921079298041605
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1625,
+              "model_calls": 65,
+              "sample_index": 33995,
+              "score": 0.01597241470063196
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1625,
+              "model_calls": 65,
+              "sample_index": 33034,
+              "score": 0.008608534867359468
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1675,
+              "model_calls": 67,
+              "sample_index": 36337,
+              "score": 0.012097065853750522
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1825,
+              "model_calls": 73,
+              "sample_index": 36850,
+              "score": 0.015904913574460607
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1625,
+              "model_calls": 65,
+              "sample_index": 35322,
+              "score": 0.015285110969441216
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 28749,
+              "score": 0.0037978044830267593
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1625,
+              "model_calls": 65,
+              "sample_index": 36576,
+              "score": 0.007788805643480546
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 34885,
+              "score": 0.003304807422321461
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 34060,
+              "score": 0.0030268581368374037
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 35081,
+              "score": 0.004568941247680531
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 2625,
+              "model_calls": 105,
+              "sample_index": 32140,
+              "score": 0.016124116816163384
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 27910,
+              "score": 0.004007703800151694
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 27697,
+              "score": 0.0030773260670943076
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 34219,
+              "score": 0.003942318360693376
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 3175,
+              "model_calls": 127,
+              "sample_index": 28462,
+              "score": 0.015627092837675164
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 2025,
+              "model_calls": 81,
+              "sample_index": 34784,
+              "score": 0.009151614275497924
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 31610,
+              "score": 0.0027671295961065935
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 28201,
+              "score": 0.003078499971497022
+            }
+          ],
+          "victim_tpr": 0.25
+        }
+      },
+      "cost": {
+        "masked_rows": 4000,
+        "mean_call_ms": 1.96,
+        "model_calls": 40,
+        "model_seconds": 0.078398
+      },
+      "n_masks": 25,
+      "policy": "covering",
+      "real_threshold": 0.02053059622302767
+    },
+    "iid-100": {
+      "attack_threshold": 0.013414501676534199,
+      "attacks": {
+        "DDoS": {
+          "fooled": 0,
+          "kinds": {
+            "backup": 0,
+            "evaded": 0,
+            "no_change": 4,
+            "not_fooled": 16
+          },
+          "n": 20,
+          "normal_tpr": 0.8,
+          "outcomes": [
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 1908279,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 1655728,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 1886622,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 1725795,
+              "score": 0.004200492244775874
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 1660704,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 1920098,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 1725786,
+              "score": 0.004376850418117277
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 1841849,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 1849605,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 1741164,
+              "score": 0.012778115745771134
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 1807458,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 1882222,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 1815869,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 1895151,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 1696625,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 1629180,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 1905506,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 1921909,
+              "score": 0.004199082076238956
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 1630243,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 1645707,
+              "score": null
+            }
+          ],
+          "victim_tpr": 0.85
+        },
+        "DoS Hulk": {
+          "fooled": 4,
+          "kinds": {
+            "backup": 0,
+            "evaded": 4,
+            "no_change": 0,
+            "not_fooled": 16
+          },
+          "n": 20,
+          "normal_tpr": 1.0,
+          "outcomes": [
+            {
+              "kind": "evaded",
+              "masks_evaluated": 6900,
+              "model_calls": 69,
+              "sample_index": 647652,
+              "score": 0.011590910752140245
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 623580,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 528704,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 686230,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 580607,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 600583,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 584230,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 511186,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 632191,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 610828,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 602909,
+              "score": null
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1500,
+              "model_calls": 15,
+              "sample_index": 689790,
+              "score": 0.013178670990292558
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 504649,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 534509,
+              "score": null
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 3300,
+              "model_calls": 33,
+              "sample_index": 500226,
+              "score": 0.013014251014904926
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 2300,
+              "model_calls": 23,
+              "sample_index": 621319,
+              "score": 0.011661700598519037
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 535994,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 593911,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 575323,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 602454,
+              "score": null
+            }
+          ],
+          "victim_tpr": 0.9
+        },
+        "DoS slowloris": {
+          "fooled": 4,
+          "kinds": {
+            "backup": 0,
+            "evaded": 4,
+            "no_change": 7,
+            "not_fooled": 9
+          },
+          "n": 20,
+          "normal_tpr": 0.65,
+          "outcomes": [
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 693533,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 729006,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 725661,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 738117,
+              "score": 0.007190434004163912
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 701176,
+              "score": 0.007247124954788098
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 708008,
+              "score": null
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 6300,
+              "model_calls": 63,
+              "sample_index": 679125,
+              "score": 0.011115738883511351
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 6300,
+              "model_calls": 63,
+              "sample_index": 677462,
+              "score": 0.0022527763710111417
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 668888,
+              "score": 0.002815911244994528
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 49500,
+              "model_calls": 495,
+              "sample_index": 671441,
+              "score": 0.013381362693606838
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 704465,
+              "score": 0.008897845931777974
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 676449,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 481150,
+              "score": null
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 6700,
+              "model_calls": 67,
+              "sample_index": 678765,
+              "score": 0.0028928422598149157
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 485591,
+              "score": 0.007954605979772248
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 714579,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 697545,
+              "score": 0.008886186308614902
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 678807,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 700567,
+              "score": 0.007317971705697578
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 108100,
+              "model_calls": 1081,
+              "sample_index": 673659,
+              "score": null
+            }
+          ],
+          "victim_tpr": 0.5
+        },
+        "FTP-Patator": {
+          "fooled": 9,
+          "kinds": {
+            "backup": 0,
+            "evaded": 9,
+            "no_change": 11,
+            "not_fooled": 0
+          },
+          "n": 20,
+          "normal_tpr": 0.45,
+          "outcomes": [
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 29487,
+              "score": 0.002739070469674635
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 30696,
+              "score": 0.002768130674329193
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 6300,
+              "model_calls": 63,
+              "sample_index": 33995,
+              "score": 0.0022729801391617433
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 6300,
+              "model_calls": 63,
+              "sample_index": 33034,
+              "score": 0.0033935052246631724
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 6300,
+              "model_calls": 63,
+              "sample_index": 36337,
+              "score": 0.0019687097772139246
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 6300,
+              "model_calls": 63,
+              "sample_index": 36850,
+              "score": 0.0019441227898303935
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 6300,
+              "model_calls": 63,
+              "sample_index": 35322,
+              "score": 0.0024706197641575956
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 28749,
+              "score": 0.002646572282614052
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 6300,
+              "model_calls": 63,
+              "sample_index": 36576,
+              "score": 0.0020522994828483317
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 34885,
+              "score": 0.002328571761808931
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 34060,
+              "score": 0.002557063251157141
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 35081,
+              "score": 0.0026302105527314236
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 6300,
+              "model_calls": 63,
+              "sample_index": 32140,
+              "score": 0.012921530739515071
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 27910,
+              "score": 0.002758929371127979
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 27697,
+              "score": 0.002882566549524732
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 34219,
+              "score": 0.0028386484481480153
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 6300,
+              "model_calls": 63,
+              "sample_index": 28462,
+              "score": 0.003982533907572116
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 6300,
+              "model_calls": 63,
+              "sample_index": 34784,
+              "score": 0.002278939154130053
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 31610,
+              "score": 0.0027408076000018443
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 100,
+              "model_calls": 1,
+              "sample_index": 28201,
+              "score": 0.002592700861963049
+            }
+          ],
+          "victim_tpr": 0.05
+        }
+      },
+      "cost": {
+        "masked_rows": 16000,
+        "mean_call_ms": 1.813,
+        "model_calls": 160,
+        "model_seconds": 0.290126
+      },
+      "n_masks": 100,
+      "policy": "iid",
+      "real_threshold": 0.01676812709566775
+    },
+    "iid-25": {
+      "attack_threshold": 0.022276581148222317,
+      "attacks": {
+        "DDoS": {
+          "fooled": 3,
+          "kinds": {
+            "backup": 1,
+            "evaded": 2,
+            "no_change": 2,
+            "not_fooled": 15
+          },
+          "n": 20,
+          "normal_tpr": 0.9,
+          "outcomes": [
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1908279,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1655728,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1886622,
+              "score": null
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 18675,
+              "model_calls": 747,
+              "sample_index": 1725795,
+              "score": 0.018766730929827773
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1660704,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1920098,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 1725786,
+              "score": 0.004251904808937177
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1841849,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1849605,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 1741164,
+              "score": 0.013784328279313918
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1807458,
+              "score": null
+            },
+            {
+              "kind": "backup",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1882222,
+              "score": 0.026043488330690732
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1815869,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1895151,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1696625,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1629180,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1905506,
+              "score": null
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 725,
+              "model_calls": 29,
+              "sample_index": 1921909,
+              "score": 0.017275676488880377
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1630243,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 1645707,
+              "score": null
+            }
+          ],
+          "victim_tpr": 0.85
+        },
+        "DoS Hulk": {
+          "fooled": 2,
+          "kinds": {
+            "backup": 0,
+            "evaded": 2,
+            "no_change": 2,
+            "not_fooled": 16
+          },
+          "n": 20,
+          "normal_tpr": 0.9,
+          "outcomes": [
+            {
+              "kind": "evaded",
+              "masks_evaluated": 125,
+              "model_calls": 5,
+              "sample_index": 647652,
+              "score": 0.020834718022230192
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 623580,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 528704,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 686230,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 580607,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 600583,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 584230,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 511186,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 632191,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 610828,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 602909,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 689790,
+              "score": 0.021460008053390323
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 504649,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 534509,
+              "score": null
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 75,
+              "model_calls": 3,
+              "sample_index": 500226,
+              "score": 0.018895129842296656
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 621319,
+              "score": 0.02167978877464622
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 535994,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 593911,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 575323,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 602454,
+              "score": null
+            }
+          ],
+          "victim_tpr": 0.8
+        },
+        "DoS slowloris": {
+          "fooled": 8,
+          "kinds": {
+            "backup": 1,
+            "evaded": 7,
+            "no_change": 7,
+            "not_fooled": 5
+          },
+          "n": 20,
+          "normal_tpr": 0.65,
+          "outcomes": [
+            {
+              "kind": "evaded",
+              "masks_evaluated": 20425,
+              "model_calls": 817,
+              "sample_index": 693533,
+              "score": 0.022199854390737114
+            },
+            {
+              "kind": "backup",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 729006,
+              "score": 0.027558550686842674
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 20575,
+              "model_calls": 823,
+              "sample_index": 725661,
+              "score": 0.022176192738006827
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 738117,
+              "score": 0.00838354561652948
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 701176,
+              "score": 0.009900740311513572
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 20575,
+              "model_calls": 823,
+              "sample_index": 708008,
+              "score": 0.02219003833540464
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1625,
+              "model_calls": 65,
+              "sample_index": 679125,
+              "score": 0.012956521175195327
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1575,
+              "model_calls": 63,
+              "sample_index": 677462,
+              "score": 0.00754446971985464
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 668888,
+              "score": 0.005028280226162359
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 671441,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 704465,
+              "score": 0.013403384206329565
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 676449,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 481150,
+              "score": null
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1825,
+              "model_calls": 73,
+              "sample_index": 678765,
+              "score": 0.01624642902697416
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 485591,
+              "score": 0.009897881770943235
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 20675,
+              "model_calls": 827,
+              "sample_index": 714579,
+              "score": 0.022077038259435654
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 697545,
+              "score": 0.01073596128530345
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 678807,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 700567,
+              "score": 0.010084044071474476
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 27025,
+              "model_calls": 1081,
+              "sample_index": 673659,
+              "score": null
+            }
+          ],
+          "victim_tpr": 0.4
+        },
+        "FTP-Patator": {
+          "fooled": 9,
+          "kinds": {
+            "backup": 0,
+            "evaded": 9,
+            "no_change": 11,
+            "not_fooled": 0
+          },
+          "n": 20,
+          "normal_tpr": 0.45,
+          "outcomes": [
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 29487,
+              "score": 0.00499640315947549
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 30696,
+              "score": 0.00362663708932905
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1725,
+              "model_calls": 69,
+              "sample_index": 33995,
+              "score": 0.011884551327874183
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1625,
+              "model_calls": 65,
+              "sample_index": 33034,
+              "score": 0.0205796027528706
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1575,
+              "model_calls": 63,
+              "sample_index": 36337,
+              "score": 0.014464345018823876
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1575,
+              "model_calls": 63,
+              "sample_index": 36850,
+              "score": 0.01637776969000944
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 19675,
+              "model_calls": 787,
+              "sample_index": 35322,
+              "score": 0.01949473443013771
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 28749,
+              "score": 0.0042848665002445385
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1775,
+              "model_calls": 71,
+              "sample_index": 36576,
+              "score": 0.020845140247392414
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 34885,
+              "score": 0.002744977280724677
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 34060,
+              "score": 0.0039724701570620575
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 35081,
+              "score": 0.0037682792405904922
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1625,
+              "model_calls": 65,
+              "sample_index": 32140,
+              "score": 0.0199250952066427
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 27910,
+              "score": 0.004787450659331543
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 27697,
+              "score": 0.003837263669001065
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 34219,
+              "score": 0.0032917652631437155
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1625,
+              "model_calls": 65,
+              "sample_index": 28462,
+              "score": 0.02044306985493219
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 1675,
+              "model_calls": 67,
+              "sample_index": 34784,
+              "score": 0.017056949558073235
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 31610,
+              "score": 0.003097339159735051
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 25,
+              "model_calls": 1,
+              "sample_index": 28201,
+              "score": 0.004093990308766662
+            }
+          ],
+          "victim_tpr": 0.2
+        }
+      },
+      "cost": {
+        "masked_rows": 4000,
+        "mean_call_ms": 1.506,
+        "model_calls": 40,
+        "model_seconds": 0.060246
+      },
+      "n_masks": 25,
+      "policy": "iid",
+      "real_threshold": 0.027845726435277895
+    },
+    "iid-5": {
+      "attack_threshold": 0.06388226707512766,
+      "attacks": {
+        "DDoS": {
+          "fooled": 2,
+          "kinds": {
+            "backup": 0,
+            "evaded": 2,
+            "no_change": 5,
+            "not_fooled": 13
+          },
+          "n": 20,
+          "normal_tpr": 0.85,
+          "outcomes": [
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 1908279,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 1655728,
+              "score": 0.061816362583898506
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 1886622,
+              "score": 0.05804030109296846
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 65,
+              "model_calls": 13,
+              "sample_index": 1725795,
+              "score": 0.06336684293132468
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 1660704,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 1920098,
+              "score": null
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 3675,
+              "model_calls": 735,
+              "sample_index": 1725786,
+              "score": 0.06167859875705157
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 1841849,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 1849605,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 1741164,
+              "score": 0.014922147856309066
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 1807458,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 1882222,
+              "score": 0.02924504946883006
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 1815869,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 1895151,
+              "score": 0.05842496162286088
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 1696625,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 1629180,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 1905506,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 1921909,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 1630243,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 1645707,
+              "score": null
+            }
+          ],
+          "victim_tpr": 0.9
+        },
+        "DoS Hulk": {
+          "fooled": 0,
+          "kinds": {
+            "backup": 0,
+            "evaded": 0,
+            "no_change": 4,
+            "not_fooled": 16
+          },
+          "n": 20,
+          "normal_tpr": 0.8,
+          "outcomes": [
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 647652,
+              "score": 0.04830816111183775
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 623580,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 528704,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 686230,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 580607,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 600583,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 584230,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 511186,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 632191,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 610828,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 602909,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 689790,
+              "score": 0.021722301173100006
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 504649,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 534509,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 500226,
+              "score": 0.024842445442433927
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 621319,
+              "score": 0.02392484572751144
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 535994,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 593911,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 575323,
+              "score": null
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 602454,
+              "score": null
+            }
+          ],
+          "victim_tpr": 0.8
+        },
+        "DoS slowloris": {
+          "fooled": 4,
+          "kinds": {
+            "backup": 0,
+            "evaded": 4,
+            "no_change": 12,
+            "not_fooled": 4
+          },
+          "n": 20,
+          "normal_tpr": 0.45,
+          "outcomes": [
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 693533,
+              "score": 0.054167470606053314
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 405,
+              "model_calls": 81,
+              "sample_index": 729006,
+              "score": 0.06340614600232157
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 395,
+              "model_calls": 79,
+              "sample_index": 725661,
+              "score": 0.05763737559077428
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 738117,
+              "score": 0.037688536719251126
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 701176,
+              "score": 0.031092928963476662
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 708008,
+              "score": 0.05778494131770624
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 679125,
+              "score": 0.05616641178595676
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 25,
+              "model_calls": 5,
+              "sample_index": 677462,
+              "score": 0.052570424718761694
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 668888,
+              "score": 0.01619741944933615
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 671441,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 704465,
+              "score": 0.04125193606816326
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 676449,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 481150,
+              "score": 0.05540575498736905
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 678765,
+              "score": 0.04480174903866561
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 485591,
+              "score": 0.015380425199531282
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 395,
+              "model_calls": 79,
+              "sample_index": 714579,
+              "score": 0.061002949461531814
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 697545,
+              "score": 0.016632089951667935
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 678807,
+              "score": null
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 700567,
+              "score": 0.013273583778155839
+            },
+            {
+              "kind": "not_fooled",
+              "masks_evaluated": 5405,
+              "model_calls": 1081,
+              "sample_index": 673659,
+              "score": null
+            }
+          ],
+          "victim_tpr": 0.3
+        },
+        "FTP-Patator": {
+          "fooled": 1,
+          "kinds": {
+            "backup": 0,
+            "evaded": 1,
+            "no_change": 19,
+            "not_fooled": 0
+          },
+          "n": 20,
+          "normal_tpr": 0.3,
+          "outcomes": [
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 29487,
+              "score": 0.058596267436798334
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 30696,
+              "score": 0.022928173897399887
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 33995,
+              "score": 0.04848675742251191
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 33034,
+              "score": 0.04761802896603265
+            },
+            {
+              "kind": "evaded",
+              "masks_evaluated": 215,
+              "model_calls": 43,
+              "sample_index": 36337,
+              "score": 0.06286490592542199
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 36850,
+              "score": 0.042661054084100904
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 35322,
+              "score": 0.053986628133477245
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 28749,
+              "score": 0.005329251306051879
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 36576,
+              "score": 0.04664501986490843
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 34885,
+              "score": 0.006709528819206974
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 34060,
+              "score": 0.0067675007021288335
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 35081,
+              "score": 0.005710030086851139
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 32140,
+              "score": 0.034521376528240826
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 27910,
+              "score": 0.00929027724108488
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 27697,
+              "score": 0.02047951696364037
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 34219,
+              "score": 0.04360553038651554
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 28462,
+              "score": 0.05781963150722003
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 34784,
+              "score": 0.04306089380747849
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 31610,
+              "score": 0.006850654006804552
+            },
+            {
+              "kind": "no_change",
+              "masks_evaluated": 5,
+              "model_calls": 1,
+              "sample_index": 28201,
+              "score": 0.024215636695501083
+            }
+          ],
+          "victim_tpr": 0.3
+        }
+      },
+      "cost": {
+        "masked_rows": 800,
+        "mean_call_ms": 1.845,
+        "model_calls": 8,
+        "model_seconds": 0.01476
+      },
+      "n_masks": 5,
+      "policy": "iid",
+      "real_threshold": 0.07985283384390958
+    }
+  }
+}
