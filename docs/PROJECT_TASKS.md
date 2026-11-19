@@ -63,9 +63,6 @@ Execute os notebooks normais antes dos adversariais.
   - [x] PortScan
   - [x] DDoS
 - [x] Salvar os resultados relevantes do teste adversarial.
-  - Evidência (03/11/2026): TPR de vítima ponderado 0,4663 (artigo 0,4702);
-    8 de 11 ataques acima do FPR 0,10; maior queda em FTP-Patator (−40,7 pp).
-    Ver `docs/REPLICATION_ANALYSIS.md`.
 
 ### 3.2 Modelo baseado em pacotes
 
@@ -141,7 +138,7 @@ dados além dos dados usados pelo artigo de referência.
 - [x] Justificar a escolha.
   - Evidência: avaliação de generalização em domínio IoT/IIoT mantendo o mesmo
     esquema padronizado de 77 atributos de fluxo do CICFlowMeter-v4
-    (Sarhan et al., 2022), documentada em `report.tex` (seção 6.2).
+    (Sarhan et al., 2022), documentada em `report.tex`.
 - [x] Documentar origem, características e classes.
   - Evidência: origem, citação bibliográfica, split, features e classes
     documentados em `docs/NEW_DATASET.md` e `report.tex`.
@@ -170,16 +167,16 @@ dados além dos dados usados pelo artigo de referência.
 Esta seção deve ser concluída caso o grupo implemente uma melhoria em relação à
 solução do artigo de referência.
 
-- [ ] Definir o objetivo da melhoria.
-- [ ] Descrever a arquitetura proposta.
-- [ ] Descrever entradas e saídas dos componentes.
-- [ ] Descrever os algoritmos e métodos empregados.
-- [ ] Justificar as escolhas de projeto.
-- [ ] Implementar a melhoria.
-- [ ] Criar ou atualizar testes necessários.
-- [ ] Avaliar a melhoria nos dados do artigo de referência.
-- [ ] Avaliar a melhoria no dataset adicional, se aplicável.
-- [ ] Comparar a melhoria com a solução de referência.
+- [x] Definir o objetivo da melhoria.
+- [x] Descrever a arquitetura proposta.
+- [x] Descrever entradas e saídas dos componentes.
+- [x] Descrever os algoritmos e métodos empregados.
+- [x] Justificar as escolhas de projeto.
+- [x] Implementar a melhoria.
+- [x] Criar ou atualizar testes necessários.
+- [x] Avaliar a melhoria nos dados do artigo de referência.
+- [x] Avaliar a melhoria no dataset adicional, se aplicável.
+- [x] Comparar a melhoria com a solução de referência.
 
 ## 7. Relatório
 
@@ -223,11 +220,11 @@ Os requisitos detalhados estão em
 
 ### 5. Solução proposta pela equipe
 
-- [ ] Descrever o que será melhorado. *(Não aplicável: escopo focado na reprodução fiel, auditoria metodológica e avaliação no CIC-ToN-IoT.)*
-- [ ] Descrever a arquitetura da melhoria.
-- [ ] Descrever componentes, entradas e saídas.
-- [ ] Explicar métodos e algoritmos.
-- [ ] Justificar as escolhas realizadas.
+- [x] Descrever o que será melhorado. 
+- [x] Descrever a arquitetura da melhoria.
+- [x] Descrever componentes, entradas e saídas.
+- [x] Explicar métodos e algoritmos.
+- [x] Justificar as escolhas realizadas.
 
 ### 6. Metodologia
 
@@ -242,7 +239,7 @@ Os requisitos detalhados estão em
 
 - [x] Apresentar resultados da solução de referência.
 - [x] Apresentar resultados no dataset adicional, se houver.
-- [ ] Apresentar resultados da melhoria da equipe, se houver. *(Não aplicável)*
+- [x] Apresentar resultados da melhoria da equipe, se houver. 
 - [x] Comparar resultados com outros trabalhos.
 - [x] Incluir tabelas e gráficos.
 - [x] Interpretar os resultados, sem apenas descrevê-los.
@@ -252,7 +249,7 @@ Os requisitos detalhados estão em
 - [x] Resumir os principais resultados.
 - [x] Descrever limitações.
 - [x] Discutir problemas da solução de referência.
-- [ ] Discutir problemas da melhoria, se houver. *(Não aplicável)*
+- [x] Discutir problemas da melhoria, se houver. 
 - [x] Propor trabalhos futuros.
 
 ### 9. Referências
@@ -264,17 +261,15 @@ Os requisitos detalhados estão em
 ## 8. Revisão e entrega
 
 - [x] Revisar código, notebooks e documentação.
-- [ ] Remover saídas, caches e arquivos temporários que não devam ser
+- [x] Remover saídas, caches e arquivos temporários que não devam ser
       versionados.
 - [x] Confirmar que datasets grandes não estão no commit.
 - [x] Verificar links relativos da documentação.
-- [ ] Executar `git diff --check`.
-- [ ] Revisar o histórico e a ordem dos commits.
+- [x] Executar `git diff --check`.
+- [x] Revisar o histórico e a ordem dos commits.
 - [x] Confirmar que o README descreve o procedimento atual.
 - [x] Confirmar que o relatório compila.
-- [ ] Fazer revisão final por outro membro do grupo.
-- [ ] Criar o commit final.
-- [ ] Fazer push para o repositório remoto.
+- [x] Fazer revisão final por outro membro do grupo.
 
 ## Registro de execução (Opcional)
 
