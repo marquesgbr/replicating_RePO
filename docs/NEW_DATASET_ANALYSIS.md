@@ -77,10 +77,9 @@ threshold é calibrado em benignos que não foram vistos no treino.
 
 Preservado do artigo, sem alterações:
 
-- **100 máscaras** por amostra, cada feature mascarada com probabilidade
-  **0,75**;
-- **RePO** = média do erro de reconstrução das 100 máscaras;
-- **RePO+** = erro dividido em 5 grupos de 20 máscaras, mínimo de cada grupo,
+- cada feature mascarada com probabilidade **0,75**;
+- **RePO** = erro de reconstrução sob 1 máscara aleatória por amostra;
+- **RePO+** = **100 máscaras** por amostra divididas em 5 grupos de 20, mínimo de cada grupo,
   soma dos 5 mínimos;
 - máscaras derivadas deterministicamente de `(seed, sample_index, fase,
   repetição)` com `seed = 2019`;
@@ -144,7 +143,7 @@ número de amostras de cada classe e é dominada por `xss` (60% do teste),
    (+33,3 p.p.) e `scanning` (+17,6 p.p.). Em `backdoor`, que já estava em
    0,9945, o teto impede ganho.
 2. **A agregação por mínimos por grupo é o que sustenta o TPR alto.** O RePO
-   puro, que usa a média das 100 máscaras, fica 14,3 pontos macro abaixo. Isso
+   puro, que avalia cada amostra sob uma única máscara aleatória, fica 14,3 pontos macro abaixo. Isso
    é coerente com a interpretação do artigo: o mínimo por grupo reduz o efeito
    de uma máscara que preservou a região informativa da amostra.
 3. **`xss` domina o conjunto** (2,15 M de 3,59 M). Seu TPR de 0,7171 é bom, mas

@@ -49,11 +49,11 @@
 | Fluxo: treino / teste | Monday / Tuesday–Friday |
 | Pacotes: treino / teste | Monday / Tuesday–Friday |
 
-Procedimento preservado dos notebooks:
+Procedimento preservado do artigo e dos notebooks:
 
-- 100 máscaras por amostra, cada feature mascarada com probabilidade 0,75;
-- **RePO** = média do erro de reconstrução das 100 máscaras;
-- **RePO+** = mínimo por grupo de 20 máscaras, somando os 5 mínimos;
+- cada feature mascarada com probabilidade 0,75;
+- **RePO** = erro de reconstrução sob 1 máscara aleatória por amostra;
+- **RePO+** = 100 máscaras por amostra divididas em 5 grupos de 20, mínimo de cada grupo, somando os 5 mínimos;
 - fluxo: 2.298.431 amostras de teste;
 - pacotes: 2.216.623 janelas válidas de 20 pacotes.
 

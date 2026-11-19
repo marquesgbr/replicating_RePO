@@ -29,12 +29,12 @@ O desenho segue o que já foi validado no projeto `ml_PIDS`:
 | `submit.sh` | submete os jobs e imprime os IDs | login |
 | `submit.sh new-data ...` | avalia o novo dataset (`data/new_data`) | login |
 
-O runner preserva as fórmulas dos notebooks de referência:
+O runner preserva as fórmulas do artigo e dos notebooks de referência:
 
-- fluxo: 77 features, 100 máscaras, 5 grupos de 20, mínimo por grupo e soma;
+- fluxo: 77 features; no RePO+ são 100 máscaras em 5 grupos de 20, mínimo por grupo e soma;
 - pacotes: janelas de 20 pacotes, 29 features, mesma agregação;
-- RePO: média dos erros das 100 máscaras;
-- RePO+: mínimo por grupo e soma dos mínimos.
+- RePO: erro de reconstrução sob 1 máscara aleatória por amostra;
+- RePO+: mínimo por grupo e soma dos mínimos sobre 100 máscaras.
 
 ## 2. Pré-requisitos
 
@@ -374,7 +374,7 @@ thresholds sem repetir a avaliação.
    padrão para permitir retomada e repetição. As máscaras continuam
    estocásticas, mas reproduzíveis.
 4. **RePO no fluxo.** O notebook normal de fluxo só implementa RePO+; o runner
-   calcula RePO (média das 100 máscaras) e RePO+ (mínimo por grupo e soma).
+   calcula RePO (erro sob 1 máscara aleatória por amostra) e RePO+ (mínimo por grupo e soma).
 5. **Último lote de pacotes.** O notebook normal de pacotes descartava o último
    lote parcial de 50 janelas; o runner pontua todas as janelas. A diferença é
    de no máximo 49 janelas em ~2,2 milhões.

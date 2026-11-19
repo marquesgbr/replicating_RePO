@@ -135,7 +135,7 @@ limitação fique visível:
 
 A avaliação reutiliza o protocolo RePO/RePO+ do artigo:
 
-- **RePO:** média dos erros de reconstrução das máscaras;
+- **RePO:** erro de reconstrução sob uma única máscara aleatória por amostra;
 - **RePO+:** os erros são divididos em cinco grupos iguais, toma-se o mínimo
   de cada grupo e somam-se os cinco mínimos (100 máscaras → 5 grupos de 20);
 - cada feature é mascarada com probabilidade **0,75**;

@@ -2,8 +2,8 @@
 
 > **Escopo.** Este documento descreve o método, o algoritmo e os resultados da **direção B** do
 > estudo de eficiência de máscaras do RePO: alocar máscaras **por amostra** em vez de fixar um
-> número para todas.  A referência de comparação é o detector do artigo com **100 máscaras**
-> (RePO e RePO+), e a referência interna dos experimentos é o `full_repo_plus` do próprio
+> número para todas.  A referência de comparação é o detector RePO+ do artigo com **100 máscaras**
+> (além do baseline de média simples de 100 máscaras usado pela regra sequencial), e a referência interna dos experimentos é o `full_repo_plus` do próprio
 > `cascade_flow.json` (mesmo conjunto de erros, 5 repetições).
 >
 > **Fonte dos números.** `$HOME/replicating-repo-results/mask_efficiency/` no cluster
@@ -102,7 +102,7 @@ Há uma diferença de garantia importante:
   cada tripla `(amostra, fase, repetição)` é derivada por BLAKE2b, então o escore não depende de
   batch nem de ordem.
 - **Erro de máscara** `e_i(m)`: MSE de reconstrução da amostra `i` sob a máscara `m`.
-- **RePO**: `s_i = (1/N) Σ_k e_i(m_k)` — média dos N erros.
+- **RePO (artigo / 1 máscara)** vs. **Média simples (`mean`, 100 máscaras)**: no artigo original o RePO utiliza 1 máscara por amostra; nos experimentos da melhoria (direção B sequencial), usa-se `s_i = (1/N) Σ_k e_i(m_k)` (média dos N=100 erros) como baseline comparativo da regra sequencial.
 - **RePO+**: com N divisível por 5, `s_i = Σ_{g=1..5} min_{k ∈ grupo g} e_i(m_k)`.
   Com 100 máscaras são 5 grupos de 20.
 - **Threshold** `τ`: calibrado nos escores benignos para um FPR alvo.  A implementação
@@ -348,7 +348,7 @@ máscaras/amostra contra 100.
 
 | regra | TPR macro | TPR pond. | máscaras/amostra | ganho | benignos pulados | FN do estágio barato | FPR | concordância |
 |---|---|---|---|---|---|---|---|---|
-| **RePO** (artigo, 100) | 0,2396 | 0,1581 | 100,00 | 0,0 % | — | — | 1,00 % | — |
+| **Média simples** (baseline, 100) | 0,2396 | 0,1581 | 100,00 | 0,0 % | — | — | 1,00 % | — |
 | **RePO+** (artigo, 100) | 0,2546 | 0,1873 | 100,00 | 0,0 % | — | — | 1,00 % | — |
 | RePO+ referência interna (5 rep.) | 0,2560 | 0,1871 | 100,00 | 0,0 % | 0,00 % | 0,00 % | 1,00 % | — |
 | cascata cheap5, FN 0 | 0,2560 | 0,1871 | 72,66 | 27,3 % | 29,07 % | 0,00 % | 1,00 % | — |
